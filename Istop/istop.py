@@ -102,7 +102,7 @@ class Istop(mS.ModelStructure):
 
         self.c = np.array([xp.var(vartype=xp.binary) for i in self.matches])
         # print(self.x.shape)
-
+        print(self.c.shape)
         self.m.addVariable(self.x, self.c)
 
     def set_constraints(self):

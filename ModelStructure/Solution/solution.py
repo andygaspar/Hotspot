@@ -10,19 +10,32 @@ def make_performance_df(model):
     airline: Airline
     flight: Flight
     airline_names = ["total"] + [airline.name for airline in model.airlines]
+    num_flights = [model.numFlights]
     initial_costs = [model.initialTotalCosts]
     final_costs = [model.compute_costs(model.flights, "final")]
+    reduction = [np.round(
+        10000 * (model.initialTotalCosts - model.compute_costs(model.flights, "final")) / model.initialTotalCosts
+        ) / 100
+    ]
     initial_delay = ["-"]
     final_delay = ["-"]
     for airline in model.airlines:
+        num_flights.append(airline.numFlights)
         initial_costs.append(model.compute_costs(airline.flights, "initial"))
         final_costs.append(model.compute_costs(airline.flights, "final"))
         initial_delay.append(model.compute_delays(airline.flights, "initial"))
         final_delay.append(model.compute_delays(airline.flights, "final"))
+        reduction.append(np.round(
+            10000 * (model.compute_costs(airline.flights, "initial")
+                     - model.compute_costs(airline.flights, "final")) /
+            model.compute_costs(airline.flights, "initial")
+        ) / 100
+                         )
 
     model.report = pd.DataFrame(
-        {"airline": airline_names, "initial costs": initial_costs, "final costs": final_costs,
-         "initial delay": initial_delay, "final delay": final_delay})
+        {"airline": airline_names, "num flights": num_flights, "initial costs": initial_costs,
+         "final costs": final_costs,
+         "reduction %": reduction})  # "initial delay": initial_delay, "final delay": final_delay})
 
 
 def make_df_solution(model):
@@ -41,7 +54,6 @@ def make_df_solution(model):
 
 
 def make_solution(model):
-
     from ModelStructure.modelStructure import ModelStructure
     from ModelStructure.Airline.airline import Airline
     from ModelStructure.Flight.flight import Flight

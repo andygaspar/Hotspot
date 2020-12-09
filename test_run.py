@@ -11,7 +11,7 @@ import pandas as pd
 # df = pd.read_csv("../data/data_ruiz.csv")
 scheduleType = scheduleMaker.schedule_types(show=True)
 # df = pd.read_csv("dfcrash")
-df = scheduleMaker.df_maker(70, 5, distribution=scheduleType[3])
+df = scheduleMaker.df_maker(50, 8, distribution=scheduleType[3])
 df["margins"] = [random.choice(range(10, 50)) for i in range(df.shape[0])]
 # df.to_csv("dfcrash")
 df_max = df.copy(deep=True)
@@ -25,6 +25,7 @@ max_model = nnBound.NNBoundModel(df_max, costFun)
 max_model.run()
 max_model.print_performance()
 
+"""
 print("UDPPnonOpt from FPFS")
 udpp_model_xp = udppModel.UDPPmodel(df_UDPP, costFun)
 udpp_model_xp.run(optimised=False)
@@ -35,10 +36,12 @@ maxFromUDPP = nnBound.NNBoundModel(udpp_model_xp.get_new_df(), costFun)
 maxFromUDPP.run()
 maxFromUDPP.print_performance()
 
+
 print("istop from UDPP")
 xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun)
 xpModel.run(True)
 xpModel.print_performance()
+"""
 
 
 print("UDPP Opt from FPFS")
@@ -51,7 +54,7 @@ maxFromUDPP = nnBound.NNBoundModel(udpp_model_xp.get_new_df(), costFun)
 maxFromUDPP.run()
 maxFromUDPP.print_performance()
 
-print("istop from UDPP")
+print("istop from UDPP opt")
 xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun)
 xpModel.run(True)
 xpModel.print_performance()
