@@ -13,7 +13,7 @@ import pandas as pd
 import time
 
 
-class MaxBenefitModel(mS.ModelStructure):
+class NNBoundModel(mS.ModelStructure):
 
     def __init__(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]], model_name="Max Benefit"):
 
@@ -80,7 +80,7 @@ class MaxBenefitModel(mS.ModelStructure):
 
         for flight in self.flights:
             if flight.eta > flight.newSlot.time:
-                print("********************** danno *********************************",
+                print("********************** negative impact *********************************",
                       flight, flight.eta, flight.newSlot.time)
 
     def assign_flights(self, sol):
