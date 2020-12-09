@@ -3,8 +3,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 from itertools import combinations
-from Programma.UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
-from Programma.ModelStructure.Airline import airline as air
+from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
+from ModelStructure.Airline import airline as air
 
 
 class UDPPairline(air.Airline):

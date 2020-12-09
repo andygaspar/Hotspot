@@ -2,15 +2,15 @@ from typing import Union, Callable, List
 
 import pandas as pd
 
-from Programma.GlobalFuns.globalFuns import HiddenPrints
-from Programma.ModelStructure.modelStructure import ModelStructure
-from Programma.UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
-from Programma.UDPP.udppMerge import UDPPmerge
-from Programma.ModelStructure.Solution import solution
-from Programma.UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from Programma.UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
-from Programma.UDPP.Local.udppLocal import udpp_local
-from Programma.ModelStructure.Slot.slot import Slot
+from GlobalFuns.globalFuns import HiddenPrints
+from ModelStructure.modelStructure import ModelStructure
+from UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
+from UDPP.udppMerge import UDPPmerge
+from ModelStructure.Solution import solution
+from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
+from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
+from UDPP.Local.udppLocal import udpp_local
+from ModelStructure.Slot.slot import Slot
 import time
 
 

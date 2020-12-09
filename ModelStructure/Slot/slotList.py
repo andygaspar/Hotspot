@@ -1,4 +1,4 @@
-from Programma.ModelStructure.Slot.slot import Slot
+from ModelStructure.Slot.slot import Slot
 import numpy as np
 import pandas as pd
 

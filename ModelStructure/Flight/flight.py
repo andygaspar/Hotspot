@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List, Callable
 
-from Programma.ModelStructure.Slot import slot as sl
+from ModelStructure.Slot import slot as sl
 
 
 class Flight:

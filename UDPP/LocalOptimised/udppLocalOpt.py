@@ -1,8 +1,8 @@
 from mip import *
 import numpy as np
-from Programma.UDPP.AirlineAndFlightAndSlot import udppAirline as air
-from Programma.UDPP.AirlineAndFlightAndSlot import udppFlight as fl
-from Programma.ModelStructure.Slot import slot as sl
+from UDPP.AirlineAndFlightAndSlot import udppAirline as air
+from UDPP.AirlineAndFlightAndSlot import udppFlight as fl
+from ModelStructure.Slot import slot as sl
 import xpress as xp
 xp.controls.outputlog = 0
 

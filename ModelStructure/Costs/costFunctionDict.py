@@ -1,6 +1,6 @@
-from Programma.ModelStructure.modelStructure import ModelStructure
-from Programma.ModelStructure.Flight.flight import Flight
-from Programma.ModelStructure.Slot.slot import Slot
+from ModelStructure.modelStructure import ModelStructure
+from ModelStructure.Flight.flight import Flight
+from ModelStructure.Slot.slot import Slot
 
 
 class CostFuns:

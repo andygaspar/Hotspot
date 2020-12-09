@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 from typing import Union, List, Callable
 from itertools import product
-from Programma.ModelStructure.Slot import slotList as sl
-from Programma.ModelStructure.Airline import airline as air
-from Programma.ModelStructure.Flight import flightList as fll
-from Programma.ModelStructure.Airline import airlineList as airList
+from ModelStructure.Slot import slotList as sl
+from ModelStructure.Airline import airline as air
+from ModelStructure.Flight import flightList as fll
+from ModelStructure.Airline import airlineList as airList
 
 
 class ModelStructure:

@@ -1,4 +1,4 @@
-from Programma.ModelStructure.Flight import flight as fl
+from ModelStructure.Flight import flight as fl
 
 
 class IstopFlight(fl.Flight):

@@ -1,11 +1,11 @@
 from typing import Callable, List, Union
 
-from Programma.ModelStructure import modelStructure as mS
+from ModelStructure import modelStructure as mS
 import xpress as xp
-from Programma.ModelStructure.Airline import airline as air
-from Programma.ModelStructure.Flight import flight as modFl
-from Programma.ModelStructure.Solution import solution
-from Programma.ModelStructure.Slot.slot import Slot
+from ModelStructure.Airline import airline as air
+from ModelStructure.Flight import flight as modFl
+from ModelStructure.Solution import solution
+from ModelStructure.Slot.slot import Slot
 
 import numpy as np
 import pandas as pd

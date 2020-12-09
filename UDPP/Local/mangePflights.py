@@ -1,11 +1,11 @@
 from typing import Union, Callable, List
 
-from Programma.ModelStructure.Slot.slot import Slot
-from Programma.UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
-from Programma.UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from Programma.UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
-from Programma.ModelStructure.modelStructure import ModelStructure
-from Programma.ModelStructure.Solution import solution
+from ModelStructure.Slot.slot import Slot
+from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
+from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
+from UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
+from ModelStructure.modelStructure import ModelStructure
+from ModelStructure.Solution import solution
 import numpy as np
 
 

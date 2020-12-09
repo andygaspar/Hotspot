@@ -1,11 +1,11 @@
 from typing import Callable, Union
 
-from Programma.ModelStructure import modelStructure as mS
+from ModelStructure import modelStructure as mS
 from mip import *
 import sys
 from itertools import combinations
-from Programma.Istop.AirlineAndFlight import istopAirline as air, istopFlight as modFl
-from Programma.ModelStructure.Solution import solution
+from Istop.AirlineAndFlight import istopAirline as air, istopFlight as modFl
+from ModelStructure.Solution import solution
 
 import numpy as np
 import pandas as pd

@@ -1,8 +1,8 @@
-from Programma.ModelStructure import modelStructure as mS
+from ModelStructure import modelStructure as mS
 from mip import *
-from Programma.Amal import amalAirline as air
-from Programma.Amal import amalFlight as modFl
-from Programma.ModelStructure.Solution import solution
+from Amal import amalAirline as air
+from Amal import amalFlight as modFl
+from ModelStructure.Solution import solution
 
 import numpy as np
 import pandas as pd
@@ -105,7 +105,7 @@ class Amal(mS.ModelStructure):
             print(offer)
 
     def get_down_set(self, flight, k):
-        from Programma.Amal.amalOffer import AmalOffer
+        from Amal.amalOffer import AmalOffer
         offer: AmalOffer
         down_offer_index_list = []
         j = 0
@@ -117,7 +117,7 @@ class Amal(mS.ModelStructure):
         return down_offer_index_list
 
     def get_up_set(self, flight, k):
-        from Programma.Amal.amalOffer import AmalOffer
+        from Amal.amalOffer import AmalOffer
         offer: AmalOffer
         up_offer_index_list = []
         j = 0

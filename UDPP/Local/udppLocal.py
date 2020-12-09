@@ -1,14 +1,14 @@
 from typing import Union, Callable, List
 
-from Programma.UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
-from Programma.UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from Programma.ModelStructure.Slot.slot import Slot
-from Programma.UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
-from Programma.ModelStructure.modelStructure import ModelStructure
-from Programma.ModelStructure.Solution import solution
-from Programma.UDPP.Local.manageMflights import manage_Mflights
-from Programma.UDPP.Local.manageNflights import manage_Nflights
-from Programma.UDPP.Local.mangePflights import manage_Pflights
+from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
+from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
+from ModelStructure.Slot.slot import Slot
+from UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
+from ModelStructure.modelStructure import ModelStructure
+from ModelStructure.Solution import solution
+from UDPP.Local.manageMflights import manage_Mflights
+from UDPP.Local.manageNflights import manage_Nflights
+from UDPP.Local.mangePflights import manage_Pflights
 
 
 def make_slot_list(flights: List[UDPPflight]):

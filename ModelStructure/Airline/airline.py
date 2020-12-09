@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from typing import List, Callable
 from itertools import combinations
-from Programma.ModelStructure.Flight.flight import Flight
-from Programma.ModelStructure.Slot.slot import Slot
+from ModelStructure.Flight.flight import Flight
+from ModelStructure.Slot.slot import Slot
 
 
 class Airline:

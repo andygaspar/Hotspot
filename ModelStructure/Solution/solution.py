@@ -3,9 +3,9 @@ import pandas as pd
 
 
 def make_performance_df(model):
-    from Programma.ModelStructure.modelStructure import ModelStructure
-    from Programma.ModelStructure.Airline.airline import Airline
-    from Programma.ModelStructure.Flight.flight import Flight
+    from ModelStructure.modelStructure import ModelStructure
+    from ModelStructure.Airline.airline import Airline
+    from ModelStructure.Flight.flight import Flight
     model: ModelStructure
     airline: Airline
     flight: Flight
@@ -26,7 +26,7 @@ def make_performance_df(model):
 
 
 def make_df_solution(model):
-    from Programma.ModelStructure.modelStructure import ModelStructure
+    from ModelStructure.modelStructure import ModelStructure
     model: ModelStructure
 
     model.solution = model.df.copy(deep=True)
@@ -42,9 +42,9 @@ def make_df_solution(model):
 
 def make_solution(model):
 
-    from Programma.ModelStructure.modelStructure import ModelStructure
-    from Programma.ModelStructure.Airline.airline import Airline
-    from Programma.ModelStructure.Flight.flight import Flight
+    from ModelStructure.modelStructure import ModelStructure
+    from ModelStructure.Airline.airline import Airline
+    from ModelStructure.Flight.flight import Flight
     model: ModelStructure
     airline: Airline
     flight: Flight
