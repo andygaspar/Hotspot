@@ -13,6 +13,8 @@ from UDPP.Local.udppLocal import udpp_local
 from ModelStructure.Slot.slot import Slot
 import time
 
+import ModelStructure.modelStructure as ms
+
 
 class UDPPmodel(ModelStructure):
 
@@ -27,6 +29,7 @@ class UDPPmodel(ModelStructure):
             if optimised:
                 with HiddenPrints():
                     UDPPlocalOpt(airline, self.slots)
+
             else:
                 udpp_local(airline, self.slots)
 
@@ -40,12 +43,12 @@ class UDPPmodel(ModelStructure):
 
     def get_new_df(self):
         self.df: pd.DataFrame
-        newDf = self.solution.copy(deep=True)
-        newDf.reset_index(drop=True, inplace=True)
-        newDf["slot"] = newDf["new slot"]
-        newDf["fpfs"] = newDf["new arrival"]
-        return newDf
+        new_df = self.solution.copy(deep=True)
+        new_df.reset_index(drop=True, inplace=True)
+        new_df["slot"] = new_df["new slot"]
+        new_df["fpfs"] = new_df["new arrival"]
+        return new_df
 
     @staticmethod
     def compute_UDPP_local_cost(flights: List[UDPPflight]):
-        return sum([flight.costFun(flight, Slot(None,flight.UDPPlocalSolution)) for flight in flights])
+        return sum([flight.costFun(flight, Slot(None, flight.UDPPlocalSolution)) for flight in flights])

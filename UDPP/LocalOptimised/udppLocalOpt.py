@@ -6,6 +6,8 @@ from ModelStructure.Slot import slot as sl
 import xpress as xp
 xp.controls.outputlog = 0
 
+import ModelStructure.modelStructure as ms
+
 
 def slot_range(k: int, AUslots: List[sl.Slot]):
     return range(AUslots[k].index + 1, AUslots[k + 1].index)
@@ -39,15 +41,17 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
 
     # slot constraint
     for j in slots:
-
+        #one y max for slot
         m.addConstraint(
             xp.Sum(y[flight.localNum, j.index] for flight in airline.flights) <= 1
         )
 
     for k in range(airline.numFlights - 1):
+        #one x max for slot
         m.addConstraint(
             xp.Sum(x[flight.localNum, k] for flight in airline.flights) <= 1
         )
+
 
         m.addConstraint(
             xp.Sum(y[flight.localNum, airline.AUslots[k].index] for flight in airline.flights) == 0
@@ -79,6 +83,11 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
         xp.Sum(x[flight.localNum, airline.numFlights - 1] for flight in airline.flights) == 1
     )
 
+    for flight in airline.flights:
+        m.addConstraint(
+            xp.Sum(y[flight.localNum, j] for j in range(flight.etaSlot.index)) == 0
+        )
+
     for flight in airline.flights[1:]:
         # flight assignment
         m.addConstraint(
@@ -109,14 +118,28 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
                 flight.priorityNumber = k
                 flight.priorityValue = "N"
 
+                print(flight, flight.slot, flight. newSlot)
+
+        if airline.name == "B":
+            pass
+            # for slot in slots:
+            #     print(flight, slot. index, m.getSolution(y[flight.localNum, slot.index]))
+            # print("obj val ", m.getObjVal())
+
         for slot in slots:
             if m.getSolution(y[flight.localNum, slot.index]) > 0.5:
                 flight.newSlot = slot
                 flight.priorityNumber = slot.time
                 flight.priorityValue = "P"
+                print("protected", flight, flight.slot, flight.newSlot)
 
 
     for flight in airline.flights:
         if flight.eta > flight.newSlot.time:
             print("********************** danno Local*********************************",
                   flight, flight.eta, flight.UDPPlocalSolution.time)
+
+    if airline.name == "B":
+        for flight in airline.flights:
+            print(flight, flight.newSlot)
+        print("obj val ", m.getObjVal())
