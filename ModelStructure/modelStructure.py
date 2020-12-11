@@ -38,6 +38,7 @@ class ModelStructure:
 
         self.report = None
 
+
     @staticmethod
     def compute_costs(flights, which):
         if which == "initial":

@@ -7,17 +7,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import nn, optim
-from IPython import display
 
-from Programma.UDPP import udppModel
-from Programma.UDPP.AIudpp.trainAuxFuns1 import run_UDPP_local
-from Programma.UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from Programma.UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
-from Programma.UDPP.udppModel import UDPPmodel
-from data.dfMaker import df_maker
-from Programma.ModelStructure.modelStructure import ModelStructure
-from Programma.ModelStructure.Costs.costFunctionDict import CostFuns
-from Programma.UDPP.Local.manageMflights import manage_Mflights
+from UDPP import udppModel
+from UDPP.AIudpp.trainAuxFuns1 import run_UDPP_local
+from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
+from UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
+from UDPP.udppModel import UDPPmodel
+from ScheduleMaker.scheduleMaker import df_maker
+from ModelStructure.modelStructure import ModelStructure
+from ModelStructure.Costs.costFunctionDict import CostFuns
+from UDPP.Local.manageMflights import manage_Mflights
 
 
 class Net(torch.nn.Module):

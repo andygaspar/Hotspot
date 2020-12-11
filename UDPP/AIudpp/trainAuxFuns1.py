@@ -3,13 +3,13 @@ import sys
 import os
 import numpy as np
 
-from Programma.GlobalFuns.globalFuns import HiddenPrints
-from Programma.ModelStructure.Costs.costFunctionDict import CostFuns
-from Programma.UDPP import udppModel
-from Programma.UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from Programma.UDPP.Local.udppLocal import udpp_local
-from Programma.UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
-from data.dfMaker import df_maker
+from GlobalFuns.globalFuns import HiddenPrints
+from ModelStructure.Costs.costFunctionDict import CostFuns
+from UDPP import udppModel
+from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
+from UDPP.Local.udppLocal import udpp_local
+from UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
+from ScheduleMaker.scheduleMaker import df_maker
 
 
 def run_UDPP_local(prior: np.array, air: UDPPairline, slots):
