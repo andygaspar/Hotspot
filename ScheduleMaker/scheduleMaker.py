@@ -103,10 +103,11 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
     priority = np.abs(priority)
     cost = priority
     num = range(num_flights)
+    margins = [random.choice(range(10, 30)) for i in num]
 
     return pd.DataFrame(
         {"slot": slot, "flight": flights, "eta": eta, "fpfs": fpfs, "time": fpfs, "priority": priority,
-         "airline": airline, "cost": cost, "num": num})
+         "margins": margins, "airline": airline, "cost": cost, "num": num})
 
 
 def schedule_types(show=False):

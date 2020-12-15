@@ -29,8 +29,20 @@ class UDPPairline(air.Airline):
 
         self.agent = None
 
+        self.set_normalised_priorities()
+
+
+
     def check_tna(self):
         for flight in self.flights:
             if flight.tna < self.flights[0].slot.time:
                 flight.tna = self.flights[0].slot.time
 
+    def set_normalised_priorities(self):
+        max_val = 0
+        for flight in self.flights:
+            if flight.cost > max_val:
+                max_val = flight.cost
+        for flight in self.flights:
+            flight.priorityNumber = 1 - flight.cost/max_val
+            flight.priority = flight.priorityNumber

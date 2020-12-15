@@ -1,4 +1,5 @@
-from mip import *
+# from mip import *
+from typing import List
 import numpy as np
 from UDPP.AirlineAndFlightAndSlot import udppAirline as air
 from UDPP.AirlineAndFlightAndSlot import udppFlight as fl
