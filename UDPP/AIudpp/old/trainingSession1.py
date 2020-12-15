@@ -16,7 +16,7 @@ from UDPP.udppModel import UDPPmodel
 from ScheduleMaker import scheduleMaker
 from ModelStructure.modelStructure import ModelStructure
 from ModelStructure.Costs.costFunctionDict import CostFuns
-from UDPP.AIudpp import network1 as nn
+from UDPP.AIudpp import network as nn
 
 
 

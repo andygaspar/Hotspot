@@ -34,11 +34,11 @@ class UDPPmodel(ModelStructure):
                 udpp_local(airline, self.slots)
 
         UDPPmerge(self.flights, self.slots)
-        print(time.time() - start)
+        # print(time.time() - start)
         solution.make_solution(self)
         for flight in self.flights:
             if flight.eta > flight.newSlot.time:
-                print("********************** danno UDPP*********************************",
+                print("************** damage, some negative impact has occured****************",
                       flight, flight.eta, flight.newSlot.time)
 
     def get_new_df(self):

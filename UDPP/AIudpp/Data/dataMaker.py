@@ -12,20 +12,21 @@ final_df: pd.DataFrame
 costFun = CostFuns().costFun["step"]
 
 final_df = pd.DataFrame(columns=["instance", "airline", "margins", "priority", "eta", "slot", "new slot"])
-print(final_df)
 
-for i in range(100):
+for i in range(5000):
     df = scheduleMaker.df_maker(custom=[6, 4, 3, 7, 2, 8])
-    df["margins"] = [random.choice(range(10, 50)) for i in range(df.shape[0])]
+    df["margins"] = [random.choice(range(10, 50)) for j in range(df.shape[0])]
     udMod = UDPPmodel(df, costFun)
     udMod.run(optimised=True)
-    udMod.solution["instance"] = (np.ones(udMod.solution.shape[0]) * i).astype(int)
     for airline in udMod.airlines:
         for flight in airline.flights:
             to_append = [i, flight.airline, flight.margin, flight.priority, flight.eta, flight.slot.time,
                          flight.newSlot.time]
             a_series = pd.Series(to_append, index=final_df.columns)
             final_df = final_df.append(a_series, ignore_index=True)
+
+    if i % 50 ==0:
+        print(i)
 
 # standardisation
 for col in final_df.columns[2:-1]:
