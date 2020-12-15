@@ -27,7 +27,7 @@ class Flight:
         self.cost = line["cost"]
 
         try:
-            self.margin = line["margins"] + self.eta
+            self.margin = line["margins"]
         except:
             self.margin = None
 
