@@ -1,7 +1,7 @@
-from typing import Callable, Union
+from typing import Callable, Union, List
 
 from ModelStructure import modelStructure as mS
-from mip import *
+# from mip import *
 import sys
 from itertools import combinations
 from Istop.AirlineAndFlight import istopAirline as air, istopFlight as modFl

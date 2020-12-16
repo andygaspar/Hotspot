@@ -8,7 +8,7 @@ from UDPP import udppModel
 import random
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # df = pd.read_csv("../data/data_ruiz.csv")
 scheduleType = scheduleMaker.schedule_types(show=True)
@@ -55,8 +55,8 @@ for i in range(1):
     # print(df_UDPP)
     udpp_model_xp = udppModel.UDPPmodel(df_UDPP, costFun)
     ff = udpp_model_xp.flights[0]
-    plt.plot([slot.index for slot in udpp_model_xp.slots], [ff.costFun(ff, slot) for slot in udpp_model_xp.slots])
-    plt.savefig("mygraph.png")
+    # plt.plot([slot.index for slot in udpp_model_xp.slots], [ff.costFun(ff, slot) for slot in udpp_model_xp.slots])
+    # plt.savefig("mygraph.png")
 
     udpp_model_xp.run(optimised=True)
     udpp_model_xp.print_performance()
