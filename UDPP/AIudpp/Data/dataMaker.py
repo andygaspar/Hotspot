@@ -12,10 +12,10 @@ final_df: pd.DataFrame
 costFun = CostFuns().costFun["step"]
 
 final_df = pd.DataFrame(columns=["instance", "airline", "margins", "priority", "eta", "slot", "new slot"])
+scheduleType = scheduleMaker.schedule_types(show=False)
 
 for i in range(5000):
-    df = scheduleMaker.df_maker(custom=[6, 4, 3, 7, 2, 8])
-    df["margins"] = [random.choice(range(10, 50)) for j in range(df.shape[0])]
+    df = scheduleMaker.df_maker(50, 4, distribution=scheduleType[0])
     udMod = UDPPmodel(df, costFun)
     udMod.run(optimised=True)
     for airline in udMod.airlines:
@@ -32,4 +32,4 @@ for i in range(5000):
 for col in final_df.columns[2:-1]:
     final_df[col] = (final_df[col] - final_df[col].mean()) / final_df[col].std()
 
-final_df.to_csv("50_5_increase.csv")
+final_df.to_csv("50_4_increase.csv")

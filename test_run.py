@@ -14,6 +14,7 @@ import numpy as np
 scheduleType = scheduleMaker.schedule_types(show=True)
 # df = pd.read_csv("dfcrash")
 # df = scheduleMaker.df_maker(50, 4, distribution=scheduleType[3])
+
 for i in range(1):
     # df = scheduleMaker.df_maker(custom=[6, 4, 3, 7, 2, 8])
     # df["margins"] = [random.choice(range(10, 50)) for i in range(df.shape[0])]

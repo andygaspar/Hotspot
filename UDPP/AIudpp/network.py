@@ -22,9 +22,10 @@ from UDPP.Local.manageMflights import manage_Mflights
 
 class AirNetwork:
 
-    def __init__(self, inputDimension, batchSize):
+    def __init__(self, inputDimension, outputDimension, batchSize):
 
         self.inputDimension = inputDimension
+        self.outputDimension = outputDimension
         self.batchSize = batchSize
         self.lr = 1e-3
         self.lambdaL2 = 1e-4
@@ -48,7 +49,7 @@ class AirNetwork:
             nn.Linear(self.width * 2, self.width),
             nn.Dropout(p=0.2),
             nn.LeakyReLU(),
-            nn.Linear(self.width, 6),
+            nn.Linear(self.width, self.outputDimension),
         )
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.network.to(self.device)
@@ -62,8 +63,7 @@ class AirNetwork:
         self.network.train()
         for e in range(self.epochs):
             self.optimizer.zero_grad()
-            X = torch.tensor(inputs, requires_grad=True).to(self.device) \
-                .reshape(self.batchSize, self.inputDimension).type(dtype=torch.float32)
+            X = torch.tensor(inputs, requires_grad=True).to(self.device).type(dtype=torch.float32)
 
             Y = self.network(X)
 
