@@ -83,9 +83,13 @@ def get_first_later_free_slot(targetSlot: UDPPslot, slotList: List[UDPPslot]):
 
 def manage_time_solution(targetTime, flight: UDPPflight, slotList: List[UDPPslot]):
     targetSlot = get_target_slot(targetTime, slotList)
-    solutionSlot = manage_solution_earlier(targetSlot, flight, slotList)
 
-    if solutionSlot.isNull:
+    if not targetSlot.isNull:
+        solutionSlot = manage_solution_earlier(targetSlot, flight, slotList)
+
+        if solutionSlot.isNull:
+            solutionSlot = get_first_later_free_slot(targetSlot, slotList)
+    else:
         solutionSlot = get_first_later_free_slot(targetSlot, slotList)
 
     flight.assign(solutionSlot)

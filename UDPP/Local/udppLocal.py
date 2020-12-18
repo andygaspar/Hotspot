@@ -23,13 +23,15 @@ def udpp_local(airline: UDPPairline, slots: List[Slot]):
 
     slotList = [UDPPslot(flight.slot, None, flight.localNum) for flight in airline.flights if flight.priority != "B"]
     Pflights = [flight for flight in airline.flights if flight.priorityValue == "P"]
-    manage_Pflights(Pflights, slotList,slots)
+    manage_Pflights(Pflights, slotList, slots)
 
     Mflights = [flight for flight in airline.flights if flight.priorityValue == "M"]
     manage_Mflights(Mflights, slotList)
 
     Nflights = [flight for flight in airline.flights if flight.priorityValue == "N"]
     manage_Nflights(Nflights, slotList)
+
+
 
     for flight in airline.flights:
         flight.UDPPlocalSolution = flight.newSlot

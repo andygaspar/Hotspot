@@ -103,7 +103,7 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
     priority = np.abs(priority)
     cost = priority
     num = range(num_flights)
-    margins_gap = np.array([random.choice(range(10, 15)) for i in num])
+    margins_gap = np.array([random.choice(range(15, 45)) for i in num])
 
     return pd.DataFrame(
         {"slot": slot, "flight": flights, "eta": eta, "fpfs": fpfs, "time": fpfs, "priority": priority,
