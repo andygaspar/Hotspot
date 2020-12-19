@@ -1,11 +1,7 @@
-from ScheduleMaker import scheduleMaker
-import random
+from ModelStructure.ScheduleMaker import scheduleMaker
 from UDPP.udppModel import UDPPmodel
 from ModelStructure.Costs.costFunctionDict import CostFuns
-import numpy as np
 import pandas as pd
-
-from UDPP.AIudpp.trainAuxFuns1 import make_batch
 
 final_df: pd.DataFrame
 

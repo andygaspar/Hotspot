@@ -1,13 +1,8 @@
-from ScheduleMaker import scheduleMaker
-from NNBound import nnBound
-
-from Istop import istop
+from ModelStructure.ScheduleMaker import scheduleMaker
 
 from ModelStructure.Costs.costFunctionDict import CostFuns
 from UDPP import udppModel
-import random
-import pandas as pd
-import numpy as np
+
 # import matplotlib.pyplot as plt
 
 # df = pd.read_csv("../data/data_ruiz.csv")

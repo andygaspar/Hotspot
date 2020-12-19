@@ -1,6 +1,4 @@
 import random
-import sys
-import os
 import numpy as np
 
 from GlobalFuns.globalFuns import HiddenPrints
@@ -9,7 +7,7 @@ from UDPP import udppModel
 from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
 from UDPP.Local.udppLocal import udpp_local
 from UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
-from ScheduleMaker.scheduleMaker import df_maker
+from ModelStructure.ScheduleMaker.scheduleMaker import df_maker
 
 
 def run_UDPP_local(prior: np.array, air: UDPPairline, slots):

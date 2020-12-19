@@ -1,19 +1,8 @@
-import random
-
-import matplotlib.pyplot as plt
-
 import numpy as np
 import pandas as pd
-import torch.tensor
 
-from UDPP import udppModel
-from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
-from UDPP.Local.udppLocal import udpp_local
-from UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
 from UDPP.udppModel import UDPPmodel
-from ScheduleMaker import scheduleMaker
-from ModelStructure.modelStructure import ModelStructure
+from ModelStructure.ScheduleMaker import scheduleMaker
 from ModelStructure.Costs.costFunctionDict import CostFuns
 from UDPP.AIudpp import network as nn
 

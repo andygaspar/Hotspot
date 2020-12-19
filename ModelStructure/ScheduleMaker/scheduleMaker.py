@@ -104,10 +104,12 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
     cost = priority
     num = range(num_flights)
     margins_gap = np.array([random.choice(range(15, 45)) for i in num])
+    at_gate = pd.read_csv("ModelStructure/Costs/costs_table_gate.csv", sep=" ")
+    flights_type = [np.random.choice(at_gate["flight"].to_numpy()) for i in range(num_flights)]
 
     return pd.DataFrame(
         {"slot": slot, "flight": flights, "eta": eta, "fpfs": fpfs, "time": fpfs, "priority": priority,
-         "margins": eta + margins_gap, "airline": airline, "cost": cost, "num": num})
+         "margins": eta + margins_gap, "airline": airline, "cost": cost, "num": num, "type": flights_type})
 
 
 def schedule_types(show=False):

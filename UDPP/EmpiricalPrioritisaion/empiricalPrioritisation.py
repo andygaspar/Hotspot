@@ -1,8 +1,7 @@
 import copy
-import pandas as pd
 
 from ModelStructure.Costs.costFunctionDict import CostFuns
-from ScheduleMaker import scheduleMaker
+from ModelStructure.ScheduleMaker import scheduleMaker
 from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
 from UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
 from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
@@ -27,7 +26,9 @@ def make_prioritisation(airline: UDPPairline):
 
     x = np.array([[xp.var(vartype=xp.binary) for j in slots] for i in airline.flights])
 
-    m.addVariable(x)
+    t = np.array([xp.var(vartype=xp.binary) for i in airline.flights])
+
+    m.addVariable(x, t)
 
     flight: UDPPflight
 
@@ -45,6 +46,10 @@ def make_prioritisation(airline: UDPPairline):
             xp.Sum(x[flight.localNum, slot.index] for slot in slots if slot.time < flight.eta) == 0
         )
 
+        m.addConstraint(
+            xp.Sum(x[flight.localNum, slot.index] * slot.time) <= t[flight.localNum] * flight.tna + (1 - t[flight.localNum]) * 1000
+        )
+
     # m.setObjective(
     #     xp.Sum(x[flight.localNum][slot.index] * flight.costFun(flight, slot)
     #            for flight in airline.flights for slot in slots)
@@ -52,9 +57,10 @@ def make_prioritisation(airline: UDPPairline):
 
     m.setObjective(
         # xp.Sum(x[flight.localNum][slot.index] * (flight.tna - slot.time)
-        #        for flight in airline.flights for slot in slots)
-        xp.Sum(x[flight.localNum][slot.index] * flight.costFun(flight, slot)
+        #        for flight in airline.flights for slot in slots) +
+        (1/100)*xp.Sum(x[flight.localNum][slot.index] * flight.costFun(flight, slot)
                           for flight in airline.flights for slot in slots)
+        - xp.Sum(t[i] for i in range(airline.numFlights)) * 100
     )
 
     m.solve()
@@ -78,7 +84,7 @@ def make_prioritisation(airline: UDPPairline):
 
 
 for i in range(1):
-    df_UDPP = scheduleMaker.df_maker(custom=[9,4,5,7,9,4])
+    df_UDPP = scheduleMaker.df_maker(custom=[9, 4, 5, 7, 9, 4])
     costFun = CostFuns().costFun["step"]
 
     udppMod = UDPPmodel(df_UDPP, costFun)

@@ -8,6 +8,8 @@ class Flight:
 
     def __init__(self, line, airline, slots: List[sl.Slot]):
 
+        self.type = line["type"]
+
         self.slot = slots[line["slot"]]
 
         self.num = line["num"]
