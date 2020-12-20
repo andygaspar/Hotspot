@@ -12,7 +12,7 @@ net = nn.AirNetwork(net_input_size,max_num_flights, batchSize)
 df = pd.read_csv("Data/50_5_increase.csv")
 
 
-for i in range(1500):
+for i in range(5000):
     batch_instance = np.random.choice(range(max(df["instance"])), size=batchSize, replace=False)
     instance_selection = df[df["instance"].isin(batch_instance)]
     inputs = np.empty((0,4))
