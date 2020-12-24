@@ -8,12 +8,24 @@ import pandas as pd
 
 # df = pd.read_csv("../data/data_ruiz.csv")
 scheduleType = scheduleMaker.schedule_types(show=True)
+
+num_flights = 50
+num_airlines = 5
 # df = pd.read_csv("dfcrash")
 # df = scheduleMaker.df_maker(50, 4, distribution=scheduleType[3])
+df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[3])
+df_max = df.copy(deep=True)
+df_UDPP = df_max.copy(deep=True)
+costFun = CostFuns().costFun["realistic"]
+udpp_model_xp = udppModel.UDPPmodel(df_UDPP, costFun)
+udpp_model_xp.run(optimised=True)
+data = udpp_model_xp.report
+data["run"] = [0 for i in range(num_airlines+1)]
 
-for i in range(1):
-    df = scheduleMaker.df_maker(100, 15, distribution=scheduleType[3])
-
+for i in range(1, 50):
+    df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[3])
+    #df.to_csv("df_crah")
+    #df = pd.read_csv("df_crah")
 
     df_max = df.copy(deep=True)
     df_UDPP = df_max.copy(deep=True)
@@ -54,8 +66,10 @@ for i in range(1):
     # plt.savefig("mygraph.png")
 
     udpp_model_xp.run(optimised=True)
-    udpp_model_xp.print_performance()
-    # print(udpp_model_xp.solution)
+    #udpp_model_xp.print_performance()
+    #print(udpp_model_xp.solution)
+    udpp_model_xp.report["run"] = [i for j in range(num_airlines+1)]
+    data = data.append(udpp_model_xp.report, ignore_index = True)
 
     # print("max from UDPP")
     # maxFromUDPP = nnBound.NNBoundModel(udpp_model_xp.get_new_df(), costFun)
@@ -67,4 +81,5 @@ for i in range(1):
     # xpModel.run(True)
     # xpModel.print_performance()
 
-
+data.to_csv("50flights.csv")
+print(data)

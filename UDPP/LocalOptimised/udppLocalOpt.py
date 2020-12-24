@@ -127,5 +127,6 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
                 flight.priorityNumber = slot.time
                 flight.priorityValue = "P"
 
-
+    if airline.name == "E":
+        print(airline.flights[0].slot, airline.flights[0].newSlot)
 
