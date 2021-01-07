@@ -110,7 +110,7 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
     )
 
     m.solve()
-    print("airline ",airline)
+    # print("airline ",airline)
     for flight in airline.flights:
 
         for k in range(airline.numFlights):
@@ -118,7 +118,7 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
                 flight.newSlot = airline.flights[k].slot
                 flight.priorityNumber = k
                 flight.priorityValue = "N"
-                print(flight.slot, flight.newSlot)
+                # print(flight.slot, flight.newSlot)
 
 
 
@@ -127,7 +127,7 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
                 flight.newSlot = slot
                 flight.priorityNumber = slot.time
                 flight.priorityValue = "P"
-                print(flight.slot, flight.newSlot, "P")
-
+    #             print(flight.slot, flight.newSlot, "P")
+    #
     print(sum([flight.costFun(flight, flight.slot) for flight in airline.flights]),
           sum([flight.costFun(flight, flight.newSlot) for flight in airline.flights]))
