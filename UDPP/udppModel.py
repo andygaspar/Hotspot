@@ -28,8 +28,8 @@ class UDPPmodel(ModelStructure):
         start = time.time()
         for airline in self.airlines:
             if optimised:
-                with HiddenPrints():
-                    UDPPlocalOpt(airline, self.slots)
+                # with HiddenPrints():
+                UDPPlocalOpt(airline, self.slots)
 
             else:
                 udpp_local(airline, self.slots)
