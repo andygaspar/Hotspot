@@ -19,6 +19,10 @@ class UDPPflight(fl.Flight):
 
         self.tnb = self.eta
 
+        self.test_slots = []
+
+        self.priorityNumber = None
+
     def set_prioritisation(self, num: float, margin: int):
         pass
 

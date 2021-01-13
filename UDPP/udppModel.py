@@ -1,3 +1,4 @@
+import string
 from typing import Union, Callable, List
 
 import pandas as pd
@@ -27,8 +28,8 @@ class UDPPmodel(ModelStructure):
         start = time.time()
         for airline in self.airlines:
             if optimised:
-                with HiddenPrints():
-                    UDPPlocalOpt(airline, self.slots)
+                # with HiddenPrints():
+                UDPPlocalOpt(airline, self.slots)
 
             else:
                 udpp_local(airline, self.slots)
@@ -52,3 +53,12 @@ class UDPPmodel(ModelStructure):
     @staticmethod
     def compute_UDPP_local_cost(flights: List[UDPPflight]):
         return sum([flight.costFun(flight, Slot(None, flight.UDPPlocalSolution)) for flight in flights])
+
+    def change_CCS(self, percentage: int):
+        for flight in self.flights:
+            flight.slot.time = flight.eta * 3
+            self.initialTotalCosts = self.compute_costs(self.flights, "initial")
+
+    def set_priority_value(self, val: string):
+        for flight in self.flights:
+            flight.priorityValue = val

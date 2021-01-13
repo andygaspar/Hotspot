@@ -110,7 +110,7 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
     )
 
     m.solve()
-
+    # print("airline ",airline)
     for flight in airline.flights:
 
         for k in range(airline.numFlights):
@@ -118,29 +118,16 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
                 flight.newSlot = airline.flights[k].slot
                 flight.priorityNumber = k
                 flight.priorityValue = "N"
+                # print(flight.slot, flight.newSlot)
 
-                print(flight, flight.slot, flight. newSlot)
 
-        if airline.name == "B":
-            pass
-            # for slot in slots:
-            #     print(flight, slot. index, m.getSolution(y[flight.localNum, slot.index]))
-            # print("obj val ", m.getObjVal())
 
         for slot in slots:
             if m.getSolution(y[flight.localNum, slot.index]) > 0.5:
                 flight.newSlot = slot
                 flight.priorityNumber = slot.time
                 flight.priorityValue = "P"
-                print("protected", flight, flight.slot, flight.newSlot)
-
-
-    for flight in airline.flights:
-        if flight.eta > flight.newSlot.time:
-            print("********************** danno Local*********************************",
-                  flight, flight.eta, flight.UDPPlocalSolution.time)
-
-    if airline.name == "B":
-        for flight in airline.flights:
-            print(flight, flight.newSlot)
-        print("obj val ", m.getObjVal())
+    #             print(flight.slot, flight.newSlot, "P")
+    #
+    print(sum([flight.costFun(flight, flight.slot) for flight in airline.flights]),
+          sum([flight.costFun(flight, flight.newSlot) for flight in airline.flights]))

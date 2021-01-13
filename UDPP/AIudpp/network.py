@@ -1,29 +1,16 @@
 import copy
 from typing import List
 
-import matplotlib.pyplot as plt
-
-import numpy as np
 import torch
 from torch import nn, optim
-
-from UDPP import udppModel
-from UDPP.AIudpp.trainAuxFuns1 import run_UDPP_local
-from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
-from UDPP.udppModel import UDPPmodel
-from ScheduleMaker.scheduleMaker import df_maker
-from ModelStructure.modelStructure import ModelStructure
-from ModelStructure.Costs.costFunctionDict import CostFuns
-from UDPP.Local.manageMflights import manage_Mflights
-
 
 
 class AirNetwork:
 
-    def __init__(self, inputDimension, batchSize):
+    def __init__(self, inputDimension, outputDimension, batchSize):
 
         self.inputDimension = inputDimension
+        self.outputDimension = outputDimension
         self.batchSize = batchSize
         self.lr = 1e-3
         self.lambdaL2 = 1e-4
@@ -36,18 +23,17 @@ class AirNetwork:
         self.network = nn.Sequential(
             nn.Linear(self.inputDimension, self.width),
             nn.LeakyReLU(),
-            nn.Linear(self.width, self.width*2),
+            nn.Linear(self.width, self.width*4),
             nn.LeakyReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(self.width*2, self.width*4),
+            nn.Dropout(p=0.4),
+            nn.Linear(self.width*4, self.width*2),
             nn.LeakyReLU(),
-            nn.Linear(self.width * 4, self.width * 2),
-            nn.Dropout(p=0.2),
+            nn.Linear(self.width * 2, self.width * 2),
             nn.LeakyReLU(),
             nn.Linear(self.width * 2, self.width),
             nn.Dropout(p=0.2),
             nn.LeakyReLU(),
-            nn.Linear(self.width, 6),
+            nn.Linear(self.width, self.outputDimension),
         )
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.network.to(self.device)
@@ -61,8 +47,7 @@ class AirNetwork:
         self.network.train()
         for e in range(self.epochs):
             self.optimizer.zero_grad()
-            X = torch.tensor(inputs, requires_grad=True).to(self.device) \
-                .reshape(self.batchSize, self.inputDimension).type(dtype=torch.float32)
+            X = torch.tensor(inputs, requires_grad=True).to(self.device).type(dtype=torch.float32)
 
             Y = self.network(X)
 
