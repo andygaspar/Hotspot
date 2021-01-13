@@ -43,6 +43,8 @@ class Flight:
 
         self.priority = line["priority"]
 
+        self.jump = line["jump"]
+
         self.preference = None
 
     def __str__(self):

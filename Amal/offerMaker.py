@@ -14,8 +14,8 @@ def convenient_offer(flight, f_offer, otherFlight, of_offer, model):
     actual_cost = model.cost_function(flight, flight.slot) + model.cost_function(otherFlight, otherFlight.slot)
     offer_cost = model.cost_function(flight, f_offer) + model.cost_function(otherFlight, of_offer)
 
-    if offer_cost < actual_cost:
-        print("")
+    # if offer_cost < actual_cost:
+    #     print("")
     return offer_cost < actual_cost
 
 

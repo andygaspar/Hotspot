@@ -1,7 +1,6 @@
 from typing import Union, List
 
 import numpy as np
-import random
 import string
 from scipy import stats
 import pandas as pd
@@ -94,7 +93,7 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
     priority = np.random.uniform(0.5, 2, num_flights)
     priority = []
     for i in range(num_flights):
-        m = random.choice([0, 1])
+        m = np.random.choice([0, 1])
         if m == 0:
             priority.append(np.random.normal(0.7, 0.1))
         else:
@@ -102,12 +101,14 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
 
     priority = np.abs(priority)
     cost = priority
+
     num = range(num_flights)
-    margins_gap = np.array([random.choice(range(10, 15)) for i in num])
+    margins_gap = np.array([np.random.choice(range(10, 15)) for i in num])
+    jump = np.random.randint(10, 100, len(num))
 
     return pd.DataFrame(
         {"slot": slot, "flight": flights, "eta": eta, "fpfs": fpfs, "time": fpfs, "priority": priority,
-         "margins": eta + margins_gap, "airline": airline, "cost": cost, "num": num})
+         "margins": eta + margins_gap, "airline": airline, "cost": cost, "num": num, "jump":jump})
 
 
 def schedule_types(show=False):

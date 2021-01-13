@@ -1,5 +1,4 @@
 from ScheduleMaker import scheduleMaker
-import random
 from UDPP.udppModel import UDPPmodel
 from ModelStructure.Costs.costFunctionDict import CostFuns
 import numpy as np
@@ -15,7 +14,7 @@ final_df = pd.DataFrame(columns=["instance", "airline", "margins", "priority", "
 
 for i in range(5000):
     df = scheduleMaker.df_maker(custom=[6, 4, 3, 7, 2, 8])
-    df["margins"] = [random.choice(range(10, 50)) for j in range(df.shape[0])]
+    df["margins"] = [np.random.choice(range(10, 50)) for j in range(df.shape[0])]
     udMod = UDPPmodel(df, costFun)
     udMod.run(optimised=True)
     for airline in udMod.airlines:

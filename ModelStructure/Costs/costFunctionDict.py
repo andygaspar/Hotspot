@@ -14,6 +14,10 @@ class CostFuns:
 
             "step": lambda flight, slot: 0 if slot.time - flight.eta < 0 else (slot.time - flight.eta) * flight.cost
             if (slot.time - flight.eta) < flight.margin else
-            ((slot.time - flight.eta) * flight.cost*10 + flight.cost * 10)
+            ((slot.time - flight.eta) * flight.cost*10 + flight.cost * 10),
+
+            "jump": lambda flight, slot: 0 if slot.time - flight.eta < 0 else (slot.time - flight.eta) * flight.cost
+            if (slot.time - flight.eta) < flight.margin else
+            ((slot.time - flight.eta) * flight.cost + flight.cost) + flight.jump
 
         }

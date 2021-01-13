@@ -1,5 +1,3 @@
-import random
-
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -57,7 +55,7 @@ for i in range(10):
 for i in range(10):
     print("\n\n\n", "run ", i)
     df = scheduleMaker.df_maker(custom=[6, 4, 3, 7, 2, 8])
-    df["margins"] = [random.choice(range(10, 50)) for i in range(df.shape[0])]
+    df["margins"] = [np.random.choice(range(10, 50)) for i in range(df.shape[0])]
     udMod = UDPPmodel(df, costFun)
     airline = [air for air in udMod.airlines if air.name == "A"][0]
     inputs = make_net_input(airline)

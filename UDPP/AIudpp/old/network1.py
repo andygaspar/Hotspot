@@ -1,5 +1,4 @@
 import copy
-import random
 from typing import List
 
 import matplotlib.pyplot as plt
