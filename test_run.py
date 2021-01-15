@@ -11,8 +11,8 @@ import numpy as np
 np.random.seed(0)
 scheduleType = scheduleMaker.schedule_types(show=True)
 
-num_flights = 9
-num_airlines = 3
+num_flights = 50
+num_airlines = 4
 # df = pd.read_csv("dfcrash")
 # df = scheduleMaker.df_maker(50, 4, distribution=scheduleType[3])
 df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[3])
