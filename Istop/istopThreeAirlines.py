@@ -1,5 +1,5 @@
 from typing import Callable, Union, List
-
+import copy
 from ModelStructure import modelStructure as mS
 # from mip import *
 import sys
@@ -82,7 +82,9 @@ class IstopThree(mS.ModelStructure):
             fl_pair_b = airl_pair[1].flight_pairs
             for pairA in fl_pair_a:
                 for pairB in fl_pair_b:
-                    if self.condition_list([pairA, pairB]):
+                    if self.condition(pairA, pairB):
+                        self.condition(pairA, pairB)
+                        self.condition_list([pairA, pairB])
                         self.matches.append([pairA, pairB])
 
         for match in self.matches:
@@ -296,26 +298,57 @@ class IstopThree(mS.ModelStructure):
             return True
 
         return False
-    @staticmethod
-    def recursive_combs(flights, comb, combs, n, N):
-        f = flights[0]
-        comb.append()
 
-    @staticmethod
-    def get_combinations(flights):
+    def recursive_combs(self, flight, flights, airlines, comb, combs, n, N):
+        for other_flight in flights:
+            if other_flight != flight:
+                if flight.eta <= other_flight.slot.time:
+                    if flight.airline.name not in airlines:
+                        self.recursive_combs(other_flight, copy.copy(flights).remove(other_flight),
+                                             copy.copy(airlines).append(flight.airline.name),
+                                             copy.copy(comb).append([flight, other_flight.slot]), combs, n, N)
+                    else:
+                        self.recursive_combs(other_flight, copy.copy(flights).remove(other_flight),
+                                             copy.copy(airlines),
+                                             copy.copy(comb).append([flight, other_flight.slot]), combs, n, N)
+        if len(comb) == N and len(airlines) == n:
+            combs.append(comb)
+
+    def get_combinations(self, flights):
         combs = []
-        flights_list = []
+        self.recursive_combs(flights[0], flights, [], [], combs, 0, len(flights))
+        return combs
 
     def condition_list(self, pairs_list):
 
-        flights = np.array([pair for pair in pairs_list])
-        initial_costs = np.array([pair[0].costFun(pair[0], pair[0].slot) + pair[1].costFun(pair[1], pair[1].slot) for
-                                  pair in pairs_list])
+        airlines = [pair[0].airline.name for pair in pairs_list]
+        initial_costs = dict(zip(airlines,
+                                 np.array(
+                                     [pair[0].costFun(pair[0], pair[0].slot) + pair[1].costFun(pair[1], pair[1].slot)
+                                      for
+                                      pair in pairs_list])))
 
-        combos = get_combinations(flights)
+        lista = [flight for pair in pairs_list for flight in pair]
+        combs = self.get_combinations(lista)
+        if len(combs) > 0:
+            for comb in combs:
+                final_costs = dict(zip([pair[0].airline.name for pair in pairs_list], np.zeros(len(pairs_list))))
+                for i in range(len(comb)-1):
+                    final_costs[comb[i].airline.name] += comb[i].costFun(comb[i], comb[i+1].slot)
+                final_costs[comb[len(comb)-1].airline.name] += \
+                    comb[len(comb)-1].costFun(comb[len(comb)-1], comb[0].slot)
 
-        for perm in permuts:
-            if eta_compatibility(flights, perm):
+                convenience = 0
+                for key in initial_costs.keys():
+                    if final_costs[key] < initial_costs[key]:
+                        convenience += 1
+                if convenience == len(airlines):
+                    return True
+        return False
+
+        """
+        pairA = 0
+        pairB = 0
         A0 = pairA[0]
         A1 = pairA[1]
         B0 = pairB[0]
@@ -372,6 +405,7 @@ class IstopThree(mS.ModelStructure):
             return True
 
         return False
+        """
 
     @staticmethod
     def is_in(couple, couples):
