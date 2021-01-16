@@ -60,6 +60,13 @@ class IstopThree(mS.ModelStructure):
         for airline in self.airlines:
             airline.set_preferences(self.preference_function)
 
+        pippo = dict(zip(self.flights,[[] for i in self.flights]))
+        print(pippo)
+        if self.flights[0] not in pippo.keys():
+            print("ciccione")
+        else:
+            print("callo")
+
         self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
 
         self.epsilon = sys.float_info.min
@@ -299,24 +306,27 @@ class IstopThree(mS.ModelStructure):
 
         return False
 
-    def recursive_combs(self, flight, flights, airlines, comb, combs, n, N):
+    def recursive_combs(self, flight, flights, airlines, comb, combs, N):
+        if len(comb) == N and len(airlines) == N/2:
+            combs.append(comb)
+            return
+
         for other_flight in flights:
             if other_flight != flight:
                 if flight.eta <= other_flight.slot.time:
+                    fl = copy.copy(flights)
+                    fl.remove(other_flight)
+                    air = copy.copy(airlines)
+                    c = copy.copy(comb)
+                    c.append([flight, other_flight.slot])
                     if flight.airline.name not in airlines:
-                        self.recursive_combs(other_flight, copy.copy(flights).remove(other_flight),
-                                             copy.copy(airlines).append(flight.airline.name),
-                                             copy.copy(comb).append([flight, other_flight.slot]), combs, n, N)
-                    else:
-                        self.recursive_combs(other_flight, copy.copy(flights).remove(other_flight),
-                                             copy.copy(airlines),
-                                             copy.copy(comb).append([flight, other_flight.slot]), combs, n, N)
-        if len(comb) == N and len(airlines) == n:
-            combs.append(comb)
+                        air.append(flight.airline.name)
+                    self.recursive_combs(other_flight, fl, air, c, combs, N)
+
 
     def get_combinations(self, flights):
         combs = []
-        self.recursive_combs(flights[0], flights, [], [], combs, 0, len(flights))
+        self.recursive_combs(flights[0], flights, [], [], combs, len(flights))
         return combs
 
     def condition_list(self, pairs_list):
