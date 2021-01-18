@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 
-from ScheduleMaker import scheduleMaker
+from ModelStructure.ScheduleMaker import scheduleMaker
 from ModelStructure.Costs.costFunctionDict import CostFuns
 
 from RL.wrapper_UDPP import allocation_from_df
