@@ -15,6 +15,8 @@ class IstopFlight(fl.Flight):
         self.preference = self.compute_preference(self.airline.numFlights, sum_priorities, f)
 
     def compute_preference(self, num_flights, sum_priorities, f):
+        if sum_priorities < 1:
+            sum_priorities = 1
         return f(self.priority, num_flights) / sum_priorities
 
     def set_priority(self, priority):

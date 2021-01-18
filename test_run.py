@@ -8,10 +8,10 @@ import pandas as pd
 # import matplotlib.pyplot as plt
 import numpy as np
 # df = pd.read_csv("../data/data_ruiz.csv")
-np.random.seed(0)
+np.random.seed(20)
 scheduleType = scheduleMaker.schedule_types(show=True)
 
-num_flights = 9
+num_flights = 6
 num_airlines = 3
 # df = pd.read_csv("dfcrash")
 # df = scheduleMaker.df_maker(50, 4, distribution=scheduleType[3])
