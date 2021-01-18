@@ -190,7 +190,8 @@ class Istop(mS.ModelStructure):
             self.assign_flights(xpSolution)
 
         else:
-            self.assign_flights([flight.slot for flight in self.flights])
+            for flight in self.flights:
+                flight.newSlot = flight.slot
 
         solution.make_solution(self)
 
