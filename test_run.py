@@ -12,7 +12,7 @@ np.random.seed(0)
 scheduleType = scheduleMaker.schedule_types(show=True)
 
 num_flights = 50
-num_airlines = 4
+num_airlines = 10
 # df = pd.read_csv("dfcrash")
 # df = scheduleMaker.df_maker(50, 4, distribution=scheduleType[3])
 df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[3])
@@ -25,7 +25,7 @@ data = udpp_model_xp.report
 data["run"] = [0 for i in range(num_airlines+1)]
 
 for i in range(1, 2):
-    df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[3])
+    df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[2])
     # df.to_csv("df_crah")
     # df = pd.read_csv("df_crah")
 
