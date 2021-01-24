@@ -12,11 +12,11 @@ import numpy as np
 np.random.seed(0)
 scheduleType = scheduleMaker.schedule_types(show=True)
 
-num_flights = 25
+num_flights = 30
 num_airlines = 5
 # df = pd.read_csv("dfcrash")
 # df = scheduleMaker.df_maker(50, 4, distribution=scheduleType[3])
-df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[3])
+df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[0])
 df.to_csv("three")
 costFun = CostFuns().costFun["realistic"]
 udpp_model_xp = udppModel.UDPPmodel(df, costFun)

@@ -61,6 +61,7 @@ class IstopThree(mS.ModelStructure):
             airline.set_preferences(self.preference_function)
 
         self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
+        self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
 
         self.epsilon = sys.float_info.min
         self.m = xp.problem()
@@ -96,7 +97,22 @@ class IstopThree(mS.ModelStructure):
                 for pairB in fl_pair_b:
                     if self.condition_list([pairA, pairB]):
                         self.matches.append([pairA, pairB])
-        print("nuovo", time.time() - t)
+        print("nuovo", time.time() - t, "couples ", len(self.matches))
+
+        t = time.time()
+        counter = 0
+        for airl_triple in self.airlines_triples:
+            fl_pair_a = airl_triple[0].flight_pairs
+            fl_pair_b = airl_triple[1].flight_pairs
+            fl_pair_c = airl_triple[2].flight_pairs
+            for pairA in fl_pair_a:
+                for pairB in fl_pair_b:
+                    for pairC in fl_pair_c:
+                        if self.condition_list([pairA, pairB, pairC]):
+                            counter += 1
+
+        print("nuovo", time.time() - t, "triples ", counter)
+
 
         for match in self.matches:
             for couple in match:
@@ -108,6 +124,8 @@ class IstopThree(mS.ModelStructure):
                         self.flights_in_matches.append(couple[1])
 
         print("preprocess concluded.  number of couples: *******  ", len(self.matches))
+
+
         return len(self.matches) > 0
 
     def set_variables(self):

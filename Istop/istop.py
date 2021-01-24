@@ -6,6 +6,7 @@ import sys
 from itertools import combinations
 from Istop.AirlineAndFlight import istopAirline as air, istopFlight as modFl
 from ModelStructure.Solution import solution
+from OfferChecker.offerChecker import OfferChecker
 
 import numpy as np
 import pandas as pd
@@ -63,6 +64,7 @@ class Istop(mS.ModelStructure):
         self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
 
         self.epsilon = sys.float_info.min
+        self.offerChecker = OfferChecker(self.scheduleMatrix)
         self.m = xp.problem()
 
         self.x = None
@@ -77,13 +79,14 @@ class Istop(mS.ModelStructure):
         # self.initial_objective_value = sum([self.score(flight, flight.slot) for flight in self.flights])
 
     def check_and_set_matches(self):
-        for airl_pair in self.airlines_pairs:
-            fl_pair_a = airl_pair[0].flight_pairs
-            fl_pair_b = airl_pair[1].flight_pairs
-            for pairA in fl_pair_a:
-                for pairB in fl_pair_b:
-                    if self.condition(pairA, pairB):
-                        self.matches.append([pairA, pairB])
+        self.matches = self.offerChecker.all_couples_check(self.airlines_pairs)
+        # for airl_pair in self.airlines_pairs:
+        #     fl_pair_a = airl_pair[0].flight_pairs
+        #     fl_pair_b = airl_pair[1].flight_pairs
+        #     for pairA in fl_pair_a:
+        #         for pairB in fl_pair_b:
+        #             if self.condition(pairA, pairB):
+        #                 self.matches.append([pairA, pairB])
 
         for match in self.matches:
             for couple in match:
