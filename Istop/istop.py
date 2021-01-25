@@ -103,9 +103,9 @@ class Istop(mS.ModelStructure):
         self.m.addVariable(self.x, self.c)
 
     def set_constraints(self):
-        for i in self.emptySlots:
-            for j in self.slots:
-                self.m.addConstraint(self.x[i, j] == 0)
+        # for i in self.emptySlots:
+        #     for j in self.slots:
+        #         self.m.addConstraint(self.x[i, j] == 0)
 
         for flight in self.flights:
             if not self.f_in_matched(flight):
@@ -125,10 +125,10 @@ class Istop(mS.ModelStructure):
                                         [s for s in self.slots if s != flight.slot]) \
                                  == xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]))
 
-        # for flight in self.flights:
-        #     for other_flight in flight.airline.flights:
-        #         if flight != other_flight:
-        #             self.m.addConstraint(self.x[flight.slot.index, other_flight.slot.index] == 0)
+        for flight in self.flights:
+            for other_flight in flight.airline.flights:
+                if flight != other_flight:
+                    self.m.addConstraint(self.x[flight.slot.index, other_flight.slot.index] == 0)
 
         k = 0
         for match in self.matches:
@@ -154,7 +154,6 @@ class Istop(mS.ModelStructure):
             k += 1
 
     def set_objective(self):
-
         self.m.setObjective(
             xp.Sum(self.x[flight.slot.index, j.index] * flight.costFun(flight, j)
                    for flight in self.flights for j in self.slots), sense=xp.minimize)
@@ -184,6 +183,7 @@ class Istop(mS.ModelStructure):
             print("problem status, explained: ", self.m.getProbStatusString())
             xpSolution = self.x
             # print(self.m.getSolution(self.x))
+
             self.assign_flights(xpSolution)
 
         else:
