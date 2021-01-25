@@ -78,6 +78,8 @@ class IstopThree(mS.ModelStructure):
         self.couples = []
         self.flights_in_matches = []
 
+        self.offers_selected = []
+
         # self.initial_objective_value = sum([self.score(flight, flight.slot) for flight in self.flights])
 
     def check_and_set_matches(self):
@@ -205,7 +207,7 @@ class IstopThree(mS.ModelStructure):
         offers = 0
         for i in range(len(self.matches)):
             if self.m.getSolution(self.c[i]) > 0.5:
-                # print(self.matches[i])
+                self.offers_selected.append(self.matches[i])
                 offers += 1
         print("offers: ", offers)
 
