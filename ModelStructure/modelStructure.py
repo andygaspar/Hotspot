@@ -24,9 +24,15 @@ class ModelStructure:
 
         self.set_flights_cost_functions(costFun)
 
+        self.set_flights_cost_vect()
+
         self.numFlights = len(self.flights)
 
         self.initialTotalCosts = self.compute_costs(self.flights, "initial")
+
+        self.airDict = dict(zip([airline.name for airline in self.airlines], range(len(self.airlines))))
+
+        self.scheduleMatrix = self.make_schedule_matrix()
 
         self.emptySlots = self.df[self.df["flight"] == "Empty"]["slot"].to_numpy()
 
@@ -52,6 +58,12 @@ class ModelStructure:
             return sum([flight.slot.time-flight.eta for flight in flights])
         if which == "final":
             return sum([flight.newSlot.time-flight.eta for flight in flights])
+
+    def make_schedule_matrix(self):
+        arr = []
+        for flight in self.flights:
+            arr.append([flight.slot.time] + [flight.eta] + flight.costVect)
+        return np.array(arr)
 
     def __str__(self):
         return str(self.airlines)
@@ -85,3 +97,9 @@ class ModelStructure:
             for flight in self.flights:
                 flight.set_cost_fun(costFun[i])
                 i += 1
+
+    def set_flights_cost_vect(self):
+        for flight in self.flights:
+            flight.costVect = [flight.costFun(flight, slot) for slot in self.slots]
+
+
