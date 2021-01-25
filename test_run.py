@@ -11,11 +11,13 @@ import numpy as np
 np.random.seed(20)
 scheduleType = scheduleMaker.schedule_types(show=True)
 
-num_flights = 6
+num_flights = 25
 num_airlines = 3
 # df = pd.read_csv("dfcrash")
 # df = scheduleMaker.df_maker(50, 4, distribution=scheduleType[3])
-df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[3])
+# df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[0])
+# df.to_csv("test.csv")
+df = pd.read_csv("test.csv")
 df_max = df.copy(deep=True)
 df_UDPP = df_max.copy(deep=True)
 costFun = CostFuns().costFun["realistic"]
@@ -25,7 +27,7 @@ data = udpp_model_xp.report
 data["run"] = [0 for i in range(num_airlines+1)]
 
 for i in range(1, 2):
-    df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[3])
+    # df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=scheduleType[0])
     # df.to_csv("df_crah")
     # df = pd.read_csv("df_crah")
 
