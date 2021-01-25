@@ -13,6 +13,8 @@ import pandas as pd
 import time
 import xpress as xp
 
+from OfferChecker.offerChecker import OfferChecker
+
 xp.controls.outputlog = 0
 
 
@@ -64,6 +66,7 @@ class IstopThree(mS.ModelStructure):
         self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
 
         self.epsilon = sys.float_info.min
+        self.offerChecker = OfferChecker(self.scheduleMatrix)
         self.m = xp.problem()
 
         self.x = None
@@ -79,40 +82,7 @@ class IstopThree(mS.ModelStructure):
 
     def check_and_set_matches(self):
 
-        t = time.time()
-        for airl_pair in self.airlines_pairs:
-            fl_pair_a = airl_pair[0].flight_pairs
-            fl_pair_b = airl_pair[1].flight_pairs
-            for pairA in fl_pair_a:
-                for pairB in fl_pair_b:
-                    if self.condition(pairA, pairB):
-                        pass
-        print("vecchio", time.time()-t)
-
-        t = time.time()
-        for airl_pair in self.airlines_pairs:
-            fl_pair_a = airl_pair[0].flight_pairs
-            fl_pair_b = airl_pair[1].flight_pairs
-            for pairA in fl_pair_a:
-                for pairB in fl_pair_b:
-                    if self.condition_list([pairA, pairB]):
-                        self.matches.append([pairA, pairB])
-        print("nuovo", time.time() - t, "couples ", len(self.matches))
-
-        t = time.time()
-        counter = 0
-        for airl_triple in self.airlines_triples:
-            fl_pair_a = airl_triple[0].flight_pairs
-            fl_pair_b = airl_triple[1].flight_pairs
-            fl_pair_c = airl_triple[2].flight_pairs
-            for pairA in fl_pair_a:
-                for pairB in fl_pair_b:
-                    for pairC in fl_pair_c:
-                        if self.condition_list([pairA, pairB, pairC]):
-                            counter += 1
-
-        print("nuovo", time.time() - t, "triples ", counter)
-
+        self.matches = self.offerChecker.all_couples_check(self.airlines_pairs)
 
         for match in self.matches:
             for couple in match:
@@ -124,8 +94,6 @@ class IstopThree(mS.ModelStructure):
                         self.flights_in_matches.append(couple[1])
 
         print("preprocess concluded.  number of couples: *******  ", len(self.matches))
-
-
         return len(self.matches) > 0
 
     def set_variables(self):
@@ -166,6 +134,7 @@ class IstopThree(mS.ModelStructure):
 
         k = 0
         for match in self.matches:
+            indexes = [flight.slot.index for pair in match for flight in pair]
             pairA = match[0]
             pairB = match[1]
 
@@ -227,12 +196,6 @@ class IstopThree(mS.ModelStructure):
 
         self.offer_solution_maker()
 
-        # for i in self.slots:
-        #     if self.x[i, i].x == 0:
-        #         for j in self.slots:
-        #             if self.x[i, j].x != 0:
-        #                 print(i, j)
-
         for flight in self.flights:
             if flight.eta > flight.newSlot.time:
                 print("********************** danno *********************************",
@@ -269,94 +232,6 @@ class IstopThree(mS.ModelStructure):
         self.offers = pd.DataFrame({"airline": airline_names, "flights": flights_numbers, "offers": offers})
         self.offers.sort_values(by="flights", inplace=True, ascending=False)
 
-    def condition(self, pairA, pairB):
-
-        A0 = pairA[0]
-        A1 = pairA[1]
-        B0 = pairB[0]
-        B1 = pairB[1]
-
-        initial_costA = A0.costFun(A0, A0.slot) + A1.costFun(A1, A1.slot)
-        initial_costB = B0.costFun(B0, B0.slot) + B1.costFun(B1, B1.slot)
-
-        offA1 = initial_costA - A0.costFun(A0, B0.slot) - A1.costFun(A1, B1.slot)
-        offA2 = initial_costA - A0.costFun(A0, B1.slot) - A1.costFun(A1, B0.slot)
-        offB1 = initial_costB - B0.costFun(B0, A0.slot) - B1.costFun(B1, A1.slot)
-        offB2 = initial_costB - B0.costFun(B0, A1.slot) - B1.costFun(B1, A0.slot)
-
-        if offA1 > 0 and offB1 > 0 and A0.etaSlot <= B0.slot and B0.etaSlot <= A0.slot and \
-                A1.etaSlot <= B1.slot and B1.etaSlot <= A1.slot:
-
-            return True
-
-        if offA2 > 0 and offB2 > 0 and A0.etaSlot <= B1.slot and B1.etaSlot <= A0.slot and \
-                A1.etaSlot <= B0.slot and B0.etaSlot <= A1.slot:
-
-            return True
-
-        if offA1 > 0 and offB2 > 0 and A0.etaSlot <= B0.slot and B0.etaSlot <= A1.slot and \
-                A1.etaSlot <= B1.slot and B1.etaSlot <= A0.slot:
-
-            return True
-
-        if offA2 > 0 and offB1 > 0 and A0.etaSlot <= B1.slot and B1.etaSlot <= A0.slot and \
-                A1.etaSlot <= B0.slot and B0.etaSlot <= A1.slot:
-
-            return True
-
-        return False
-
-    def recursive_calls(self, flight, flights, free, initial_costs,  airlines, comb):
-        for other_flight in free:
-            if other_flight != flight:
-                if flight.eta <= other_flight.slot.time:
-                    fl = copy.copy(flights)
-                    fl.remove(flight)
-                    new_free = copy.copy(free)
-                    new_free.remove(other_flight)
-                    air = copy.copy(airlines)
-                    c = copy.deepcopy(comb)
-                    c[flight.airline.name].append([flight, other_flight.slot])
-                    if flight.airline.name != other_flight.airline.name:
-                        air.append(flight.airline.name)
-
-                    still_convenient = True
-
-                    for airline in c.keys():
-                        cost = sum([c[airline][i][0].costFun(c[airline][i][0], c[airline][i][1])
-                             for i in range(len(c[airline]))])
-
-                        if cost >= initial_costs[airline]:
-                            still_convenient = False
-                            break
-
-                    if still_convenient:
-                        if len(fl) > 0:
-                            if self.recursive_calls(fl[0], fl, new_free, initial_costs, air, c):
-                                return True
-
-                        elif len(np.unique(air)) == len(initial_costs.keys()):
-                            return True
-        return False
-
-    def get_combinations(self, flights, initial_costs):
-        combs = dict(zip(np.unique([flight.airline.name for flight in flights]).tolist(),
-                         [[] for i in range(int(len(flights)/2))]))
-        free = copy.copy(flights)
-        return self.recursive_calls(flights[0], flights, free, initial_costs, [], combs)
-
-    def condition_list(self, pairs_list):
-
-        airlines = [pair[0].airline.name for pair in pairs_list]
-        initial_costs = dict(zip(airlines,
-                                 np.array(
-                                     [pair[0].costFun(pair[0], pair[0].slot) + pair[1].costFun(pair[1], pair[1].slot)
-                                      for
-                                      pair in pairs_list])))
-
-        flights = [flight for pair in pairs_list for flight in pair]
-        return self.get_combinations(flights, initial_costs)
-
 
     @staticmethod
     def is_in(couple, couples):
@@ -378,7 +253,7 @@ class IstopThree(mS.ModelStructure):
             for slot in self.slots:
                 if self.m.getSolution(xpSolution[flight.slot.index, slot.index]) > .5:
                     flight.newSlot = slot
-                    # print(flight, flight.slot, flight.newSlot)
+                    print(flight, flight.slot, flight.newSlot)
 
     # def find_match(self, i):
     #     for j in self.slotIndexes[self.slotIndexes != i]:
