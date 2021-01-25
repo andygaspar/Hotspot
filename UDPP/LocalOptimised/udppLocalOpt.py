@@ -129,5 +129,5 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
                 flight.priorityValue = "P"
     #             print(flight.slot, flight.newSlot, "P")
     #
-    print(sum([flight.costFun(flight, flight.slot) for flight in airline.flights]),
-          sum([flight.costFun(flight, flight.newSlot) for flight in airline.flights]))
+    # print(sum([flight.costFun(flight, flight.slot) for flight in airline.flights]),
+    #       sum([flight.costFun(flight, flight.newSlot) for flight in airline.flights]))
