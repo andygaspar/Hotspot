@@ -164,9 +164,9 @@ class Istop(mS.ModelStructure):
                    for flight in self.flights for j in self.slots), sense=xp.minimize)
 
     def run(self, timing=False):
-        print("start")
+        # print("start")
         feasible = self.check_and_set_matches()
-        print("end", len(self.matches))
+        # print("end", len(self.matches))
         if feasible:
             self.set_variables()
 

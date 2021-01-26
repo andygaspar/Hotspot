@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 class TwoWayDict(OrderedDict):
 	def add(self, item1, item2):
 		# Preferred methods
@@ -25,3 +27,11 @@ class TwoWayDict(OrderedDict):
 	def __len__(self):
 		"""Returns the number of connections"""
 		return dict.__len__(self) // 2
+
+def print_allocation(allocation):
+	s = ''
+	for slot, name in allocation.items():
+		
+		s += str(name) + ' -> ' + str(slot) + ' ; '
+		
+	print (s)
