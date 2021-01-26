@@ -242,6 +242,7 @@ class Istop(mS.ModelStructure):
 
     def assign_flights(self, xpSolution):
         for flight in self.flights:
+            print([self.m.getSolution(xpSolution[flight.slot.index, slot.index]) for slot in self.slots])
             for slot in self.slots:
                 if self.m.getSolution(xpSolution[flight.slot.index, slot.index]) > 0.5:
                     flight.newSlot = slot
