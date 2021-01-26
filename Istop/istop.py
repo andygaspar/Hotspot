@@ -138,7 +138,7 @@ class Istop(mS.ModelStructure):
             for pair in match:
                 self.m.addConstraint(
                     xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(i, j.slot) for i in pair for j in flights) -
-                    (1 - self.c[k]) * 1000000 \
+                    (1 - self.c[k]) * 10000000 \
                     <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(i, i.slot) for i in pair for j in flights) - \
                     self.epsilon)
 
