@@ -15,8 +15,8 @@ num_airlines = 4
 distribution = scheduleType[0]
 print("schedule type: ", distribution)
 
-#df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution)
-df = pd.read_csv("0offers.csv")
+df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution)
+#df = pd.read_csv("0offers.csv")
 costFun = CostFuns().costFun["realistic"]
 
 print("\nnn bound")
