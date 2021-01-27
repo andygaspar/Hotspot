@@ -151,7 +151,7 @@ class Istop(mS.ModelStructure):
     def set_objective(self):
 
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, j.index] * flight.costFun(flight, j)
+            xp.Sum(self.x[flight.slot.index, j.index] * self.score(flight, j)
                    for flight in self.flights for j in self.slots), sense=xp.minimize)
 
     def run(self, timing=False):
