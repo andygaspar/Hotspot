@@ -101,6 +101,7 @@ class Istop(mS.ModelStructure):
         self.x = np.array([[xp.var(vartype=xp.binary) for j in self.slots] for i in self.slots])
 
         self.c = np.array([xp.var(vartype=xp.binary) for i in self.matches])
+
         self.m.addVariable(self.x, self.c)
 
     def set_constraints(self):
@@ -110,9 +111,9 @@ class Istop(mS.ModelStructure):
 
         for flight in self.flights:
             if not self.f_in_matched(flight):
-                self.m.addConstraint(self.x[flight.slot.index, flight.slot.index] >= 0.9)
+                self.m.addConstraint(self.x[flight.slot.index, flight.slot.index] == 1)
             else:
-                self.m.addConstraint(xp.Sum(self.x[flight.slot.index, j.index] for j in flight.compatibleSlots) >= 0.9)
+                self.m.addConstraint(xp.Sum(self.x[flight.slot.index, j.index] for j in flight.compatibleSlots) == 1)
 
         for j in self.slots:
             self.m.addConstraint(xp.Sum(self.x[i.index, j.index] for i in self.slots) <= 1.1)
@@ -121,10 +122,17 @@ class Istop(mS.ModelStructure):
             for j in flight.notCompatibleSlots:
                 self.m.addConstraint(self.x[flight.slot.index, j.index] <= 0.1)
 
+
+
         for flight in self.flights_in_matches:
-            self.m.addConstraint(xp.Sum(self.x[flight.slot.index, slot_to_swap.index] for slot_to_swap in
+            self.m.addConstraint(xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) - 0.1 <=
+                                 xp.Sum(self.x[flight.slot.index, slot_to_swap.index] for slot_to_swap in
+                                        [s for s in self.slots if s != flight.slot]))
+            self.m.addConstraint(
+                                 xp.Sum(self.x[flight.slot.index, slot_to_swap.index] for slot_to_swap in
                                         [s for s in self.slots if s != flight.slot]) \
                                  <= xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) + 0.1)
+
 
         k = 0
         for match in self.matches:
@@ -137,7 +145,7 @@ class Istop(mS.ModelStructure):
             for pair in match:
                 self.m.addConstraint(
                     xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(i, j.slot) for i in pair for j in flights) -
-                    (1 - self.c[k]) * 1000000 \
+                    (1 - self.c[k]) * 10000000 \
                     <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(i, i.slot) for i in pair for j in flights) - \
                     self.epsilon)
 
@@ -242,6 +250,7 @@ class Istop(mS.ModelStructure):
 
     def assign_flights(self, xpSolution):
         for flight in self.flights:
+            print([self.m.getSolution(self.x[flight.slot.index,j.index]) for j in self.slots])
             for slot in self.slots:
                 if self.m.getSolution(xpSolution[flight.slot.index, slot.index]) > 0.5:
                     flight.newSlot = slot
