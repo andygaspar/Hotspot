@@ -133,8 +133,6 @@ class Istop(mS.ModelStructure):
                                         [s for s in self.slots if s != flight.slot]) \
                                  <= xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) + 0.1)
 
-            if flight.num == 2:
-                self.variabilePerPaola = xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)])
 
         k = 0
         for match in self.matches:
