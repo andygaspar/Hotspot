@@ -28,24 +28,21 @@ print("\nudpp")
 udpp_model_xp = udppModel.UDPPmodel(df, costFun)
 udpp_model_xp.run(optimised=True)
 udpp_model_xp.print_performance()
-print(udpp_model_xp.solution)
+
 
 print("\nistop only pairs")
 xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=False)
-
 xpModel.run(True)
-# print(xpModel.matches)
 xpModel.print_performance()
-# print(xpModel.offers_selected)
-print(xpModel.solution)
 
 
-# print("\nistop with triples")
-# xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=True)
-# xpModel.run(True)
-# # print(xpModel.matches)
-# xpModel.print_performance()
-# # print(xpModel.offers_selected)
+
+
+print("\nistop with triples")
+xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=True)
+xpModel.run(True)
+xpModel.print_performance()
+
 
 
 

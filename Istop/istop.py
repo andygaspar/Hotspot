@@ -49,7 +49,6 @@ class Istop(mS.ModelStructure):
             for couple in match:
                 if flight.slot == couple[0].slot or flight.slot == couple[1].slot:
                     indexes.append(j)
-                    print(flight, couple)
             j += 1
         return indexes
 
@@ -103,14 +102,12 @@ class Istop(mS.ModelStructure):
 
         self.c = np.array([xp.var(vartype=xp.binary) for _ in self.matches], dtype=xp.npvar)
 
-        self.z = np.array([xp.var(vartype=xp.integer) for _ in self.flights], dtype=xp.npvar)
-
-        self.m.addVariable(self.x, self.c, self.z)
+        self.m.addVariable(self.x, self.c)
 
     def set_constraints(self):
-        # for i in self.emptySlots:
-        #     for j in self.slots:
-        #         self.m.addConstraint(self.x[i, j] == 0)
+        for i in self.emptySlots:
+            for j in self.slots:
+                self.m.addConstraint(self.x[i, j] == 0)
 
         for flight in self.flights:
             if not self.f_in_matched(flight):
@@ -176,7 +173,6 @@ class Istop(mS.ModelStructure):
             if timing:
                 print("Simplex time ", end)
 
-            # print("status: ", self.m.getProbStatus())
             print("problem status, explained: ", self.m.getProbStatusString())
             xpSolution = self.x
             # print(self.m.getSolution(self.x))
@@ -189,12 +185,6 @@ class Istop(mS.ModelStructure):
         solution.make_solution(self)
 
         self.offer_solution_maker()
-
-        # for i in self.slots:
-        #     if self.x[i, i].x == 0:
-        #         for j in self.slots:
-        #             if self.x[i, j].x != 0:
-        #                 print(i, j)
 
         for flight in self.flights:
             if flight.eta > flight.newSlot.time:
@@ -249,15 +239,7 @@ class Istop(mS.ModelStructure):
 
     def assign_flights(self, xpSolution):
         for flight in self.flights:
-            print([self.m.getSolution(self.x[flight.slot.index,j.index]) for j in self.slots])
             for slot in self.slots:
                 if self.m.getSolution(xpSolution[flight.slot.index, slot.index]) > 0.5:
                     flight.newSlot = slot
-                    # print(flight, flight.slot, flight.newSlot)
-        print("\n",[(self.m.getSolution(self.c[j]),self.matches[j]) for j in range(len(self.matches))])
-        print([self.m.getSolution(self.z[j]) for j in range(len(self.flights))])
 
-    # def find_match(self, i):
-    #     for j in self.slotIndexes[self.slotIndexes != i]:
-    #         if self.xpSolution[i.slot, j] == 1:
-    #             return self.flights[j]
