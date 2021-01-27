@@ -125,6 +125,9 @@ class Istop(mS.ModelStructure):
         for flight in self.flights_in_matches:
             self.m.addConstraint(xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) - 0.1 <=
                                  xp.Sum(self.x[flight.slot.index, slot_to_swap.index] for slot_to_swap in
+                                        [s for s in self.slots if s != flight.slot]))
+            self.m.addConstraint(
+                                 xp.Sum(self.x[flight.slot.index, slot_to_swap.index] for slot_to_swap in
                                         [s for s in self.slots if s != flight.slot]) \
                                  <= xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) + 0.1)
 
