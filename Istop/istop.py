@@ -101,8 +101,8 @@ class Istop(mS.ModelStructure):
         self.x = np.array([[xp.var(vartype=xp.binary) for j in self.slots] for i in self.slots])
 
         self.c = np.array([xp.var(vartype=xp.binary) for i in self.matches])
-        self.z = np.array([xp.var(vartype=xp.binary) for _ in self.flights])
-        self.m.addVariable(self.x, self.c, self.z)
+
+        self.m.addVariable(self.x, self.c)
 
     def set_constraints(self):
         # for i in self.emptySlots:
@@ -111,9 +111,9 @@ class Istop(mS.ModelStructure):
 
         for flight in self.flights:
             if not self.f_in_matched(flight):
-                self.m.addConstraint(self.x[flight.slot.index, flight.slot.index] >= 0.9)
+                self.m.addConstraint(self.x[flight.slot.index, flight.slot.index] == 1)
             else:
-                self.m.addConstraint(xp.Sum(self.x[flight.slot.index, j.index] for j in flight.compatibleSlots) >= 0.9)
+                self.m.addConstraint(xp.Sum(self.x[flight.slot.index, j.index] for j in flight.compatibleSlots) == 1)
 
         for j in self.slots:
             self.m.addConstraint(xp.Sum(self.x[i.index, j.index] for i in self.slots) <= 1.1)
@@ -121,6 +121,8 @@ class Istop(mS.ModelStructure):
         for flight in self.flights:
             for j in flight.notCompatibleSlots:
                 self.m.addConstraint(self.x[flight.slot.index, j.index] <= 0.1)
+
+
 
         for flight in self.flights_in_matches:
             self.m.addConstraint(xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) - 0.1 <=
@@ -130,6 +132,9 @@ class Istop(mS.ModelStructure):
                                  xp.Sum(self.x[flight.slot.index, slot_to_swap.index] for slot_to_swap in
                                         [s for s in self.slots if s != flight.slot]) \
                                  <= xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) + 0.1)
+
+            if flight.num == 2:
+                self.variabilePerPaola = xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)])
 
         k = 0
         for match in self.matches:
