@@ -74,7 +74,13 @@ def distribution_maker(num_flights, num_airlines, distribution="uniform"):
     return dist
 
 
-def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1, new_capacity=2, custom:Union[None, List[int]]= None):
+def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1, new_capacity=2,
+    n_flight_first_airline=None, custom:Union[None, List[int]]= None):
+    
+    # Quick hack
+    if not n_flight_first_airline is None:
+        dist_other_flights = distribution_maker(num_flights-n_flight_first_airline, num_airlines-1, distribution)
+        custom = [n_flight_first_airline] + list(dist_other_flights)
 
     if custom is None:
         dist = distribution_maker(num_flights, num_airlines, distribution)
@@ -111,7 +117,7 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
 
     return pd.DataFrame(
         {"slot": slot, "flight": flights, "eta": eta, "fpfs": fpfs, "time": fpfs, "priority": priority,
-         "margins": eta + margins_gap, "airline": airline, "cost": cost, "num": num, "jump":jump, "type": flights_type})
+         "margins":margins_gap, "airline": airline, "cost": cost, "num": num, "jump":jump, "type": flights_type})
 
 
 def schedule_types(show=False):

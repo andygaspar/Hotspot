@@ -37,7 +37,7 @@ class CostFuns:
 
             "jump": lambda flight, slot: 0 if slot.time - flight.eta < 0 else (slot.time - flight.eta) * flight.cost
             if (slot.time - flight.eta) < flight.margin else
-            ((slot.time - flight.eta) * flight.cost + flight.cost) + flight.jump,
+            (slot.time - flight.eta) * flight.cost + flight.jump,
 
             "realistic": lambda flight, slot: compute(flight, slot)
 
