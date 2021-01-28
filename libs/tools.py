@@ -1,4 +1,7 @@
+import sys
 from collections import OrderedDict
+import contextlib
+import datetime
 
 class TwoWayDict(OrderedDict):
 	def add(self, item1, item2):
@@ -35,3 +38,30 @@ def print_allocation(allocation):
 		s += str(name) + ' -> ' + str(slot) + ' ; '
 		
 	print (s)
+
+@contextlib.contextmanager
+def print_to_void():
+    stdout_backup = sys.stdout
+    sys.stdout = None
+    yield
+    sys.stdout = stdout_backup
+
+@contextlib.contextmanager
+def clock_time(message_before='', 
+	message_after='executed in', print_function=print,
+	oneline=False):
+
+	if oneline:
+		print_function(message_before, end="\r")
+	else:
+		print_function(message_before)
+	start = datetime.datetime.now()
+	yield
+	elapsed = datetime.datetime.now() - start
+
+	if oneline:
+		message = ' '.join([message_before, message_after, str(elapsed)])
+	else:
+		message = ' '.join([message_after, str(elapsed)])
+		
+	print_function (message)
