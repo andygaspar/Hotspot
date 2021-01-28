@@ -12,10 +12,11 @@ scheduleType = scheduleMaker.schedule_types(show=False)
 
 num_flights = 40
 num_airlines = 4
-distribution = scheduleType[0]
+distribution = scheduleType[3]
 print("schedule type: ", distribution)
 
-df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution)
+# df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution)
+df = pd.read_csv("0offers.csv")
 costFun = CostFuns().costFun["realistic"]
 
 print("\nnn bound")
@@ -35,8 +36,13 @@ xpModel.run(True)
 xpModel.print_performance()
 
 
+
+
 print("\nistop with triples")
 xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=True)
 xpModel.run(True)
 xpModel.print_performance()
+
+
+
 
