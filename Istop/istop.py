@@ -1,5 +1,6 @@
 from typing import Callable, Union, List
 
+from GlobalFuns.globalFuns import HiddenPrints
 from ModelStructure import modelStructure as mS
 # from mip import *
 import sys
@@ -243,3 +244,28 @@ class Istop(mS.ModelStructure):
                 if self.m.getSolution(xpSolution[flight.slot.index, slot.index]) > 0.5:
                     flight.newSlot = slot
 
+    def update_object(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
+        self.preference_function = lambda x, y: x * (y ** alpha)
+        self.offers = None
+        self.triples = triples
+        super().__init__(df_init=df_init, costFun=costFun, airline_ctor=air.IstopAirline)
+        airline: air.IstopAirline
+        for airline in self.airlines:
+            airline.set_preferences(self.preference_function)
+
+        self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
+        self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
+
+        self.epsilon = sys.float_info.min
+        self.offerChecker = OfferChecker(self.scheduleMatrix)
+        with HiddenPrints():
+            self.m.reset()
+
+        self.x = None
+        self.c = None
+
+        self.matches = []
+        self.couples = []
+        self.flights_in_matches = []
+
+        self.offers_selected = []
