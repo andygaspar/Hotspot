@@ -53,7 +53,8 @@ class Istop(mS.ModelStructure):
             j += 1
         return indexes
 
-    def __init__(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
+    def __init__(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False,
+        xp_problem=None):
 
         self.preference_function = lambda x, y: x * (y ** alpha)
         self.offers = None
@@ -68,7 +69,11 @@ class Istop(mS.ModelStructure):
 
         self.epsilon = sys.float_info.min
         self.offerChecker = OfferChecker(self.scheduleMatrix)
-        self.m = xp.problem()
+
+        if xp_problem is None:
+            self.m = xp.problem()
+        else:
+            self.m = xp_problem
 
         self.x = None
         self.c = None
@@ -244,7 +249,8 @@ class Istop(mS.ModelStructure):
                 if self.m.getSolution(xpSolution[flight.slot.index, slot.index]) > 0.5:
                     flight.newSlot = slot
 
-    def update_object(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
+    def reset(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
+        # To avoid calling xp.problem(), creating a blank line
         self.preference_function = lambda x, y: x * (y ** alpha)
         self.offers = None
         self.triples = triples
