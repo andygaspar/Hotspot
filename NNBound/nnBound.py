@@ -1,5 +1,7 @@
 from typing import Callable, List, Union
 
+from GlobalFuns.globalFuns import HiddenPrints
+
 from ModelStructure import modelStructure as mS
 import xpress as xp
 from ModelStructure.Airline import airline as air
@@ -15,13 +17,17 @@ import time
 
 class NNBoundModel(mS.ModelStructure):
 
-    def __init__(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]], model_name="Max Benefit"):
+    def __init__(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]], model_name="Max Benefit",
+        xp_problem=None):
 
         self.airlineConstructor = air.Airline
         self.flightConstructor = modFl.Flight
         super().__init__(df_init=df_init, costFun=costFun)
 
-        self.m = xp.problem()
+        if xp_problem is None:
+            self.m = xp.problem()
+        else:
+            self.m = xp_problem
         self.x = None
 
     def set_variables(self):
@@ -88,3 +94,14 @@ class NNBoundModel(mS.ModelStructure):
             for slot in self.slots:
                 if self.m.getSolution(sol[flight.slot.index, slot.index]) > 0.5:
                     flight.newSlot = slot
+
+    def reset(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]], model_name="Max Benefit"):
+
+        self.airlineConstructor = air.Airline
+        self.flightConstructor = modFl.Flight
+        super().__init__(df_init=df_init, costFun=costFun)
+
+        with HiddenPrints():
+            self.m.reset()
+
+        self.x = None
