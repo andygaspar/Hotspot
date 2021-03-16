@@ -6,8 +6,9 @@ from ModelStructure.Costs.costFunctionDict import CostFuns
 
 from RL.wrapper_UDPP import allocation_from_df
 from RL.wrapper_UDPP import df_sch_from_flights
-from RL.wrapper_UDPP import compute_optimal_allocation
+#from RL.wrapper_UDPP import compute_optimal_allocation
 from RL.flight import Flight
+
 class SingleGame(gym.Env):
 	"""
 	Game with iteration where a player (airline)
