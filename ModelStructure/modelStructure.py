@@ -12,37 +12,39 @@ class ModelStructure:
 
     def __init__(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]], airline_ctor=air.Airline):
 
-        self.df = df_init
+        if not df_init is None:
 
-        self.slots = sl.make_slots_list(self.df)
+            self.df = df_init
 
-        self.airlines = airList.make_airlines_list(self.df, self.slots, airline_ctor)
+            self.slots = sl.make_slots_list(self.df)
 
-        self.numAirlines = len(np.unique(self.df["airline"]))
+            self.airlines = airList.make_airlines_list(self.df, self.slots, airline_ctor)
 
-        self.flights = fll.make_flight_list(self)
+            self.numAirlines = len(np.unique(self.df["airline"]))
 
-        self.set_flights_cost_functions(costFun)
+            self.flights = fll.make_flight_list(self)
 
-        self.set_flights_cost_vect()
+            self.set_flights_cost_functions(costFun)
 
-        self.numFlights = len(self.flights)
+            self.set_flights_cost_vect()
 
-        self.initialTotalCosts = self.compute_costs(self.flights, "initial")
+            self.numFlights = len(self.flights)
 
-        self.airDict = dict(zip([airline.name for airline in self.airlines], range(len(self.airlines))))
+            self.initialTotalCosts = self.compute_costs(self.flights, "initial")
 
-        self.scheduleMatrix = self.make_schedule_matrix()
+            self.airDict = dict(zip([airline.name for airline in self.airlines], range(len(self.airlines))))
 
-        self.emptySlots = self.df[self.df["flight"] == "Empty"]["slot"].to_numpy()
+            self.scheduleMatrix = self.make_schedule_matrix()
 
-        # self.mipSolution = None
+            self.emptySlots = self.df[self.df["flight"] == "Empty"]["slot"].to_numpy()
 
-        # self.solutionArray = None
+            # self.mipSolution = None
 
-        self.solution = None
+            # self.solutionArray = None
 
-        self.report = None
+            self.solution = None
+
+            self.report = None
 
 
     @staticmethod
