@@ -62,3 +62,6 @@ class UDPPmodel(ModelStructure):
     def set_priority_value(self, val: string):
         for flight in self.flights:
             flight.priorityValue = val
+
+    def reset(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]]):
+        super().__init__(df_init=df_init, costFun=costFun, airline_ctor=UDPPairline)

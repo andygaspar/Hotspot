@@ -14,6 +14,8 @@ import pandas as pd
 
 import time
 
+from libs.tools import print_to_void
+
 
 class NNBoundModel(mS.ModelStructure):
 
@@ -25,7 +27,8 @@ class NNBoundModel(mS.ModelStructure):
         super().__init__(df_init=df_init, costFun=costFun)
 
         if xp_problem is None:
-            self.m = xp.problem()
+            with print_to_void():
+                self.m = xp.problem()
         else:
             self.m = xp_problem
         self.x = None

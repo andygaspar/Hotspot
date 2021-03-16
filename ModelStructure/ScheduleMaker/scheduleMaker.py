@@ -75,7 +75,8 @@ def distribution_maker(num_flights, num_airlines, distribution="uniform"):
 
 
 def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1, new_capacity=2,
-    n_flight_first_airline=None, custom:Union[None, List[int]]= None):
+    n_flight_first_airline=None, custom:Union[None, List[int]]= None, min_margin=10,
+    max_margin=45, min_jump=10, max_jump=100):
     
     # Quick hack
     if not n_flight_first_airline is None:
@@ -110,10 +111,10 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
     cost = priority
 
     num = range(num_flights)
-    margins_gap = np.array([random.choice(range(10, 45)) for i in num])
+    margins_gap = np.array([random.choice(range(min_margin, max_margin)) for i in num])
     at_gate = pd.read_csv("ModelStructure/Costs/costs_table_gate.csv", sep=" ")
     flights_type = [np.random.choice(at_gate["flight"].to_numpy()) for i in range(num_flights)]
-    jump = np.random.randint(10, 100, len(num))
+    jump = np.random.randint(min_jump, max_jump, len(num))
 
     return pd.DataFrame(
         {"slot": slot, "flight": flights, "eta": eta, "fpfs": fpfs, "time": fpfs, "priority": priority,
