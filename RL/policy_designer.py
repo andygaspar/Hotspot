@@ -14,13 +14,13 @@ class PolicyDesigner:
 		"""
 
 		if not jump_price is None:
-			self.trainer.game.set_jump_price(jump_price)
+			self.trainer.set_price_jump(jump_price)
 
 		if not cost_price is None:
-			self.trainer.game.set_cost_price(cost_price)
+			self.trainer.set_price_cost(cost_price)
 
 		if not margin_price is None:
-			self.trainer.game.set_margin_price(margin_price)
+			self.trainer.set_price_margin(margin_price)
 
 		self.trainer.train_agent(num_iterations=num_iterations,
 							n_eval_setp=n_eval_setp)
