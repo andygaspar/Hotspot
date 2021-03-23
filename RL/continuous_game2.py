@@ -18,6 +18,12 @@ def linear_function(min_y, max_y):
 
     return f
 
+def norm_function(min_y, max_y):
+    def f(x):
+        return (x - min_y)/(max_y-min_y)
+
+    return f
+
 class ContGame(gym.Env):
     """
     Game with iteration where a player (airline)
@@ -34,9 +40,13 @@ class ContGame(gym.Env):
         offset=100., cost_type='jump', min_jump=10, max_jump=100,
         trading_alg='nnbound', n_f_player=4, new_capacity=5.,
         min_margin=10, max_margin=45, price_jump=0., price_cost=0.,
-        price_margin=0.):
+        price_margin=0., min_cost=0.1, max_cost=2., normed_state=True,
+        min_margin_action=None, max_margin_action=None,
+        min_jump_action=None, max_jump_action=None):
 
         super().__init__()
+
+        self.normed_state = normed_state
 
         self.set_price_jump(price_jump)
         self.set_price_cost(price_cost)
@@ -44,13 +54,42 @@ class ContGame(gym.Env):
 
         self.min_margin = int(min_margin)
         self.max_margin = int(max_margin)
+        if not min_margin_action is None:
+            self.min_margin_action = int(min_margin_action)
+        else:
+            self.min_margin_action = int(min_margin)
+        if not max_margin_action is None:
+            self.max_margin_action = int(max_margin_action)
+        else:
+            self.max_margin_action = int(max_margin)
 
-        self.func_margin = linear_function(min_margin, max_margin)
+        #print (self.min_margin_action, self.max_margin_action)
 
         self.min_jump = int(min_jump)
         self.max_jump = int(max_jump)
+        if not min_jump_action is None:
+            self.min_jump_action = int(min_jump_action)
+        else:
+            self.min_jump_action = int(min_jump)
+        if not max_jump_action is None:
+            self.max_jump_action = int(max_jump_action)
+        else:
+            self.max_jump_action = int(max_jump)
 
-        self.func_jump = linear_function(min_jump, max_jump)
+        #print (self.min_jump_action, self.max_jump_action)
+
+        self.min_cost = int(min_cost)
+        self.max_cost = int(max_cost)
+
+        self.norm_margin = norm_function(min_margin, max_margin)
+        self.norm_jump = norm_function(min_jump, max_jump)
+        #self.norm_cost = norm_function(min_cost, max_cost)
+        min_time = 0.
+        max_time = (new_capacity -1)* n_f
+        self.norm_time = norm_function(min_time, max_time)
+
+        self.func_jump = linear_function(self.min_jump_action, self.max_jump_action)
+        self.func_margin = linear_function(self.min_margin_action, self.max_margin_action)
 
         np.random.seed(seed)
 
@@ -127,7 +166,7 @@ class ContGame(gym.Env):
 
                 add_cost = dj*self.jump_price + dc*self.cost_price + dm*self.margin_price
 
-                cost = self.flights[flight].cost_f_true(time)# + add_cost
+                cost = self.flights[flight].cost_f_true(time) + add_cost
 
                 cost_tot += cost
 
@@ -232,6 +271,12 @@ class ContGame(gym.Env):
     def get_state(self):
         #state = [slot for name, slot in allocation.items() if name in self.flight_per_company[self.player]]
         state = self.df_sch.set_index('flight').loc[self.player_flights, ['margins', 'jump', 'time']]#, 'slot']]
+        #print (state)
+        if self.normed_state:
+            state = np.array([np.array(state['margins'].apply(self.norm_margin)),
+                    np.array(state['jump'].apply(self.norm_jump)),
+                    np.array(state['time'].apply(self.norm_time))]).T
+
         state = tuple(np.array(state).flatten())
         return state
 
@@ -310,7 +355,10 @@ class ContGameMargin(ContGame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.observation_space =  gym.spaces.Box(self.min_margin, self.max_margin, shape=(self.n_f_player*3, ))#, dtype=int)
+        if self.normed_state:
+            self.observation_space =  gym.spaces.Box(0., 1., shape=(self.n_f_player*3, ))#, dtype=int)
+        else:
+            self.observation_space =  gym.spaces.Box(self.min_margin, self.max_margin, shape=(self.n_f_player*3, ))#, dtype=int)
 
         self.action_space = gym.spaces.Box(0, 1, shape=(self.n_f_player, ))#, dtype=float)
 
@@ -330,7 +378,10 @@ class ContGameJump(ContGame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.observation_space =  gym.spaces.Box(self.min_jump, self.max_jump, shape=(self.n_f_player*3, ))#, dtype=int)
+        if self.normed_state:
+            self.observation_space =  gym.spaces.Box(0., 1., shape=(self.n_f_player*3, ))#, dtype=int)
+        else:
+            self.observation_space =  gym.spaces.Box(self.min_jump, self.max_jump, shape=(self.n_f_player*3, ))#, dtype=int)
 
         self.action_space = gym.spaces.Box(0, 1, shape=(self.n_f_player, ))#, dtype=float)
 

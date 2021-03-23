@@ -35,6 +35,7 @@ from tf_agents.train.utils import spec_utils
 #from tf_agents.train.utils import strategy_utils
 from tf_agents.train.utils import train_utils
 
+#from RL.multiple_game import MultiStochGameJumpFlatSpaces, MultiStochGameMarginFlatSpaces
 from RL.multiple_game import MultiStochGameJumpFlatSpaces, MultiStochGameMarginFlatSpaces
 from RL.continuous_game2 import ContGame, ContGameJump, ContGameMargin
 
@@ -103,20 +104,34 @@ def get_results_builder(env):
 	return f
 
 def compute_cost_diff(row, player='A'):
+	#print ('COIN', type(row))
+	#print ('AH', row['cost_per_c'])
+	#try:
+	if type(row)==np.float64:
+		row = float(row)
 	cost_diff = row['cost_per_c'][player] - row['best_cost_per_c'][player]
+	# except Exception as e:
+	# 	print ('BANG2', e)
+	# 	raise
 	return cost_diff
 
 def compute_cost_diff_ratio(row, player='A'):
+	if type(row)==np.float64:
+		row = float(row)
 	cost_diff = (row['cost_per_c'][player] - row['best_cost_per_c'][player])/row['best_cost_per_c'][player]
 	return cost_diff
 
 def compute_cost_diff_others(row, player='A'):
+	if type(row)==np.float64:
+		row = float(row)
 	c = np.array([cc for air, cc in row['cost_per_c'].items() if air!=player]).sum()
 	cb = np.array([cc for air, cc in row['best_cost_per_c'].items() if air!=player]).sum()
 	cost_diff = c-cb
 	return cost_diff
 
 def compute_cost_diff_ratio_others(row, player='A'):
+	if type(row)==np.float64:
+		row = float(row)
 	c = np.array([cc for air, cc in row['cost_per_c'].items() if air!=player]).sum()
 	cb = np.array([cc for air, cc in row['best_cost_per_c'].items() if air!=player]).sum()
 	cost_diff = (c-cb)/cb
@@ -299,24 +314,24 @@ class ContinuousGameTrainer:
 		pass
 
 	def build_game(self, game='jump', **kwargs_game):
-		#n_f = 10, n_a = 3, n_f_player = 4,
-		#new_capacity = 5, trading_alg='nnbound'):
-
 		if game=='jump':
-			gym_env = ContGameJump(**kwargs_game)
+			self.gym_env = ContGameJump(**kwargs_game)
 		elif game=='margin':
-			gym_env = ContGameMargin(**kwargs_game)
+			self.gym_env = ContGameMargin(**kwargs_game)
 		elif game=='jump_margin':
-			gym_env = ContGame(**kwargs_game)
+			self.gym_env = ContGame(**kwargs_game)
 		else:
 			raise Exception('Unknown game:', game)
 
-		py_env = suite_gym.wrap_env(gym_env)
+		self.build_wrapper()
+
+	def build_wrapper(self):
+		py_env = suite_gym.wrap_env(self.gym_env)
 		self.train_env = tf_py_environment.TFPyEnvironment(py_env)
 
 		self.observation_spec, self.action_spec, self.time_step_spec = (spec_utils.get_tensor_specs(self.train_env))
 
-		py_env = suite_gym.wrap_env(gym_env)
+		py_env = suite_gym.wrap_env(self.gym_env)
 		self.collect_env = tf_py_environment.TFPyEnvironment(py_env)
 
 	def build_agent(self, critic_learning_rate=3e-4, actor_learning_rate=3e-4, alpha_learning_rate=3e-4,
@@ -330,11 +345,10 @@ class ContinuousGameTrainer:
 													kernel_initializer='glorot_uniform',
 													last_kernel_initializer='glorot_uniform')
 
-		actor_net = actor_distribution_network.ActorDistributionNetwork(
-			  self.observation_spec,
-			  self.action_spec,
-			  fc_layer_params=actor_fc_layer_params,
-			  continuous_projection_net=(tanh_normal_projection_network.TanhNormalProjectionNetwork))
+		actor_net = actor_distribution_network.ActorDistributionNetwork(self.observation_spec,
+																		self.action_spec,
+																		fc_layer_params=actor_fc_layer_params,
+																		continuous_projection_net=(tanh_normal_projection_network.TanhNormalProjectionNetwork))
 
 		train_step = train_utils.create_train_step()
 
@@ -353,6 +367,18 @@ class ContinuousGameTrainer:
 											train_step_counter=train_step)
 
 		self.tf_agent.initialize()
+
+	def set_price_jump(self, price):
+		self.gym_env.set_price_jump(price)
+		self.build_wrapper()
+
+	def set_price_cost(self, price):
+		self.gym_env.set_price_cost(price)
+		self.build_wrapper()
+
+	def set_price_margin(self, price):
+		self.gym_env.set_price_margin(price)
+		self.build_wrapper()
 
 	def game_summary(self):
 		self.collect_env.pyenv.envs[0].gym.game_summary()
@@ -421,7 +447,7 @@ class ContinuousGameTrainer:
 		self.tf_agent = DummyAgent()
 		self.tf_agent.policy = saved_policy
 
-	def do_plots(self, instantaneous=False):
+	def do_plots(self, file_name=None, instantaneous=False):
 		fig, ax = plt.subplots()
 		if instantaneous:
 			ax.plot(self.rewards, lw=0.5, label='Instantaneous reward', alpha=0.6)
@@ -435,7 +461,10 @@ class ContinuousGameTrainer:
 		ax.set_xlabel('Number of Iterations')
 		ax.legend()
 
-	def evaluation(self, n_evaluations=1000):
+		if not file_name is None:
+			plt.savefig(file_name, bbox_inches='tight')
+
+	def evaluation(self, n_evaluations=100, show_results=True, file_name=None):
 		rewards_eval = []
 
 		for i in range(n_evaluations):
@@ -445,17 +474,20 @@ class ContinuousGameTrainer:
 			rewards_eval.append(stuff.reward.numpy()[0])
 		rewards_eval = np.array(rewards_eval)
 
-		print ('Positive rewards:', 100 * len(rewards_eval[rewards_eval>100])/len(rewards_eval), '%')
-		print ('Neutral rewards:', 100 * len(rewards_eval[rewards_eval==100])/len(rewards_eval), '%')
-		print ('Negative rewards:', 100 * len(rewards_eval[rewards_eval<100])/len(rewards_eval), '%')
-		print ('Average reward:', rewards_eval.mean())
-		print ('Reward std:', rewards_eval.std())
-		plt.hist(rewards_eval, bins=20)
+		if show_results:
+			print ('Positive rewards:', 100 * len(rewards_eval[rewards_eval>100])/len(rewards_eval), '%')
+			print ('Neutral rewards:', 100 * len(rewards_eval[rewards_eval==100])/len(rewards_eval), '%')
+			print ('Negative rewards:', 100 * len(rewards_eval[rewards_eval<100])/len(rewards_eval), '%')
+			print ('Average reward:', rewards_eval.mean())
+			print ('Reward std:', rewards_eval.std())
+			plt.hist(rewards_eval, bins=20)
+
+		# if not file_name is None:
+		# 	rewards_eval.to_csv(file_name)
 
 		return rewards_eval
 
 	def compare_with_optimiser(self, n_iter=100):
-
 		rewards_agent = []
 		rewards_best = []
 		for i in range(n_iter):
@@ -492,11 +524,11 @@ class ContinuousGameTrainer:
 
 		return rewards_agent, rewards_best
 
-	def compare_airlines(self, n_iter=100):
+	def compare_airlines(self, n_iter=100, show_results=True, file_name=None):
 		results = {}
 		builder = get_results_builder(self.collect_env)
 		for i in range(n_iter):
-			if i%int(n_iter/10)==0:
+			if n_iter>=10 and i%int(n_iter/10)==0:
 				print ('i=', i)
 			time_step = self.collect_env.reset()
 
@@ -505,6 +537,7 @@ class ContinuousGameTrainer:
 			stuff = self.collect_env.step(action)
 
 		df = pd.DataFrame(results, index=['reward', 'reward_tot', 'cost_tot', 'cost_per_c', 'allocation', 'reward_fake', 'best_cost_per_c']).T
+		#print (df)
 		dg = df.T.apply([compute_cost_diff, compute_cost_diff_ratio, compute_cost_diff_others, compute_cost_diff_ratio_others]).T
 		df = pd.concat([df, dg], axis=1)
 
@@ -516,11 +549,15 @@ class ContinuousGameTrainer:
 		df = pd.concat([df, dg, dg2], axis=1)
 		df.drop(columns=['cost_per_c', 'best_cost_per_c', 'allocation'], inplace=True)
 
-		print ('Average results:')
-		print (df.mean())
+		if show_results:
+			print ('Average results:')
+			print (df.mean())
+
+		if not file_name is None:
+			df.to_csv(file_name)
 
 		return df
-	
+
 	def print_specs(self):
 		print ('Environment specs:')
 		print ('Observation Specs:', self.train_env.observation_spec())

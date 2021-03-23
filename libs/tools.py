@@ -65,3 +65,39 @@ def clock_time(message_before='',
 		message = ' '.join([message_after, str(elapsed)])
 		
 	print_function (message)
+
+
+def loop(a, level, parass, ret={}, thing_to_do=None, **args):
+	"""
+	Typical usage:
+
+	paras = {'pouet':2, 'pouic':4}
+
+	a = {'pouet':[0, 1], 'pouic':[10, 11]}
+
+	args = {'paras':paras}
+
+	def yep(paras={}):
+		return paras['pouet'] + paras['pouic']
+		
+	level = ['pouet', 'pouic']
+	loop(a, level, paras, thing_to_do=yep, **args)
+	"""
+
+	if level==[]:
+		return thing_to_do(**args)#(paras, G)
+		# return thing_to_do(**parass)#(paras, G)
+	else:
+		assert level[0] in a.keys()
+		for i in a[level[0]]:
+			print (level[0], '=', i)
+			#parass.update(level[0], i)
+			if not level[0] in parass.keys():
+				raise Exception('Trying to update a key that does not exist.')
+
+			parass.update({level[0]:i})
+			
+			#print (parass['sb']['r_div'], parass['firms']['r_s'])
+			ret[i] = loop(a, level[1:], parass, ret={}, thing_to_do=thing_to_do, **args)
+
+	return ret
