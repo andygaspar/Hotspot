@@ -23,7 +23,7 @@ class PolicyDesigner:
 			self.trainer.set_price_margin(margin_price)
 
 		self.trainer.train_agent(num_iterations=num_iterations,
-							n_eval_setp=n_eval_setp)
+								n_eval_setp=n_eval_setp)
 
 	def find_best_prices(self, n_iter_evaluation=100):
 		### Only jump price for now
@@ -37,6 +37,19 @@ class PolicyDesigner:
 			return a
 
 		dual_annealing(f, [(0., 100.)])
+
+	def sweep_jump_price(self, jump_prices=[],  n_iter_evaluation=1000):
+		diff_ratio_all = []
+		for jump_price in jump_prices:
+			self.train_with_prices(jump_price=x)
+
+			df = self.trainer.compare_airlines(n_iter=n_iter_evaluation)
+
+			a = abs(df.mean()['compute_cost_diff_ratio_all'])
+
+			diff_ratio_all.append(a)
+
+		return diff_ratio_all
 
 
 		

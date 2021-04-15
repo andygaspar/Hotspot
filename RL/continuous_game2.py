@@ -147,7 +147,10 @@ class ContGame(gym.Env):
         # True cost
         cost_tot = 0.
         cost_c = {}
+        cost_true_c = {} # without the transferred cost.
 
+        transferred_cost = 0.
+        
         for company, flights in self.flight_per_company.items():
             for flight in flights:
                     # print ('company:', company)
@@ -160,26 +163,36 @@ class ContGame(gym.Env):
                 #print ('B', self.flights[flight].jump_declared)
 
                 # Penalty for changing their declared cost function.
-                dj = self.flights[flight].jump - self.flights[flight].jump_declared
+                dj = abs(self.flights[flight].jump - self.flights[flight].jump_declared)
                 dc = self.flights[flight].cost - self.flights[flight].cost_declared
                 dm = -(self.flights[flight].margin - self.flights[flight].margin_declared)
 
-                add_cost = dj*self.jump_price + dc*self.cost_price + dm*self.margin_price
+                added_cost = dj*self.jump_price + dc*self.cost_price + dm*self.margin_price
 
-                cost = self.flights[flight].cost_f_true(time) + add_cost
+                transferred_cost += added_cost
 
+                cost = self.flights[flight].cost_f_true(time)
+                cost_true_c[company] = cost_c.get(company, 0.) + cost
+
+                cost += added_cost
+                cost_c[company] = cost_c.get(company, 0.) + cost
+                
                 cost_tot += cost
 
                 # print ('cost:', cost)
 
-                cost_c[company] = cost_c.get(company, 0.) + cost
+        transferred_cost_per_c = transferred_cost/self.n_f
+        for company, flights in self.flight_per_company.items():
+            for flight in flights:
+                transferred_cost_per_c
+                cost_c[company] -= transferred_cost_per_c
 
         #print ()
 
         if only_player:
-            return cost_c[self.player]
+            return cost_c[self.player], cost_true_c, transferred_cost
         else:
-            return cost_tot , cost_c
+            return cost_tot , cost_c, cost_true_c, transferred_cost
 
     def cost_of_allocation_declared(self, allocation, only_player=False):
         # True cost
@@ -211,7 +224,7 @@ class ContGame(gym.Env):
                                                 self.n_a,
                                                 distribution=scheduleType[0],
                                                 new_capacity=self.new_capacity,
-                                                n_flight_first_airline=self.n_f_player,
+                                                n_flights_first_airlines=[self.n_f_player],
                                                 min_margin=self.min_margin,
                                                 max_margin=self.max_margin,
                                                 min_jump=self.min_jump,
@@ -227,10 +240,10 @@ class ContGame(gym.Env):
         self.player_flights = self.flight_per_company[self.player]
 
         self.base_allocation = allocation_from_df(self.df_sch_init, name_slot='slot')
-        self.base_cost_tot, self.base_cost_per_c = self.cost_of_allocation(self.base_allocation)
+        self.base_cost_tot, self.base_cost_per_c, _, _ = self.cost_of_allocation(self.base_allocation)
 
         self.best_allocation = self.allocation_computer.compute_optimal_allocation(self.df_sch, self.costFun)
-        self.best_cost_tot, self.best_cost_per_c = self.cost_of_allocation(self.best_allocation)
+        self.best_cost_tot, self.best_cost_per_c, _, _ = self.cost_of_allocation(self.best_allocation)
 
     def compute_reward(self):
         # Build the df used as input by the optimisers
@@ -242,7 +255,7 @@ class ContGame(gym.Env):
 
         # Compute cost for all companies for player : real cost
         # real cost
-        cost_tot, cost_per_c = self.cost_of_allocation(allocation)
+        cost_tot, cost_per_c, cost_true_per_c, transferred_cost = self.cost_of_allocation(allocation)
         # declared cost
         cost_tot_declared, cost_per_c_declared = self.cost_of_allocation_declared(allocation)
 
@@ -257,7 +270,7 @@ class ContGame(gym.Env):
 
         #state = [slot for name, slot in allocation.items() if name in self.flight_per_company[self.player]]
 
-        return reward, reward_tot, cost_tot, cost_per_c, allocation, reward_fake
+        return reward, reward_tot, cost_tot, cost_per_c, allocation, reward_fake, cost_true_per_c, transferred_cost
 
     def get_player_flight_charac(self, charac_name):
         return list(self.df_sch['margins'][self.df_sch['airline']=='A'])
@@ -294,7 +307,7 @@ class ContGame(gym.Env):
         self.apply_action(action)
 
         # Compute reward
-        reward, reward_tot, cost_tot, cost_per_c, allocation, reward_fake = self.compute_reward()
+        reward, reward_tot, cost_tot, cost_per_c, allocation, reward_fake, cost_true_per_c, transferred_cost = self.compute_reward()
 
         # Remember stuff
         names = self.flight_per_company[self.player]
@@ -305,7 +318,8 @@ class ContGame(gym.Env):
                                 'df_sch':self.df_sch.copy(),
                                 'df_sch_init':self.df_sch_init.copy(),
                                 'best_allocation':copy(self.best_allocation),
-                                'base_allocation':copy(self.base_allocation)}
+                                'base_allocation':copy(self.base_allocation),
+                                'transferred_cost':transferred_cost}
 
         # Compute new schedule for next state
         self.make_new_schedules()
