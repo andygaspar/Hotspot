@@ -75,13 +75,24 @@ def distribution_maker(num_flights, num_airlines, distribution="uniform"):
 
 
 def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1, new_capacity=2,
-    n_flight_first_airline=None, custom:Union[None, List[int]]= None, min_margin=10,
+    n_flights_first_airlines=None, custom:Union[None, List[int]]= None, min_margin=10,
     max_margin=45, min_jump=10, max_jump=100):
-    
-    # Quick hack
-    if not n_flight_first_airline is None:
-        dist_other_flights = distribution_maker(num_flights-n_flight_first_airline, num_airlines-1, distribution)
-        custom = [n_flight_first_airline] + list(dist_other_flights)
+
+    """
+    n_flights_first_airlines can be passed as list of ints and represents number
+    of fligihts per airlines. For instance, num_airlines=3 and n_flights_first_airlines=[3]
+    can create distribution of flights [3, 4, 3] or [3, 5, 2] etc. All number of flights
+    if given by n_flights_first_airlines, they are used as is, for instance 
+    num_airlines=3 and n_flights_first_airlines=[1, 5, 4]
+    """
+
+    if len(n_flights_first_airlines)==num_airlines and custom is None:
+        custom = n_flights_first_airlines
+    elif not n_flights_first_airlines is None:
+        dist_other_flights = distribution_maker(num_flights-sum(n_flights_first_airlines),
+                                                num_airlines-len(n_flights_first_airlines),
+                                                distribution)
+        custom = n_flights_first_airlines + list(dist_other_flights)
 
     if custom is None:
         dist = distribution_maker(num_flights, num_airlines, distribution)
