@@ -30,6 +30,7 @@ class GlobalOptimum(mS.ModelStructure):
         self.x = np.array([[xp.var(vartype=xp.binary) for k in self.slots] for flight in self.flights])
         self.m.addVariable(self.x)
 
+
     def set_constraints(self):
         flight: modFl.Flight
         airline: air.Airline
