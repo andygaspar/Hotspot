@@ -15,7 +15,7 @@ import pandas as pd
 import time
 import xpress as xp
 
-xp.controls.outputlog = 0
+# xp.controls.outputlog = 0
 
 
 class Istop(mS.ModelStructure):
@@ -119,9 +119,9 @@ class Istop(mS.ModelStructure):
         for j in self.slots:
             self.m.addConstraint(xp.Sum(self.x[i.index, j.index] for i in self.slots) <= 1)
 
-        # for flight in self.flights:
-        #     for j in flight.notCompatibleSlots:
-        #         self.m.addConstraint(self.x[flight.slot.index, j.index] == 0)
+        for flight in self.flights:
+            for j in flight.notCompatibleSlots:
+                self.m.addConstraint(self.x[flight.slot.index, j.index] == 0)
 
 
         for flight in self.flights_in_matches:
@@ -129,6 +129,8 @@ class Istop(mS.ModelStructure):
                                  xp.Sum(self.x[flight.slot.index, slot.index]
                                         for slot in self.slots if slot != flight.slot) \
                                  <= xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]))
+
+            self.m.addConstraint(xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) <= 1)
 
 
 
@@ -174,7 +176,7 @@ class Istop(mS.ModelStructure):
             if timing:
                 print("Simplex time ", end)
 
-            print("problem status, explained: ", self.m.getProbStatusString())
+            print("problem status, explained: ", self.m.getProbStatusString(), self.m.getObjVal())
             xpSolution = self.x
             # print(self.m.getSolution(self.x))
             self.assign_flights(xpSolution)
@@ -184,7 +186,7 @@ class Istop(mS.ModelStructure):
                 flight.newSlot = flight.slot
 
         solution.make_solution(self)
-
+        # 24170.971882985057
         self.offer_solution_maker()
 
         for flight in self.flights:
@@ -194,7 +196,8 @@ class Istop(mS.ModelStructure):
 
         offers = 0
         for i in range(len(self.matches)):
-            if self.m.getSolution(self.c[i]) > 0.5:
+            # print(self.m.getSolution(self.c[i]))
+            if self.m.getSolution(self.c[i]) > 0.9:
                 self.offers_selected.append(self.matches[i])
                 offers += 1
         print("Number of offers selected: ", offers)
@@ -241,7 +244,7 @@ class Istop(mS.ModelStructure):
     def assign_flights(self, xpSolution):
         for flight in self.flights:
             for slot in self.slots:
-                if self.m.getSolution(xpSolution[flight.slot.index, slot.index]) > 0.5:
+                if self.m.getSolution(xpSolution[flight.slot.index, slot.index]) > 0.9:
                     flight.newSlot = slot
 
     def update_object(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
@@ -269,3 +272,60 @@ class Istop(mS.ModelStructure):
         self.flights_in_matches = []
 
         self.offers_selected = []
+
+"""
+0   total           50  299101.666667  298623.000000         0.16
+1       B           16  104410.000000  102681.333333         1.66
+2       E            1      28.000000      28.000000         0.00
+3       C           10   31916.333333   31818.333333         0.31
+4       A           19  120191.333333  121539.333333        -1.12
+5       D            4   42556.000000   42556.000000         0.00
+
+"""
+
+
+"""
+rows 936
+problem status, explained:  mip_optimal 27612.33615924535
+rows 936
+sets 0
+setmembers 0
+elems 8140
+primalinfeas 0
+dualinfeas 0
+simplexiter 42033
+lpstatus 1
+mipstatus 6
+cuts 0
+nodes 99
+nodedepth 1
+activenodes 0
+mipsolnode 1042
+mipsols 14
+cols 2545
+sparerows 793
+sparecols 0
+spareelems 2968
+sparemipents 315
+errorcode 0
+mipinfeas 132
+presolvestate 1310881
+parentnode 0
+namelength 1
+qelems 0
+numiis 0
+mipents 2545
+branchvar 0
+mipthreadid 0
+algorithm 2
+time 1
+originalrows 936
+callbackcount_optnode 0
+callbackcount_cutmgr 0
+systemmemory 1596327
+originalqelems 0
+maxprobnamelength 1024
+stopstatus 0
+originalmipents 2545
+
+"""
