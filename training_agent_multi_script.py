@@ -3,7 +3,8 @@
 
 import argparse
 from RL.game_trainer import ContinuousMGameTrainer
-from libs.tools import loop
+from libs.tools import loop, agent_file_name, root_file_name
+
 
 def wrapper_training(paras={}):
 	do_training(**paras)
@@ -11,9 +12,11 @@ def wrapper_training(paras={}):
 def wrapper_training_dummy(paras={}):
 	print (paras)
 
-def do_training(n_f=10, n_a=3, n_f_players=[], nn=128, game='jump',
-	num_iterations=8000, learning_rate=3e-5, num_iterations_validation=1000):
+def do_training(n_f=10, n_h=2, n_a=3, n_f_players=[], nn=10, game='jump',
+	num_iterations=8000, learning_rate=3e-4, num_iterations_validation=1000,
+	version='v1.0', jp=0.):
 	n_f_players = list(n_f_players)
+	layers = tuple([nn]*n_h)
 	trainer = ContinuousMGameTrainer()
 	trainer.build_game(game=game, n_f=n_f, n_a=n_a, n_f_players=n_f_players)
 	trainer.build_agents(critic_learning_rate = learning_rate,
@@ -23,18 +26,38 @@ def do_training(n_f=10, n_a=3, n_f_players=[], nn=128, game='jump',
 						target_update_period = 1,
 						gamma = 0.99,
 						reward_scale_factor = 100.0,
-						actor_fc_layer_params = (nn, nn),
-						critic_joint_fc_layer_params = (nn, nn))
+						actor_fc_layer_params = layers,
+						critic_joint_fc_layer_params = layers)
 	trainer.prepare_buffers(initial_collect_steps=10, batch_size=2048)
 	trainer.train_agents(num_iterations=num_iterations, n_eval_setp=500)
 
-	name = "save_policies/multi v1.2/nf{}_na{}_nn{}_nfp".format(n_f, n_a, nn)
-	for nfp in n_f_players:
-		name += str(nfp) + '_'
+	# name = "save_policies/multi v1.2/nf{}_na{}_nn{}_nfp".format(n_f, n_a, nn)
+	# for nfp in n_f_players:
+	# 	name += str(nfp) + '_'
 		
-	name += game
+	# name += game
 
-	file_names = ['{}/nfp{}'.format(name, nfp) for nfp in n_f_players]
+	name = root_file_name(nn=nn,
+						  n_h=n_h,
+						  v=version,
+						  nf_tot_game=n_f,
+						  n_a=n_a,
+						  game_type='multi',
+						  game=game,
+						  n_f_players=n_f_players,
+						  jp=jp)
+
+	file_names = [agent_file_name(nfp,
+							  nn=nn,
+							  n_h=n_h,
+							  v=version,
+							  nf_tot_game=n_f,
+							  n_a=n_a,
+							  game_type='multi',
+							  game=game,
+							  n_f_players=n_f_players,
+							  jp=jp) for nfp in n_f_players]
+
 	trainer.save_policies(file_names)
 	trainer.do_plots(file_name='{}/training.png'.format(name),
 				   instantaneous=True)
@@ -56,6 +79,8 @@ def do_iterations(iterated_paras={}):
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description='Mercury batch script', add_help=True)
+
+	version = 'v1.3'
 	
 	parser.add_argument('-nf', '--number_flights',
 								help='Number of flights in total in hotspot',
@@ -89,6 +114,18 @@ if __name__=='__main__':
 
 	parser.add_argument('-nitv', '--num_iterations_validation',
 								help='Number of iterations in validation',
+								required=False,
+								default=None,
+								nargs='?')
+
+	parser.add_argument('-nn', '--number_neurons',
+								help='Number of neurons in each layer',
+								required=False,
+								default=None,
+								nargs='?')
+
+	parser.add_argument('-nh', '--number_layers',
+								help='Number of hidden layers',
 								required=False,
 								default=None,
 								nargs='?')
@@ -162,6 +199,14 @@ if __name__=='__main__':
 
 	if not (args.num_iterations_validation is None):
 		iterated_paras['num_iterations_validation'] = [int(args.num_iterations_validation)]
+
+	if not (args.number_neurons is None):
+		iterated_paras['nn'] = [int(args.number_neurons)]
+
+	if not (args.number_layers is None):
+		iterated_paras['n_h'] = [int(args.number_layers)]
+
+	iterated_paras['version'] = [version]
 
 	print (iterated_paras)
 

@@ -786,6 +786,58 @@ class ContinuousGameTrainer:
 		print ('Time Specs:',self.train_env.time_step_spec())
 		print ()
 
+	def show_examples(self, n_ex=3):
+		#sg = SingleGameFromMulti(self.collect_env)
+		#gym_env = self.collect_env.pyenv.envs[0].gym
+	
+		for i in range(n_ex):
+			time_step = self.collect_env.reset()
+
+			action = self.tf_agent.policy.action(time_step)
+
+			action = action.action.numpy()[0]
+
+			gym_env = self.collect_env.pyenv.envs[0].gym
+			#results[i] = builder(action.action.numpy()[0])
+			gym_env.apply_action(action)
+			reward, reward_tot, cost_tot, cost_per_c, allocation, reward_fake, cost_true_per_c, transferred_cost = gym_env.compute_reward()
+
+			print ('initial state:')
+			print (gym_env.df_sch_init)
+			print ()
+
+			print ('declared state:')
+			print (gym_env.df_sch)
+			print ()
+
+			print ('Base allocation:')
+			print_allocation(gym_env.base_allocation)
+			print ()
+
+			print ('Costs in base allocation:')
+			print (gym_env.base_cost_per_c)
+			print ()
+
+			print ('Best allocation:')
+			print_allocation(gym_env.best_allocation)
+			print ()
+
+			print ('Costs in best allocation:')
+			print (gym_env.best_cost_per_c)
+			print ()
+
+			print ('Final allocation:')
+			print_allocation(allocation)
+			print ()
+
+			print ('Cost of final allocation:')
+			print (cost_per_c)
+			print ()
+
+			print ('Reward:', reward)
+			print ()
+			print ()
+
 
 class ContinuousMGameTrainer:
 	"""
