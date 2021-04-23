@@ -1,13 +1,15 @@
 # from mip import *
 from typing import List
-import numpy as np
-from UDPP.AirlineAndFlightAndSlot import udppAirline as air
-from UDPP.AirlineAndFlightAndSlot import udppFlight as fl
-from ModelStructure.Slot import slot as sl
-import xpress as xp
-xp.controls.outputlog = 0
 
-import ModelStructure.modelStructure as ms
+import numpy as np
+import xpress as xp
+
+from Hotspot.UDPP.AirlineAndFlightAndSlot import udppAirline as air
+from Hotspot.UDPP.AirlineAndFlightAndSlot import udppFlight as fl
+from Hotspot.ModelStructure.Slot import slot as sl
+import Hotspot.ModelStructure.modelStructure as ms
+
+xp.controls.outputlog = 0
 
 
 def slot_range(k: int, AUslots: List[sl.Slot]):

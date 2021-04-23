@@ -1,7 +1,7 @@
-from ModelStructure.Slot.slot import Slot
 import numpy as np
 import pandas as pd
 
+from Hotspot.ModelStructure.Slot.slot import Slot
 
 def make_slots_list(df: pd.DataFrame):
     slots = []

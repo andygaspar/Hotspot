@@ -1,19 +1,21 @@
-from typing import Callable, Union, List
-
-from GlobalFuns.globalFuns import HiddenPrints
-from ModelStructure import modelStructure as mS
 # from mip import *
 import sys
-from itertools import combinations
-from Istop.AirlineAndFlight import istopAirline as air, istopFlight as modFl
-from ModelStructure.Solution import solution
-from OfferChecker.offerChecker import OfferChecker
 
+from typing import Callable, Union, List
+
+from itertools import combinations
 import numpy as np
 import pandas as pd
 
 import time
 import xpress as xp
+
+from Hotspot.GlobalFuns.globalFuns import HiddenPrints
+from Hotspot.ModelStructure import modelStructure as mS
+
+from Hotspot.Istop.AirlineAndFlight import istopAirline as air, istopFlight as modFl
+from Hotspot.ModelStructure.Solution import solution
+from Hotspot.OfferChecker.offerChecker import OfferChecker
 
 xp.controls.outputlog = 0
 

@@ -1,12 +1,13 @@
 from typing import Union, Callable, List
 
-from ModelStructure.Slot.slot import Slot
-from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
-from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
-from ModelStructure.modelStructure import ModelStructure
-from ModelStructure.Solution import solution
 import numpy as np
+
+from Hotspot.ModelStructure.Slot.slot import Slot
+from Hotspot.UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
+from Hotspot.UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
+from Hotspot.UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
+from Hotspot.ModelStructure.modelStructure import ModelStructure
+from Hotspot.ModelStructure.Solution import solution
 
 
 def get_target_slot(targetTime, slotList: List[UDPPslot]):

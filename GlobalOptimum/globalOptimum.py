@@ -1,18 +1,18 @@
 from typing import Callable, List, Union
 
-from ModelStructure import modelStructure as mS
-import xpress as xp
-from ModelStructure.Airline import airline as air
-from ModelStructure.Flight import flight as modFl
-from ModelStructure.Solution import solution
-from ModelStructure.Slot.slot import Slot
-
 import numpy as np
 import pandas as pd
 
 import time
 
-from libs.tools import print_to_void
+import xpress as xp
+
+from Hotspot.ModelStructure import modelStructure as mS
+from Hotspot.ModelStructure.Airline import airline as air
+from Hotspot.ModelStructure.Flight import flight as modFl
+from Hotspot.ModelStructure.Solution import solution
+from Hotspot.ModelStructure.Slot.slot import Slot
+from Hotspot.libs.tools import print_to_void
 
 
 class GlobalOptimum(mS.ModelStructure):

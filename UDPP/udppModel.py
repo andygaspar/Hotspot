@@ -1,20 +1,20 @@
 import string
 from typing import Union, Callable, List
 
-import pandas as pd
-
-from GlobalFuns.globalFuns import HiddenPrints
-from ModelStructure.modelStructure import ModelStructure
-from UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
-from UDPP.udppMerge import UDPPmerge
-from ModelStructure.Solution import solution
-from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
-from UDPP.Local.udppLocal import udpp_local
-from ModelStructure.Slot.slot import Slot
 import time
 
-import ModelStructure.modelStructure as ms
+import pandas as pd
+
+from Hotspot.GlobalFuns.globalFuns import HiddenPrints
+from Hotspot.ModelStructure.modelStructure import ModelStructure
+from Hotspot.UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
+from Hotspot.UDPP.udppMerge import UDPPmerge
+from Hotspot.ModelStructure.Solution import solution
+from Hotspot.UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
+from Hotspot.UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
+from Hotspot.UDPP.Local.udppLocal import udpp_local
+from Hotspot.ModelStructure.Slot.slot import Slot
+import Hotspot.ModelStructure.modelStructure as ms
 
 
 class UDPPmodel(ModelStructure):
