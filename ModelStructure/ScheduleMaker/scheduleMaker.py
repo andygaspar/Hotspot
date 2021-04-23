@@ -1,5 +1,7 @@
 from typing import Union, List
 
+from pathlib import Path
+
 import numpy as np
 import random
 import string
@@ -123,7 +125,8 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
 
     num = range(num_flights)
     margins_gap = np.array([random.choice(range(min_margin, max_margin)) for i in num])
-    at_gate = pd.read_csv("ModelStructure/Costs/costs_table_gate.csv", sep=" ")
+    dir_path = Path(__file__).resolve().parent.parent
+    at_gate = pd.read_csv(dir_path / "Costs/costs_table_gate.csv", sep=" ")
     flights_type = [np.random.choice(at_gate["flight"].to_numpy()) for i in range(num_flights)]
     jump = np.random.randint(min_jump, max_jump, len(num))
 

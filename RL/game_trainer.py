@@ -21,26 +21,13 @@ from tf_agents.trajectories import trajectory
 from tf_agents.agents.ddpg import critic_network
 from tf_agents.agents.sac import sac_agent
 from tf_agents.agents.sac import tanh_normal_projection_network
-#from tf_agents.environments import suite_pybullet
-#from tf_agents.metrics import py_metrics
 from tf_agents.networks import actor_distribution_network
-#from tf_agents.policies import greedy_policy
-#from tf_agents.policies import py_tf_eager_policy
-#from tf_agents.policies import random_py_policy
-#from tf_agents.replay_buffers import reverb_replay_buffer
-#from tf_agents.replay_buffers import reverb_utils
-#from tf_agents.train import actor
-#from tf_agents.train import learner
-#from tf_agents.train import triggers
 from tf_agents.train.utils import spec_utils
-#from tf_agents.train.utils import strategy_utils
 from tf_agents.train.utils import train_utils
 from tf_agents.trajectories.policy_step import PolicyStep
 from tf_agents.trajectories.time_step import TimeStep
 from tf_agents.specs import BoundedTensorSpec
 
-#from RL.multiple_game import MultiStochGameJumpFlatSpaces, MultiStochGameMarginFlatSpaces
-#from RL.multiple_game import MultiStochGameJumpFlatSpaces, MultiStochGameMarginFlatSpaces
 from Hotspot.RL.continuous_game import ContGame, ContGameJump, ContGameMargin
 from Hotspot.RL.mcontinuous_game import ContMGame, ContMGameJump, ContMGameMargin
 
@@ -233,7 +220,7 @@ class RewardObserver:
 		return self.reward
 
 
-class SingleGameFromMulti:
+class WrapperSingleGame:
 	"""
 	"freezes" the environment.
 	"""
@@ -254,7 +241,7 @@ class SingleGameFromMulti:
 		return reward, reward_tot, cost_tot, cost_per_c, allocation, reward_fake, cost_true_per_c, transferred_cost, self.gym_env.best_cost_per_c
 
 
-class MultiGameFromMulti:
+class WrapperMultiGame:
 	"""
 	"freezes" the environment.
 
@@ -278,21 +265,21 @@ class MultiGameFromMulti:
 
 
 def function_builder(env):
-	sg = SingleGameFromMulti(env)
+	sg = WrapperSingleGame(env)
 	def f(x):
 		return 100-sg.compute_reward(x)
 	
 	return f
 
 def get_results_builder(env):
-	sg = SingleGameFromMulti(env)
+	sg = WrapperSingleGame(env)
 	def f(x):
 		return sg.compute_all(x)
 
 	return f
 
 def get_results_builder_multi(env):
-	sg = MultiGameFromMulti(env)
+	sg = WrapperMultiGame(env)
 	def f(x):
 		return sg.compute_all(x)
 
@@ -789,7 +776,7 @@ class ContinuousGameTrainer:
 		print ()
 
 	def show_examples(self, n_ex=3):
-		#sg = SingleGameFromMulti(self.collect_env)
+		#sg = WrapperSingleGame(self.collect_env)
 		#gym_env = self.collect_env.pyenv.envs[0].gym
 	
 		for i in range(n_ex):
