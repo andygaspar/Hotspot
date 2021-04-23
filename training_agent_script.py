@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 
 from RL.game_trainer import ContinuousGameTrainer
-from libs.tools import loop
+from libs.tools import loop, agent_file_name, root_file_name
 
 def wrapper_training(paras={}):
 	do_training(**paras)
@@ -13,9 +13,9 @@ def wrapper_training(paras={}):
 def wrapper_training_dummy(paras={}):
 	print (paras)
 
-def do_training(n_f=10, n_a=3, n_f_player=4, nn=128, game='jump',
-	num_iterations=8000, learning_rate=3e-5, num_iterations_validation=1000,
-	jump_price=0.):
+def do_training(n_f=10, n_a=3, n_f_player=4, nn=10, n_h=2, game='jump',
+	num_iterations=8000, learning_rate=3e-4, num_iterations_validation=1000,
+	jump_price=0., version='v1.0'):
 	trainer = ContinuousGameTrainer()
 	trainer.build_game(game=game,
 						n_f=n_f,
@@ -33,7 +33,18 @@ def do_training(n_f=10, n_a=3, n_f_player=4, nn=128, game='jump',
 						critic_joint_fc_layer_params = (nn, nn))
 	trainer.prepare_buffer(initial_collect_steps=10, batch_size=2048)
 	trainer.train_agent(num_iterations=num_iterations, n_eval_setp=500)
-	name = 'save_policies/v1.2/nf{}_na{}_nn{}_nfp{}_jp{}_{}'.format(n_f, n_a, nn, n_f_player, jump_price, game)
+	
+	#name = 'save_policies/v1.2/nf{}_na{}_nn{}_nfp{}_jp{}_{}'.format(n_f, n_a, nn, n_f_player, jump_price, game)
+	name = agent_file_name(n_f_player,
+							  nn=nn,
+							  n_h=n_h,
+							  v=version,
+							  nf_tot_game=n_f,
+							  n_a=n_a,
+							  game_type='single',
+							  game=game,
+							  jp=jump_price)
+	
 	trainer.save_policy(name)
 	trainer.do_plots(file_name='{}/training.png'.format(name),
 					instantaneous=True)
@@ -54,6 +65,8 @@ def do_iterations(iterated_paras={}):
 		**args)
 
 if __name__=='__main__':
+	version = 'v1.3'
+
 	parser = argparse.ArgumentParser(description='Mercury batch script', add_help=True)
 	
 	parser.add_argument('-nf', '--number_flights',
@@ -82,6 +95,18 @@ if __name__=='__main__':
 
 	parser.add_argument('-nitv', '--num_iterations_validation',
 								help='Number of iterations in validation',
+								required=False,
+								default=None,
+								nargs='?')
+
+	parser.add_argument('-nn', '--number_neurons',
+								help='Number of neurons in each layer',
+								required=False,
+								default=None,
+								nargs='?')
+
+	parser.add_argument('-nh', '--number_layers',
+								help='Number of hidden layers',
 								required=False,
 								default=None,
 								nargs='?')
@@ -144,6 +169,14 @@ if __name__=='__main__':
 
 	if not (args.num_iterations_validation is None):
 		iterated_paras['num_iterations_validation'] = [int(args.num_iterations_validation)]
+
+	if not (args.number_neurons is None):
+		iterated_paras['nn'] = [int(args.number_neurons)]
+
+	if not (args.number_layers is None):
+		iterated_paras['n_h'] = [int(args.number_layers)]
+
+	iterated_paras['version'] = [version]
 
 	print (iterated_paras)
 
