@@ -1,4 +1,4 @@
-from ModelStructure.Flight import flight as fl
+from Hotspot.ModelStructure.Flight import flight as fl
 
 
 class IstopFlight(fl.Flight):

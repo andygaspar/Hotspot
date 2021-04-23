@@ -40,12 +40,12 @@ from tf_agents.trajectories.time_step import TimeStep
 from tf_agents.specs import BoundedTensorSpec
 
 #from RL.multiple_game import MultiStochGameJumpFlatSpaces, MultiStochGameMarginFlatSpaces
-from RL.multiple_game import MultiStochGameJumpFlatSpaces, MultiStochGameMarginFlatSpaces
-from RL.continuous_game2 import ContGame, ContGameJump, ContGameMargin
-from RL.mcontinuous_game import ContMGame, ContMGameJump, ContMGameMargin
+#from RL.multiple_game import MultiStochGameJumpFlatSpaces, MultiStochGameMarginFlatSpaces
+from Hotspot.RL.continuous_game import ContGame, ContGameJump, ContGameMargin
+from Hotspot.RL.mcontinuous_game import ContMGame, ContMGameJump, ContMGameMargin
 
-from libs.tools import print_allocation
-from libs.general_tools3 import nice_colors
+from Hotspot.libs.tools import print_allocation
+from Hotspot.libs.general_tools3 import nice_colors
 
 # For videos
 # import imageio
@@ -253,6 +253,7 @@ class SingleGameFromMulti:
 		
 		return reward, reward_tot, cost_tot, cost_per_c, allocation, reward_fake, cost_true_per_c, transferred_cost, self.gym_env.best_cost_per_c
 
+
 class MultiGameFromMulti:
 	"""
 	"freezes" the environment.
@@ -347,6 +348,7 @@ def compute_cost_diff_ratio_all(row):
 	cost_diff = (c-cb)/cb
 	return cost_diff
 	
+
 class DiscreteGameTrainer:
 	def __init__(self):
 		pass

@@ -3,14 +3,14 @@ import numpy as np
 
 from copy import copy
 
-from ModelStructure.ScheduleMaker import scheduleMaker
-from ModelStructure.Costs.costFunctionDict import CostFuns
+from Hotspot.ModelStructure.ScheduleMaker import scheduleMaker
+from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
 
-from RL.wrapper_UDPP import allocation_from_df
-from RL.wrapper_UDPP import df_sch_from_flights
-from RL.wrapper_UDPP import OptimalAllocationComputer #, compute_optimal_allocation
-from RL.flight import Flight
-from libs.tools import clock_time
+from Hotspot.RL.wrapper_UDPP import allocation_from_df
+from Hotspot.RL.wrapper_UDPP import df_sch_from_flights
+from Hotspot.RL.wrapper_UDPP import OptimalAllocationComputer #, compute_optimal_allocation
+from Hotspot.RL.flight import Flight
+from Hotspot.libs.tools import clock_time
 
 def linear_function(min_y, max_y):
 	def f(x):

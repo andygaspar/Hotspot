@@ -1,5 +1,5 @@
-from ModelStructure.Slot.slot import Slot
-from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
+from Hotspot.ModelStructure.Slot.slot import Slot
+from Hotspot.UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
 
 
 class UDPPslot(Slot):

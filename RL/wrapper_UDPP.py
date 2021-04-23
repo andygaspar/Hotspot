@@ -1,11 +1,11 @@
 from collections import OrderedDict
 
-from UDPP import udppModel
-from ModelStructure.Costs.costFunctionDict import CostFuns
-from Istop import istop
-from NNBound import nnBound
-from GlobalOptimum import globalOptimum
-from libs.tools import print_to_void, clock_time
+from Hotspot.UDPP import udppModel
+from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
+from Hotspot.Istop import istop
+from Hotspot.NNBound import nnBound
+from Hotspot.GlobalOptimum import globalOptimum
+from Hotspot.libs.tools import print_to_void, clock_time
 
 def allocation_from_df(df, name_slot='new slot'):
 	return OrderedDict(df[['flight', name_slot]].set_index('flight').to_dict()[name_slot])
