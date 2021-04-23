@@ -16,6 +16,8 @@ class SingleGame(gym.Env):
 	in order to minimise its real cost.
 	This is using UDPP (with real cost) and ISTOP on top (with declared/fake
 	cost functions).
+	The schedules are always the same in this version.
+	Game is discrete in action.
 
 	# UDPATE FOLLOWING
 	The state is the set of indices of its flight in the queue. The reward is the

@@ -22,6 +22,8 @@ class MultiGame(gym.Env):
 	in order to minimise its real cost.
 	This is using UDPP (with real cost) and ISTOP on top (with declared/fake
 	cost functions).
+	Schedules are randomised at easch step in this version.
+	Game is discrete in action.
 	The state is the set of indices of its flight in the queue. The reward is the
 	opposite of the sum of the cost across flights from airline player.
 	"""
