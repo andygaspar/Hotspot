@@ -160,6 +160,10 @@ class Istop(mS.ModelStructure):
     def run(self, timing=False):
         feasible = self.check_and_set_matches()
         if feasible:
+            # print("before", self.m.getControl('presolve'))
+            # # self.m.setControl({'presolve': 0})
+            # self.m.setControl({'maxnode': 100})
+            # print("after", self.m.getControl('presolve'))
             self.set_variables()
 
             start = time.time()
