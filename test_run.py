@@ -34,24 +34,24 @@ udpp_model_xp = udppModel.UDPPmodel(df, costFun)
 udpp_model_xp.run(optimised=True)
 udpp_model_xp.print_performance()
 
-print(udpp_model_xp.get_new_df())
 
 print("\nistop only pairs")
-for i in range(10):
-    np.random.seed(i)
-    xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=False)
-    xpModel.run(True)
-    xpModel.print_performance()
-    print(xpModel.offers_selected)
-
-# attributes = xpModel.m.getAttrib()
-# for attribute in attributes.keys():
-#     print(attribute, attributes[attribute])
-
-
-
-print("\nistop with triples")
-xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=True)
+xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=False)
 xpModel.run(True)
 xpModel.print_performance()
+print(xpModel.offers_selected)
+
+
+print("maxnodes", xpModel.m.getControl('maxnode'))
+
+attributes = xpModel.m.getAttrib()
+for attribute in attributes.keys():
+    print(attribute, attributes[attribute])
+
+
+
+# print("\nistop with triples")
+# xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=True)
+# xpModel.run(True)
+# xpModel.print_performance()
 
