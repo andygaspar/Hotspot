@@ -7,7 +7,7 @@ from ModelStructure.Slot.slot import Slot
 class Flight:
 
     def __init__(self, flight_type: str, slot: Slot, num, flight_name: str, airline_name: str,
-                 eta: int, fpfs: int, cost_fun: Callable, udpp_priority: int = None, margins: int =None):
+                 eta: int, cost_fun: Callable, udpp_priority: int = None, margins: int = None):
 
         self.type = flight_type
 
@@ -24,8 +24,6 @@ class Flight:
         self.costFun = cost_fun
 
         self.udppPriority = udpp_priority
-
-        self.fpfs = fpfs
 
         try:
             self.margin = margins
@@ -95,8 +93,6 @@ class Flight:
             i += 1
         self.etaSlot = slots[i]
 
-    def assign(self, solutionSlot: Slot):
-        self.newSlot = solutionSlot
-        solutionSlot.free = False
-
-
+    def get_attributes(self):
+        return self.type, self.slot, self.num, self.name, self.airlineName, self.eta, \
+               self.costFun, self.udppPriority, self.margin

@@ -3,9 +3,9 @@ from ModelStructure.Flight import flight as fl
 
 class UDPPflight(fl.Flight):
 
-    def __init__(self, line, airline, model):
+    def __init__(self, flight: fl.Flight):
 
-        super().__init__(line, airline, model)
+        super().__init__(*flight.get_attributes())
 
         # UDPP attributes ***************
 

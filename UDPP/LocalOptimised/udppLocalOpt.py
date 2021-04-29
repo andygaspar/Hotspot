@@ -1,8 +1,9 @@
 # from mip import *
 from typing import List
 import numpy as np
-from UDPP.AirlineAndFlightAndSlot import udppAirline as air
-from UDPP.AirlineAndFlightAndSlot import udppFlight as fl
+
+from ModelStructure.Airline.airline import Airline
+from UDPP.UDPPflight import udppFlight as fl
 from ModelStructure.Slot import slot as sl
 import xpress as xp
 xp.controls.outputlog = 0
@@ -22,7 +23,7 @@ def eta_limit_slot(flight: fl.UDPPflight, AUslots: List[sl.Slot]):
         i += 1
 
 
-def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
+def UDPPlocalOpt(airline: Airline, slots: List[sl.Slot]):
 
     m = xp.problem()
 

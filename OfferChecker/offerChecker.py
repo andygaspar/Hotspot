@@ -12,7 +12,7 @@ class OfferChecker(object):
     def __init__(self, schedule_mat):
 
         self.numProcs = os.cpu_count()
-        self.lib = ctypes.CDLL('./liboffers_parallel.so')
+        self.lib = ctypes.CDLL('./OfferChecker/liboffers_parallel.so')
         self.lib.OfferChecker_.argtypes = [ctypes.c_void_p, ctypes.c_short, ctypes.c_short,
                                            ctypes.c_void_p, ctypes.c_short, ctypes.c_short, ctypes.c_void_p,
                                            ctypes.c_short, ctypes.c_short, ctypes.c_short]

@@ -7,15 +7,13 @@ import pandas as pd
 
 
 def make_flight(line, cost_fun):
-
     flight_type = line["type"]
     slot_index = line["slot"]
     num = line["num"]
     flight_name = line["flight"]
     airline_name = line["airline"]
     eta = line["eta"]
-    fpfs = line['fpfs']
-    slot_time = fpfs
+    slot_time = line['fpfs']
 
     slot = Slot(slot_index, slot_time)
 
@@ -28,11 +26,10 @@ def make_flight(line, cost_fun):
     udpp_priority = line["priority"]
 
     return fl.Flight(flight_type, slot, num, flight_name, airline_name,
-                     eta, fpfs, cost_fun, udpp_priority, margin)
+                     eta, cost_fun, udpp_priority, margin)
 
 
 def make_flight_list(df: pd.DataFrame, cost_fun):
-
     flight_list = []
     for i in range(df.shape[0]):
         line = df.iloc[i]

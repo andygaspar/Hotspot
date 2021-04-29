@@ -9,13 +9,13 @@ from ModelStructure.Flight.flight import Flight
 
 class ModelStructure:
 
-    def __init__(self, flights: List[Flight]):
+    def __init__(self, flights: List[Flight], air_ctor=Airline):
 
         self.flights = flights
 
         self.slots = [flight.slot for flight in self.flights]
 
-        self.airlines, self.airDict = self.make_airlines()
+        self.airlines, self.airDict = self.make_airlines(air_ctor)
 
         self.numAirlines = len(self.airlines)
 
@@ -86,7 +86,7 @@ class ModelStructure:
     def make_slots(self):
         pass
 
-    def make_airlines(self):
+    def make_airlines(self, air_ctor):
 
         air_flight_dict = {}
         for flight in self.flights:
@@ -96,7 +96,7 @@ class ModelStructure:
                 air_flight_dict[flight.airlineName].append(flight)
 
         air_names = list(air_flight_dict.keys())
-        airlines = [Airline(air_names[i], i, air_flight_dict[air_names[i]]) for i in range(len(air_flight_dict))]
+        airlines = [air_ctor(air_names[i], i, air_flight_dict[air_names[i]]) for i in range(len(air_flight_dict))]
         air_dict = dict(zip(airlines, range(len(airlines))))
 
         return airlines, air_dict
@@ -114,3 +114,13 @@ class ModelStructure:
             flight.set_eta_slot(self.slots)
             flight.set_compatible_slots(self.slots)
             flight.set_not_compatible_slots(self.slots)
+
+    def get_new_flight_list(self):
+        new_flight_list = []
+        for flight in self.flights:
+            new_flight = Flight(*flight.get_attributes())
+            new_flight.slot = flight.newSlot
+            new_flight.newSlot = None
+            new_flight_list.append(new_flight)
+
+        return sorted(new_flight_list, key=lambda f: f.slot)

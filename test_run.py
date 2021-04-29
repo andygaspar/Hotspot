@@ -24,10 +24,10 @@ df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution
 
 costFun = CostFuns().costFun["realistic"]
 
-print("\nnn bound")
-max_model = nnBound.NNBoundModel(df, costFun)
-max_model.run()
-max_model.print_performance()
+# print("\nnn bound")
+# max_model = nnBound.NNBoundModel(df, costFun)
+# max_model.run()
+# max_model.print_performance()
 
 print("\nudpp")
 udpp_model_xp = udppModel.UDPPmodel(df, costFun)
