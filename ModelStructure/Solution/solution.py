@@ -43,11 +43,9 @@ def make_df_solution(model):
     model: ModelStructure
 
     model.solution = model.df.copy(deep=True)
-    priorities = [flight.priority for flight in model.flights]
     new_slot = [flight.newSlot.index for flight in model.flights]
     new_arrival = [flight.newSlot.time for flight in model.flights]
     eta_slot = [flight.etaSlot for flight in model.flights]
-    model.solution["priority"] = priorities
     model.solution["new slot"] = new_slot
     model.solution["new arrival"] = new_arrival
     model.solution["eta slot"] = eta_slot
