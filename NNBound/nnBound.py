@@ -2,8 +2,9 @@ from typing import Callable, List, Union
 
 from ModelStructure import modelStructure as mS
 import xpress as xp
+xp.controls.outputlog = 0
 from ModelStructure.Airline import airline as air
-from ModelStructure.Flight import flight as modFl
+from ModelStructure.Flight.flight import Flight
 from ModelStructure.Solution import solution
 from ModelStructure.Slot.slot import Slot
 
@@ -15,23 +16,21 @@ import time
 
 class NNBoundModel(mS.ModelStructure):
 
-    def __init__(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]], model_name="Max Benefit"):
+    def __init__(self, flight_list: List[Flight]):
 
-        self.airlineConstructor = air.Airline
-        self.flightConstructor = modFl.Flight
-        super().__init__(df_init=df_init, costFun=costFun)
+        super().__init__(flight_list)
 
         self.m = xp.problem()
         self.x = None
 
     def set_variables(self):
-        flight: modFl.Flight
+        flight: Flight
         airline: air.Airline
         self.x = np.array([[xp.var(vartype=xp.binary) for k in self.slots] for flight in self.flights])
         self.m.addVariable(self.x)
 
     def set_constraints(self):
-        flight: modFl.Flight
+        flight: Flight
         airline: air.Airline
         for flight in self.flights:
             self.m.addConstraint(
@@ -51,7 +50,7 @@ class NNBoundModel(mS.ModelStructure):
             )
 
     def set_objective(self):
-        flight: modFl.Flight
+        flight: Flight
         self.m.setObjective(
             xp.Sum(self.x[flight.slot.index, slot.index] * flight.costFun(flight, slot)
                    for flight in self.flights for slot in self.slots)

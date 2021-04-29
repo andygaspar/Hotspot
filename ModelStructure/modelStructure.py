@@ -2,27 +2,24 @@ import numpy as np
 import pandas as pd
 from typing import Union, List, Callable
 from itertools import product
-from ModelStructure.Slot import slotList as sl
-from ModelStructure.Airline import airline as air
-from ModelStructure.Flight import flightList as fll
-from ModelStructure.Airline import airlineList as airList
+from ModelStructure.Airline.airline import Airline
+from ModelStructure.Slot import slot as sl
+from ModelStructure.Flight.flight import Flight
 
 
 class ModelStructure:
 
-    def __init__(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]], airline_ctor=air.Airline):
+    def __init__(self, flights: List[Flight]):
 
-        self.df = df_init
+        self.flights = flights
 
-        self.slots = sl.make_slots_list(self.df)
+        self.slots = [flight.slot for flight in self.flights]
 
-        self.airlines = airList.make_airlines_list(self.df, self.slots, airline_ctor)
+        self.airlines, self.airDict = self.make_airlines()
 
-        self.numAirlines = len(np.unique(self.df["airline"]))
+        self.numAirlines = len(self.airlines)
 
-        self.flights = fll.make_flight_list(self)
-
-        self.set_flights_cost_functions(costFun)
+        self.set_flights_attributes()
 
         self.set_flights_cost_vect()
 
@@ -30,20 +27,15 @@ class ModelStructure:
 
         self.initialTotalCosts = self.compute_costs(self.flights, "initial")
 
-        self.airDict = dict(zip([airline.name for airline in self.airlines], range(len(self.airlines))))
-
         self.scheduleMatrix = self.make_schedule_matrix()
 
-        self.emptySlots = self.df[self.df["flight"] == "Empty"]["slot"].to_numpy()
-
-        # self.mipSolution = None
-
-        # self.solutionArray = None
+        self.emptySlots = []
 
         self.solution = None
 
         self.report = None
 
+        self.df = self.make_df()
 
     @staticmethod
     def compute_costs(flights, which):
@@ -55,9 +47,9 @@ class ModelStructure:
     @staticmethod
     def compute_delays(flights, which):
         if which == "initial":
-            return sum([flight.slot.time-flight.eta for flight in flights])
+            return sum([flight.slot.time - flight.eta for flight in flights])
         if which == "final":
-            return sum([flight.newSlot.time-flight.eta for flight in flights])
+            return sum([flight.newSlot.time - flight.eta for flight in flights])
 
     def make_schedule_matrix(self):
         arr = []
@@ -75,7 +67,6 @@ class ModelStructure:
         print(self.df)
 
     def print_performance(self):
-        # print(self.solution)
         print(self.report)
 
     def get_flight_by_slot(self, slot: sl.Slot):
@@ -88,18 +79,38 @@ class ModelStructure:
             if flight.name == f_name:
                 return flight
 
-    def set_flights_cost_functions(self, costFun):
-        if isinstance(costFun, Callable):
-            for flight in self.flights:
-                flight.set_cost_fun(costFun)
-        else:
-            i = 0
-            for flight in self.flights:
-                flight.set_cost_fun(costFun[i])
-                i += 1
-
     def set_flights_cost_vect(self):
         for flight in self.flights:
             flight.costVect = [flight.costFun(flight, slot) for slot in self.slots]
 
+    def make_slots(self):
+        pass
 
+    def make_airlines(self):
+
+        air_flight_dict = {}
+        for flight in self.flights:
+            if flight.airlineName not in air_flight_dict.keys():
+                air_flight_dict[flight.airlineName] = [flight]
+            else:
+                air_flight_dict[flight.airlineName].append(flight)
+
+        air_names = list(air_flight_dict.keys())
+        airlines = [Airline(air_names[i], i, air_flight_dict[air_names[i]]) for i in range(len(air_flight_dict))]
+        air_dict = dict(zip(airlines, range(len(airlines))))
+
+        return airlines, air_dict
+
+    def make_df(self):
+        slot_index = [flight.slot.index for flight in self.flights]
+        flights = [flight.name for flight in self.flights]
+        airlines = [flight.airlineName for flight in self.flights]
+        slot_time = [flight.slot.time for flight in self.flights]
+
+        return pd.DataFrame({"slot": slot_index, "flight": flights, "airline": airlines, "time": slot_time})
+
+    def set_flights_attributes(self):
+        for flight in self.flights:
+            flight.set_eta_slot(self.slots)
+            flight.set_compatible_slots(self.slots)
+            flight.set_not_compatible_slots(self.slots)
