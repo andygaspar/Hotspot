@@ -1,9 +1,9 @@
 from typing import Union, Callable, List
 
 from ModelStructure.Slot.slot import Slot
-from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
-from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
+from UDPP.UDPPflight.udppFlight import UDPPflight
+from UDPP.UDPPflight.udppAirline import UDPPairline
+from UDPP.UDPPflight.udppSlot import UDPPslot
 from ModelStructure.modelStructure import ModelStructure
 from ModelStructure.Solution import solution
 import numpy as np

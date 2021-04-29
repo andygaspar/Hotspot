@@ -1,11 +1,13 @@
 from typing import Callable, Union, List
 
 from GlobalFuns.globalFuns import HiddenPrints
+from Istop.AirlineAndFlight.istopFlight import IstopFlight
 from ModelStructure import modelStructure as mS
 # from mip import *
 import sys
 from itertools import combinations
-from Istop.AirlineAndFlight import istopAirline as air, istopFlight as modFl
+from Istop.AirlineAndFlight.istopAirline import IstopAirline
+from ModelStructure.Flight.flight import Flight
 from ModelStructure.Solution import solution
 from OfferChecker.offerChecker import OfferChecker
 
@@ -53,15 +55,17 @@ class Istop(mS.ModelStructure):
             j += 1
         return indexes
 
-    def __init__(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
-
-        self.preference_function = lambda x, y: x * (y ** alpha)
+    def __init__(self, flights: List[Flight], triples=False):
+        self.preference_function = lambda x, y: x * (y ** 2) # to fix
         self.offers = None
         self.triples = triples
-        super().__init__(df_init=df_init, costFun=costFun, airline_ctor=air.IstopAirline)
-        airline: air.IstopAirline
-        for airline in self.airlines:
-            airline.set_preferences(self.preference_function)
+
+        istop_flights = [IstopFlight(flight) for flight in flights]
+
+        super().__init__(istop_flights, air_ctor=IstopAirline)
+        airline: IstopAirline
+        # for airline in self.airlines:
+        #     airline.set_preferences(self.preference_function)
 
         self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
         self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
@@ -154,8 +158,8 @@ class Istop(mS.ModelStructure):
     def set_objective(self):
 
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, j.index] * self.score(flight, j)
-                   for flight in self.flights for j in self.slots), sense=xp.minimize)
+            xp.Sum(self.x[flight.slot.index, j.index] * flight.costFun(flight, j)
+                   for flight in self.flights for j in self.slots), sense=xp.minimize) #self.scrore instead of cost
 
     def run(self, timing=False):
         feasible = self.check_and_set_matches()
@@ -218,7 +222,7 @@ class Istop(mS.ModelStructure):
 
     def offer_solution_maker(self):
 
-        flight: modFl.IstopFlight
+        flight: IstopFlight
         airline_names = ["total"] + [airline.name for airline in self.airlines]
         flights_numbers = [self.numFlights] + [len(airline.flights) for airline in self.airlines]
         offers = [sum([1 for flight in self.flights if flight.slot != flight.newSlot]) / 4]
@@ -256,9 +260,10 @@ class Istop(mS.ModelStructure):
         self.offers = None
         self.triples = triples
         super().__init__(df_init=df_init, costFun=costFun, airline_ctor=air.IstopAirline)
-        airline: air.IstopAirline
+        airline: IstopAirline
         for airline in self.airlines:
-            airline.set_preferences(self.preference_function)
+            #airline.set_preferences(self.preference_function)
+            pass
 
         self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
         self.airlines_triples = np.array(list(combinations(self.airlines, 3)))

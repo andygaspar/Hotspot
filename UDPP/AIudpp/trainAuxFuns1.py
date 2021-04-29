@@ -4,7 +4,7 @@ import numpy as np
 from GlobalFuns.globalFuns import HiddenPrints
 from ModelStructure.Costs.costFunctionDict import CostFuns
 from UDPP import udppModel
-from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
+from UDPP.UDPPflight.udppAirline import UDPPairline
 from UDPP.Local.udppLocal import udpp_local
 from UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
 from ModelStructure.ScheduleMaker.scheduleMaker import df_maker
