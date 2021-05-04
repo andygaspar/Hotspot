@@ -10,5 +10,4 @@ flights_dict_keys = np.array(list(dict_cost_func.keys()))
 
 def make_random_cost_fun():
     flight_id = np.random.choice(flights_dict_keys, 1)[0]
-    print(flight_id)
     return lambda t: dict_cost_func[flight_id](t, True)

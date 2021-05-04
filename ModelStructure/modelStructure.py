@@ -81,7 +81,10 @@ class ModelStructure:
 
     def set_flights_cost_vect(self):
         for flight in self.flights:
-            flight.costVect = [flight.costFun(flight, slot) for slot in self.slots]
+            flight.costVect = []
+            for slot in self.slots:
+                flight.costVect.append(flight.costFun(slot))
+        print(self.slots)
 
     def make_slots(self):
         pass
