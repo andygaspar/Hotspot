@@ -1,6 +1,7 @@
 from Istop import istop
 from ScheduleMaker import scheduleMaker, df_to_schedule as converter
 from ModelStructure.Costs.costFunctionDict import CostFuns
+from ModelStructure.Costs import realCosts
 import random
 
 import numpy as np
@@ -11,7 +12,7 @@ random.seed(0)
 np.random.seed(0)
 scheduleType = scheduleMaker.schedule_types(show=False)
 
-num_flights = 50
+num_flights = 5
 num_airlines = 5
 
 
@@ -23,6 +24,8 @@ df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution
 costFun = CostFuns().costFun["realistic"]
 
 fl_list = converter.make_flight_list(df, costFun)
+for flight in fl_list:
+    flight.set_cost_fun(realCosts.make_random_cost_fun())
 
 # m = ModelStructure(fl_list)
 #
