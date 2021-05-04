@@ -4,7 +4,7 @@ from typing import List
 import torch
 from torch import nn, optim
 
-from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
+from UDPP.UDPPflight.udppAirline import UDPPairline
 from UDPP.udppModel import UDPPmodel
 
 

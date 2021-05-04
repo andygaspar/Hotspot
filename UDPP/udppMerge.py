@@ -7,13 +7,13 @@ def sort_flights_by_time(flights):
     return np.array([flights[i] for i in sorted_indexes])
 
 
-def getFirstCompatibleFlight(slot, sorted_flights, slots):
+def get_first_compatible_light(slot, sorted_flights, slots):
     for flight in sorted_flights:
         if flight.eta <= slot.time:
             return flight
 
 
-def UDPPmerge(flights, slots):
+def udpp_merge(flights, slots):
     sorted_flights = list(sort_flights_by_time(flights))
     # print([f.newSlot for f in sorted_flights])
     i = 0
@@ -23,7 +23,7 @@ def UDPPmerge(flights, slots):
             sorted_flights.pop(0)
 
         else:
-            flight = getFirstCompatibleFlight(slots[i], sorted_flights, slots)
+            flight = get_first_compatible_light(slots[i], sorted_flights, slots)
             flight.newSlot = slots[i]
             sorted_flights.remove(flight)
         i += 1

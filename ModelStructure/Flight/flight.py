@@ -1,51 +1,52 @@
 import numpy as np
 from typing import List, Callable
 
-from ModelStructure.Slot import slot as sl
+from ModelStructure.Slot.slot import Slot
 
 
 class Flight:
 
-    def __init__(self, line, airline, slots: List[sl.Slot]):
+    def __init__(self, flight_type: str, slot: Slot, num, flight_name: str, airline_name: str,
+                 eta: int, cost_fun: Callable, udpp_priority: int = None, margins: int = None):
 
-        self.type = line["type"]
+        self.type = flight_type
 
-        self.slot = slots[line["slot"]]
+        self.slot = slot
 
-        self.num = line["num"]
+        self.name = flight_name
 
-        self.newSlot = None
+        self.airlineName = airline_name
 
-        self.name = line["flight"]
+        self.eta = eta
 
-        self.airline = airline
+        self.num = num
 
-        self.eta = line["eta"]
+        self.costFun = cost_fun
 
-        self.etaSlot = self.get_eta_slot(self.eta, slots) #slots[len([slot for slot in slots if slot.time <= self.eta])]
-
-        self.fpfs = line['fpfs']
-
-        self.cost = line["cost"]
-
-        self.costVect = None
+        self.udppPriority = udpp_priority
 
         try:
-            self.margin = line["margins"]
+            self.margin = margins
         except:
             self.margin = None
 
-        self.costFun = None
+        # attribute  handled by ModelStructure
 
-        self.compatibleSlots = self.compute_compatible_slots(slots)
+        self.airline = None
 
-        self.notCompatibleSlots = self.compute_not_compatible_slots(slots)
+        self.etaSlot = None
+
+        self.costVect = None
+
+        self.compatibleSlots = None
+
+        self.notCompatibleSlots = None
 
         self.localNum = None
 
-        # ISTOP attributes  *************
+        self.newSlot = None
 
-        self.priority = line["priority"]
+        # ISTOP attributes  *************
 
         self.preference = None
 
@@ -55,44 +56,43 @@ class Flight:
     def __repr__(self):
         return self.name
 
+    def __hash__(self):
+        return hash(self.name)
+
+    def __eq__(self, other):
+        if type(other) == str:
+            return self.name == other
+        return self.name == other.name
+
     def set_num(self, i):
         self.num = i
 
     def set_local_num(self, i):
         self.localNum = i
 
-    def set_cost_fun(self, costFun: Callable):
-        self.costFun = costFun
-
-    def delay(self, slot: sl.Slot):
+    def delay(self, slot: Slot):
         return slot.time - self.eta
 
-    def compute_compatible_slots(self, slots: List[sl.Slot]):
-        try:
-            compatible_slots = []
-            for slot in slots:
-                if slot.time >= self.eta:
-                    compatible_slots.append(slot)
-            # if compatible_slots[0].index > 0:
-            #     compatible_slots.insert(0, slots[compatible_slots[0].index - 1])
-            return compatible_slots
-        except IndexError:
-            raise IndexError("No available slot for flight ", self.name)
+    def set_compatible_slots(self, slots: List[Slot]):
+        compatible_slots = []
+        for slot in slots:
+            if slot.time >= self.eta:
+                compatible_slots.append(slot)
+        self.compatibleSlots = compatible_slots
 
-    def compute_not_compatible_slots(self, slots):
+    def set_not_compatible_slots(self, slots):
         notCompatibleSlots = []
         for slot in slots:
             if slot not in self.compatibleSlots:
                 notCompatibleSlots.append(slot)
-        return notCompatibleSlots
+        self.notCompatibleSlots = notCompatibleSlots
 
-    @staticmethod
-    def get_eta_slot(eta, slots):
+    def set_eta_slot(self, slots):
         i = 0
-        while slots[i].time < eta:
+        while slots[i].time < self.eta:
             i += 1
-        return slots[i]
+        self.etaSlot = slots[i]
 
-    def assign(self, solutionSlot: sl.Slot):
-        self.newSlot = solutionSlot
-        solutionSlot.free = False
+    def get_attributes(self):
+        return self.type, self.slot, self.num, self.name, self.airlineName, self.eta, \
+               self.costFun, self.udppPriority, self.margin
