@@ -1,4 +1,4 @@
-from ModelStructure.ScheduleMaker import scheduleMaker
+from ScheduleMaker import scheduleMaker
 from UDPP.udppModel import UDPPmodel
 from ModelStructure.Costs.costFunctionDict import CostFuns
 import pandas as pd

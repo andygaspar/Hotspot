@@ -2,7 +2,7 @@ import random
 
 from UDPP.AIudpp.trainAuxFuns1 import make_network_input, make_prioritisation
 from UDPP.udppModel import UDPPmodel
-from ModelStructure.ScheduleMaker import scheduleMaker
+from ScheduleMaker import scheduleMaker
 from ModelStructure.Costs.costFunctionDict import CostFuns
 from UDPP.AIudpp import network as nn
 

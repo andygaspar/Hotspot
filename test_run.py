@@ -1,10 +1,8 @@
-from GlobalFuns.globalFuns import HiddenPrints
 from Istop import istop
-from ModelStructure.ScheduleMaker import scheduleMaker
+from ScheduleMaker import scheduleMaker
 from ModelStructure.Costs.costFunctionDict import CostFuns
 from NNBound import nnBound
 from UDPP import udppModel
-import pandas as pd
 import random
 
 import numpy as np
@@ -42,16 +40,9 @@ xpModel.print_performance()
 print(xpModel.offers_selected)
 
 
-print("maxnodes", xpModel.m.getControl('maxnode'))
 
-attributes = xpModel.m.getAttrib()
-for attribute in attributes.keys():
-    print(attribute, attributes[attribute])
-
-
-
-# print("\nistop with triples")
-# xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=True)
-# xpModel.run(True)
-# xpModel.print_performance()
+print("\nistop with triples")
+xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=True)
+xpModel.run(True)
+xpModel.print_performance()
 

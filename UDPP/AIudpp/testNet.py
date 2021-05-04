@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from UDPP.udppModel import UDPPmodel
-from ModelStructure.ScheduleMaker import scheduleMaker
+from ScheduleMaker import scheduleMaker
 from ModelStructure.Costs.costFunctionDict import CostFuns
 from UDPP.AIudpp import network as nn
 
