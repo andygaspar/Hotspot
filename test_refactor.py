@@ -1,6 +1,6 @@
 from GlobalFuns.globalFuns import HiddenPrints
 from Istop import istop
-from ModelStructure.ScheduleMaker import scheduleMaker
+from ScheduleMaker import scheduleMaker
 from ModelStructure.Costs.costFunctionDict import CostFuns
 from ModelStructure.modelStructure import ModelStructure
 from ModelStructure import df_to_schedule as converter
