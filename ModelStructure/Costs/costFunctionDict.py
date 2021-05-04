@@ -12,7 +12,7 @@ def get_interval(time):
         if delay_range[i] <= time < delay_range[i+1]:
             return i
 
-def compute(flight, slot):
+def compute_gate_costs(flight, slot):
     i = get_interval(slot.time)
     y2 = at_gate[at_gate["flight"] == flight.type][str(delay_range[i+1])].values[0]
     y1 = at_gate[at_gate["flight"] == flight.type][str(delay_range[i])].values[0]
@@ -35,7 +35,9 @@ class CostFuns:
             if (slot.time - flight.eta) < flight.margin else
             ((slot.time - flight.eta) * flight.cost*10 + flight.cost * 30),
 
-            "realistic": lambda flight, slot: compute(flight, slot)
+            "gate": lambda flight, slot: compute_gate_costs(flight, slot),
+
+            "realistic" : 2
 
         }
 
