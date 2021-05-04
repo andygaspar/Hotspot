@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
 from itertools import combinations
@@ -17,11 +19,11 @@ class IstopAirline(air.Airline):
     def triplet(list_to_comb):
         return np.array(list(combinations(list_to_comb, 3)))
 
-    def __init__(self, df_airline: pd.DataFrame, airline_index, slots):
+    def __init__(self, airline_name: str, airline_index: int, flights: List[IstopFlight]):
 
-        super().__init__(df_airline=df_airline, airline_index=airline_index, slots=slots, flight_ctor=IstopFlight)
+        super().__init__(airline_name, airline_index, flights)
 
-        self.sum_priorities = sum(self.df["priority"])
+        self.sum_priorities = None #sum(self.df["priority"])
 
         self.flight_pairs = self.pairs(self.flights)
 

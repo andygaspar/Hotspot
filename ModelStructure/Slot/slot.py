@@ -1,5 +1,8 @@
 from __future__ import annotations
-from typing import Union
+
+import numpy as np
+import pandas as pd
+from typing import Union, List
 
 
 class Slot:
@@ -7,7 +10,6 @@ class Slot:
     def __init__(self, index: Union[int, None] = None, time: Union[int, None] = None):
         self.index = index
         self.time = time
-        # self.flight = flight
 
     def __str__(self):
         return str(self.index)
