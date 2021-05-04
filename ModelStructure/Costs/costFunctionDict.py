@@ -7,10 +7,12 @@ import os
 at_gate = pd.read_csv("ModelStructure/Costs/costs_table_gate.csv", sep=" ")
 delay_range = list(at_gate.columns[1:].astype(int))
 
+
 def get_interval(time):
     for i in range(len(delay_range)-1):
         if delay_range[i] <= time < delay_range[i+1]:
             return i
+
 
 def compute_gate_costs(flight, slot):
     i = get_interval(slot.time)

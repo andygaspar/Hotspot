@@ -82,24 +82,9 @@ def fit_cost_curve(x, y, max_delay, steps= 6):
     return solution.x
 
 
-flights = np.array(list(dict_cost_func.keys()))
-max_delay = 100
-delays = np.linspace(0, max_delay, 50)
+def make_preference_fun(flight_id, delays_vect, max_delay):
+    costs = normalised_costs(flight_id, delays_vect)
+    result = fit_cost_curve(delays_vect, costs, max_delay)
+    slope, margin_1, jump_1, margin_2, jump_2, margin_3, jump_3 = result
+    return lambda t: slope*t if t<margin_1 else jump_2 if t<margin_2 else jump_3
 
-
-t = time.time()
-for i in range(50):
-
-    costs = normalised_costs(flights[i], delays)
-    result = fit_cost_curve(delays, costs, max_delay)
-
-    # plt.plot(delays, costs)
-    # plt.plot(delays, approx_three_margins(delays, *result))
-    # plt.show()
-print(time.time() - t)
-
-
-f = lambda t: dict_cost_func[flights[0]](t, True)
-
-plt.plot(delays, [f(t) for t in delays])
-plt.show()
