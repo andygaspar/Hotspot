@@ -1,5 +1,6 @@
 from typing import Union, List, Callable
 
+
 def set_flights_cost_functions(self, costFun):
     if isinstance(costFun, Callable):
         for flight in self.flights:
