@@ -1,7 +1,7 @@
 import copy
 
 from ModelStructure.Costs.costFunctionDict import CostFuns
-from ModelStructure.ScheduleMaker import scheduleMaker
+from ScheduleMaker import scheduleMaker
 from UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
 from UDPP.AirlineAndFlightAndSlot.udppSlot import UDPPslot
 from UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight

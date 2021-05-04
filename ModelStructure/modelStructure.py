@@ -22,8 +22,6 @@ class ModelStructure:
 
         self.flights = fll.make_flight_list(self)
 
-        self.set_flights_cost_functions(costFun)
-
         self.set_flights_cost_vect()
 
         self.numFlights = len(self.flights)
@@ -35,10 +33,6 @@ class ModelStructure:
         self.scheduleMatrix = self.make_schedule_matrix()
 
         self.emptySlots = self.df[self.df["flight"] == "Empty"]["slot"].to_numpy()
-
-        # self.mipSolution = None
-
-        # self.solutionArray = None
 
         self.solution = None
 
@@ -75,7 +69,6 @@ class ModelStructure:
         print(self.df)
 
     def print_performance(self):
-        # print(self.solution)
         print(self.report)
 
     def get_flight_by_slot(self, slot: sl.Slot):
@@ -87,16 +80,6 @@ class ModelStructure:
         for flight in self.flights:
             if flight.name == f_name:
                 return flight
-
-    def set_flights_cost_functions(self, costFun):
-        if isinstance(costFun, Callable):
-            for flight in self.flights:
-                flight.set_cost_fun(costFun)
-        else:
-            i = 0
-            for flight in self.flights:
-                flight.set_cost_fun(costFun[i])
-                i += 1
 
     def set_flights_cost_vect(self):
         for flight in self.flights:
