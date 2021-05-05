@@ -104,9 +104,9 @@ def UDPPlocalOpt(airline: Airline, slots: List[sl.Slot]):
     )
 
     m.setObjective(
-            xp.Sum(y[flight.localNum][slot.index] * flight.costFun(flight, slot)
+            xp.Sum(y[flight.localNum][slot.index] * flight.costFun(slot)
              for flight in airline.flights for slot in slots) +
-            xp.Sum(x[flight.localNum][k] * flight.costFun(flight, airline.AUslots[k])
+            xp.Sum(x[flight.localNum][k] * flight.costFun(airline.AUslots[k])
              for flight in airline.flights for k in range(airline.numFlights))
     )
 

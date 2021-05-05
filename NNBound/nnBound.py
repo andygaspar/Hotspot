@@ -44,15 +44,15 @@ class NNBoundModel(mS.ModelStructure):
 
         for airline in self.airlines:
             self.m.addConstraint(
-                xp.Sum(flight.costFun(flight, flight.slot) for flight in airline.flights) >= \
-                xp.Sum(self.x[flight.slot.index, slot.index] * flight.costFun(flight, slot)
+                xp.Sum(flight.costFun(flight.slot) for flight in airline.flights) >= \
+                xp.Sum(self.x[flight.slot.index, slot.index] * flight.costFun(slot)
                        for flight in airline.flights for slot in self.slots)
             )
 
     def set_objective(self):
         flight: Flight
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, slot.index] * flight.costFun(flight, slot)
+            xp.Sum(self.x[flight.slot.index, slot.index] * flight.costFun( slot)
                    for flight in self.flights for slot in self.slots)
         )
 
