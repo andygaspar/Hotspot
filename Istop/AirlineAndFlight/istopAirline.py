@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from itertools import combinations
 from Istop.AirlineAndFlight.istopFlight import IstopFlight
+from Istop.Preferences import preference
 from ModelStructure.Airline import airline as air
 
 
@@ -29,9 +30,24 @@ class IstopAirline(air.Airline):
 
         self.flight_triplets = self.triplet(self.flights)
 
-    def set_preferences(self, priorityFunction):
-        flight: IstopFlight
+    # def set_preferences(self, priorityFunction):
+    #     flight: IstopFlight
+    #     for flight in self.flights:
+    #         df_flight = self.df[self.df["flight"] == flight.name]
+    #         flight.set_priority(df_flight["priority"].values[0])
+    #         flight.set_preference(self.sum_priorities, priorityFunction)
+
+    def set_preferences(self, max_delay):
+        max_val = 0
         for flight in self.flights:
-            df_flight = self.df[self.df["flight"] == flight.name]
-            flight.set_priority(df_flight["priority"].values[0])
-            flight.set_preference(self.sum_priorities, priorityFunction)
+            f_max = max(flight.costVect)
+            if f_max > max_val:
+                max_val = f_max
+
+        for flight in self.flights:
+            slope, margin_1, jump_2, margin_2, jump_3 = \
+                preference.make_preference_fun(max_delay, flight.delay_cost_fun)
+            flight.preference = lambda slot: slope/max_val if slot.time - flight.eta < margin_1 \
+                else jump_2/max_val if slot.time - flight.eta < margin_2 else jump_3/max_val
+
+

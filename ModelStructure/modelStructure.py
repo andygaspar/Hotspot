@@ -23,6 +23,8 @@ class ModelStructure:
 
         self.set_flights_cost_vect()
 
+        self.set_delay_vect()
+
         self.numFlights = len(self.flights)
 
         self.initialTotalCosts = self.compute_costs(self.flights, "initial")
@@ -82,6 +84,12 @@ class ModelStructure:
     def set_flights_cost_vect(self):
         for flight in self.flights:
             flight.costVect = [flight.costFun(slot) for slot in self.slots]
+
+    def set_delay_vect(self):
+        for flight in self.flights:
+            flight.delayVect = [slot.time for slot in self.slots if slot.time >= flight.eta]
+
+
 
 
     def make_slots(self):

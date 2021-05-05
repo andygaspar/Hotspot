@@ -38,6 +38,8 @@ class Flight:
 
         self.costVect = None
 
+        self.delayVect = None
+
         self.compatibleSlots = None
 
         self.notCompatibleSlots = None
