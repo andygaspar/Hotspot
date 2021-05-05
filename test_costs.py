@@ -1,3 +1,5 @@
+import copy
+
 from scipy.optimize import curve_fit, minimize
 import scipy
 import math
@@ -100,6 +102,13 @@ print(time.time() - t)
 
 
 f = lambda t: dict_cost_func[flights[0]](t, True)
-
+f(2)
 plt.plot(delays, [f(t) for t in delays])
 plt.show()
+
+a = lambda : 0
+a.__code__ = copy.deepcopy(f.__code__)
+print(f.__code__)
+print(a.__code__)
+import dis
+dis.dis(dict_cost_func[flights[0]])

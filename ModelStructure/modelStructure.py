@@ -84,7 +84,7 @@ class ModelStructure:
             flight.costVect = []
             for slot in self.slots:
                 flight.costVect.append(flight.costFun(slot))
-        print(self.slots)
+
 
     def make_slots(self):
         pass

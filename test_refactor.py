@@ -21,11 +21,11 @@ print("schedule type: ", distribution)
 
 df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution)
 
-costFun = CostFuns().costFun["realistic"]
+#costFun = CostFuns().costFun["realistic"]
 
-fl_list = converter.make_flight_list(df, costFun)
-for flight in fl_list:
-    flight.set_cost_fun(realCosts.make_random_cost_fun())
+fl_list = converter.make_flight_list(df, None)
+# for flight in fl_list:
+#     flight.set_cost_fun(realCosts.make_random_cost_fun())
 
 # m = ModelStructure(fl_list)
 #
