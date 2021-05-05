@@ -25,6 +25,8 @@ def make_flight(line, cost_fun):
     # ISTOP attributes  *************
     udpp_priority = line["priority"]
 
+    cost_fun = lambda t: t
+
     return fl.Flight(flight_type, slot, num, flight_name, airline_name,
                      eta, cost_fun, udpp_priority, margin)
 
