@@ -10,16 +10,6 @@ from multiprocessing import Pool
 
 num_cpu = multiprocessing.cpu_count()
 
-with open('ModelStructure/Costs/cost_functions_all.pck', 'rb') as dbfile:
-    # dbfile = open('./cost_functions_1.pck', 'rb')
-    dict_cost_func = pickle.load(dbfile)
-dbfile.close()
-
-
-def normalised_costs(flight, delays):
-    costs = np.array([dict_cost_func[flight](x, True) for x in delays])
-    return 100 * costs / max(costs)
-
 
 def approx_linear(x, slope):
     return slope * x
@@ -82,9 +72,12 @@ def fit_cost_curve(x, y, max_delay, steps= 6):
     return solution.x
 
 
-def make_preference_fun(flight_id, delays_vect, max_delay):
-    costs = normalised_costs(flight_id, delays_vect)
-    result = fit_cost_curve(delays_vect, costs, max_delay)
+def make_preference_fun(max_delay, cost_fun):
+    delays_vect = np.linspace(0, max_delay, 50)
+    cost_vect = np.array([cost_fun(d) for d in delays_vect])
+    scale_factor = max(cost_vect)
+    scaled_costs = 100 * cost_vect / scale_factor
+    result = fit_cost_curve(delays_vect, scaled_costs, max_delay)
     slope, margin_1, jump_1, margin_2, jump_2, margin_3, jump_3 = result
-    return lambda t: slope*t if t<margin_1 else jump_2 if t<margin_2 else jump_3
+    return slope*scale_factor, margin_1, jump_2*scale_factor, margin_2, jump_3*scale_factor
 

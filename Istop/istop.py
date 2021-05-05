@@ -56,7 +56,6 @@ class Istop(mS.ModelStructure):
         return indexes
 
     def __init__(self, flights: List[Flight], triples=False):
-        self.preference_function = lambda x, y: x * (y ** 2) # to fix
         self.offers = None
         self.triples = triples
 
@@ -64,8 +63,8 @@ class Istop(mS.ModelStructure):
 
         super().__init__(istop_flights, air_ctor=IstopAirline)
         airline: IstopAirline
-        # for airline in self.airlines:
-        #     airline.set_preferences(self.preference_function)
+        for airline in self.airlines:
+            airline.set_preferences(max_delay=self.slots[-1].time - self.slots[0].time)
 
         self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
         self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
