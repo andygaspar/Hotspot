@@ -1,18 +1,19 @@
 from Istop import istop
+from NNBound import nnBound
 from ScheduleMaker import scheduleMaker, df_to_schedule as converter
 from ModelStructure.Costs.costFunctionDict import CostFuns
-from ModelStructure.Costs import realCosts
+
 import random
 
 import numpy as np
 
 from UDPP import udppModel
 
-random.seed(0)
-np.random.seed(0)
+# random.seed(0)
+# np.random.seed(0)
 scheduleType = scheduleMaker.schedule_types(show=False)
 
-num_flights = 5
+num_flights = 50
 num_airlines = 5
 
 
@@ -21,27 +22,23 @@ print("schedule type: ", distribution)
 
 df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution)
 
-#costFun = CostFuns().costFun["realistic"]
+costFun = CostFuns()
 
 fl_list = converter.make_flight_list(df, None)
-# for flight in fl_list:
-#     flight.set_cost_fun(realCosts.make_random_cost_fun())
+for flight in fl_list:
+    flight.set_cost_fun(costFun.get_random_real_cost_fun())
 
-# m = ModelStructure(fl_list)
-#
-# print(m.df)
-
-# print("\nnn bound")
-# max_model = nnBound.NNBoundModel(fl_list)
-# max_model.run()
-# max_model.print_performance()
+print("\nnn bound")
+max_model = nnBound.NNBoundModel(fl_list)
+max_model.run()
+max_model.print_performance()
 
 
 print("\nudpp")
 udpp_model_xp = udppModel.UDPPmodel(fl_list)
 udpp_model_xp.run(optimised=True)
 udpp_model_xp.print_performance()
-print(udpp_model_xp.get_new_df())
+# print(udpp_model_xp.get_new_df())
 
 new_fl_list = udpp_model_xp.get_new_flight_list()
 print(new_fl_list)
@@ -51,6 +48,12 @@ xpModel = istop.Istop(new_fl_list, triples=False)
 xpModel.run(True)
 xpModel.print_performance()
 print(xpModel.offers_selected)
+
+
+print("\nistop with triples")
+xpModel = istop.Istop(new_fl_list, triples=True)
+xpModel.run(True)
+xpModel.print_performance()
 
 """
 TO CONSIDER - TO DO

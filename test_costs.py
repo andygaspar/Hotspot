@@ -100,15 +100,11 @@ for i in range(50):
     # plt.show()
 print(time.time() - t)
 
+dict_cost_func
+for i in range(20):
+    f = lambda t: dict_cost_func[flights[i]](t, True)
+    plt.plot(delays, [f(t) for t in delays])
+    plt.show()
 
-f = lambda t: dict_cost_func[flights[0]](t, True)
-f(2)
-plt.plot(delays, [f(t) for t in delays])
-plt.show()
-
-a = lambda : 0
-a.__code__ = copy.deepcopy(f.__code__)
-print(f.__code__)
-print(a.__code__)
-import dis
-dis.dis(dict_cost_func[flights[0]])
+p =dict(zip(flights, [lambda t: dict_cost_func[flight_id](t, True) for flight_id in flights]))
+p[flights[0]](9)

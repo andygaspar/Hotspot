@@ -40,9 +40,9 @@ class ModelStructure:
     @staticmethod
     def compute_costs(flights, which):
         if which == "initial":
-            return sum([flight.costFun(flight, flight.slot) for flight in flights])
+            return sum([flight.costFun(flight.slot) for flight in flights])
         if which == "final":
-            return sum([flight.costFun(flight, flight.newSlot) for flight in flights])
+            return sum([flight.costFun(flight.newSlot) for flight in flights])
 
     @staticmethod
     def compute_delays(flights, which):
@@ -81,9 +81,7 @@ class ModelStructure:
 
     def set_flights_cost_vect(self):
         for flight in self.flights:
-            flight.costVect = []
-            for slot in self.slots:
-                flight.costVect.append(flight.costFun(slot))
+            flight.costVect = [flight.costFun(slot) for slot in self.slots]
 
 
     def make_slots(self):

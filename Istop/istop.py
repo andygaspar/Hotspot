@@ -147,9 +147,9 @@ class Istop(mS.ModelStructure):
 
             for pair in match:
                 self.m.addConstraint(
-                    xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(i, j.slot) for i in pair for j in flights) -
+                    xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(j.slot) for i in pair for j in flights) -
                     (1 - self.c[k]) * 10000000 \
-                    <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(i, i.slot) for i in pair for j in flights) - \
+                    <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(i.slot) for i in pair for j in flights) - \
                     self.epsilon)
 
 
@@ -158,7 +158,7 @@ class Istop(mS.ModelStructure):
     def set_objective(self):
 
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, j.index] * flight.costFun(flight, j)
+            xp.Sum(self.x[flight.slot.index, j.index] * flight.costFun(j)
                    for flight in self.flights for j in self.slots), sense=xp.minimize) #self.scrore instead of cost
 
     def run(self, timing=False):

@@ -21,7 +21,7 @@ class Flight:
 
         self.num = num
 
-        self.costFun = lambda slot: cost_fun(slot.time - self.eta)
+        self.delay_cost_fun = cost_fun
 
         self.udppPriority = udpp_priority
 
@@ -95,13 +95,11 @@ class Flight:
 
     def get_attributes(self):
         return self.type, self.slot, self.num, self.name, self.airlineName, self.eta, \
-               self.costFun, self.udppPriority, self.margin
+               self.delay_cost_fun, self.udppPriority, self.margin
 
     def set_cost_fun(self, delay_cost_fun):
-        self.delay_cost_fun = staticmethod(delay_cost_fun)
+        self.delay_cost_fun = delay_cost_fun
 
-    # def cost__Fun(self, slot):
-    #     print(type(slot))
-    #     #return self.delay_cost_fun(delay)
-    #     print(self.delay_cost_fun(slot.time))
-    #     return 2
+    def costFun(self, slot):
+        delay = slot.time - self.eta
+        return self.delay_cost_fun(delay)
