@@ -95,9 +95,9 @@ for i in range(50):
     costs = normalised_costs(flights[i], delays)
     result = fit_cost_curve(delays, costs, max_delay)
 
-    # plt.plot(delays, costs)
-    # plt.plot(delays, approx_three_margins(delays, *result))
-    # plt.show()
+    plt.plot(delays, costs)
+    plt.plot(delays, approx_three_margins(delays, *result))
+    plt.show()
 print(time.time() - t)
 
 dict_cost_func

@@ -12,6 +12,10 @@ at_gate = pd.read_csv("ModelStructure/Costs/costs_table_gate.csv", sep=" ")
 delay_range = list(at_gate.columns[1:].astype(int))
 
 
+def get_flight_id_keys():
+    return flights_dict_keys
+
+
 def get_interval(time):
     for i in range(len(delay_range) - 1):
         if delay_range[i] <= time < delay_range[i + 1]:
@@ -47,6 +51,5 @@ class CostFuns:
 
         }
 
-    def get_random_real_cost_fun(self):
-        flight_id = np.random.choice(flights_dict_keys, 1)[0]
-        return self.costFun["realistic"][flight_id]
+    def get_random_id(self):
+        return np.random.choice(get_flight_id_keys(), 1)[0]

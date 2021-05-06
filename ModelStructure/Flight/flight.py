@@ -25,6 +25,8 @@ class Flight:
 
         self.udppPriority = udpp_priority
 
+        self.flight_id = None
+
         try:
             self.margin = margins
         except:
@@ -105,3 +107,6 @@ class Flight:
     def costFun(self, slot):
         delay = slot.time - self.eta
         return self.delay_cost_fun(delay)
+
+    def set_WM_cost_fun(self, cost_fun_obj):
+        self.delay_cost_fun = cost_fun_obj.costFun["realistic"][self.flight_id]

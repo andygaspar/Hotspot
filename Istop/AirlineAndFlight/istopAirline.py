@@ -6,6 +6,7 @@ from itertools import combinations
 from Istop.AirlineAndFlight.istopFlight import IstopFlight
 from Istop.Preferences import preference
 from ModelStructure.Airline import airline as air
+import matplotlib.pyplot as plt
 
 
 class IstopAirline(air.Airline):
@@ -50,4 +51,11 @@ class IstopAirline(air.Airline):
             flight.preference = lambda slot: slope/max_val if slot.time - flight.eta < margin_1 \
                 else jump_2/max_val if slot.time - flight.eta < margin_2 else jump_3/max_val
 
+            x = np.linspace(0,100, 100)
+            costs = np.array([flight.delay_cost_fun(t) for t in x])
+            f = lambda t: slope/max_val if t < margin_1 else jump_2/max_val if t < margin_2 else jump_3/max_val
+            p = np.array([f(t) for t in x])
+            plt.plot(x, costs)
+            # plt.plot(x, p)
+            plt.show()
 
