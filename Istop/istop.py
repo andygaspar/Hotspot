@@ -126,7 +126,6 @@ class Istop(mS.ModelStructure):
             for j in flight.notCompatibleSlots:
                 self.m.addConstraint(self.x[flight.slot.index, j.index] == 0)
 
-
         for flight in self.flights_in_matches:
             self.m.addConstraint(
                                  xp.Sum(self.x[flight.slot.index, slot.index]
@@ -135,29 +134,25 @@ class Istop(mS.ModelStructure):
 
             self.m.addConstraint(xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) <= 1)
 
-
-
         k = 0
         for match in self.matches:
             flights = [flight for pair in match for flight in pair]
             self.m.addConstraint(xp.Sum(xp.Sum(self.x[i.slot.index, j.slot.index] for i in pair for j in flights)
                                         for pair in match) >= (self.c[k]) * len(flights))
 
-
             for pair in match:
                 self.m.addConstraint(
-                    xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(j.slot) for i in pair for j in flights) -
+                    xp.Sum(self.x[i.slot.index, j.slot.index] * i.preference(j.slot) for i in pair for j in flights) -
                     (1 - self.c[k]) * 10000000 \
-                    <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.costFun(i.slot) for i in pair for j in flights) - \
+                    <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.preference(i.slot) for i in pair for j in flights) - \
                     self.epsilon)
-
 
             k += 1
 
     def set_objective(self):
 
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, j.index] * flight.costFun(j)
+            xp.Sum(self.x[flight.slot.index, j.index] * flight.preference(j)
                    for flight in self.flights for j in self.slots), sense=xp.minimize) #self.scrore instead of cost
 
     def run(self, timing=False):
@@ -254,32 +249,32 @@ class Istop(mS.ModelStructure):
                 if self.m.getSolution(xpSolution[flight.slot.index, slot.index]) > 0.9:
                     flight.newSlot = slot
 
-    def update_object(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
-        self.preference_function = lambda x, y: x * (y ** alpha)
-        self.offers = None
-        self.triples = triples
-        super().__init__(df_init=df_init, costFun=costFun, airline_ctor=air.IstopAirline)
-        airline: IstopAirline
-        for airline in self.airlines:
-            #airline.set_preferences(self.preference_function)
-            pass
-
-        self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
-        self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
-
-        self.epsilon = sys.float_info.min
-        self.offerChecker = OfferChecker(self.scheduleMatrix)
-        with HiddenPrints():
-            self.m.reset()
-
-        self.x = None
-        self.c = None
-
-        self.matches = []
-        self.couples = []
-        self.flights_in_matches = []
-
-        self.offers_selected = []
+    # def update_object(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
+    #     self.preference_function = lambda x, y: x * (y ** alpha)
+    #     self.offers = None
+    #     self.triples = triples
+    #     super().__init__(df_init=df_init, costFun=costFun, airline_ctor=air.IstopAirline)
+    #     airline: IstopAirline
+    #     for airline in self.airlines:
+    #         #airline.set_preferences(self.preference_function)
+    #         pass
+    #
+    #     self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
+    #     self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
+    #
+    #     self.epsilon = sys.float_info.min
+    #     self.offerChecker = OfferChecker(self.scheduleMatrix)
+    #     with HiddenPrints():
+    #         self.m.reset()
+    #
+    #     self.x = None
+    #     self.c = None
+    #
+    #     self.matches = []
+    #     self.couples = []
+    #     self.flights_in_matches = []
+    #
+    #     self.offers_selected = []
 
 """
 0   total           50  299101.666667  298623.000000         0.16

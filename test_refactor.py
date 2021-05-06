@@ -1,3 +1,4 @@
+import ModelStructure.Costs.costFunctionDict
 from Istop import istop
 from NNBound import nnBound
 from ScheduleMaker import scheduleMaker, df_to_schedule as converter
@@ -26,7 +27,8 @@ costFun = CostFuns()
 
 fl_list = converter.make_flight_list(df, None)
 for flight in fl_list:
-    flight.set_cost_fun(costFun.get_random_real_cost_fun())
+    flight.flight_id = costFun.get_random_id()
+    flight.set_WM_cost_fun(costFun)
 
 print("\nnn bound")
 max_model = nnBound.NNBoundModel(fl_list)
@@ -50,10 +52,10 @@ xpModel.print_performance()
 print(xpModel.offers_selected)
 
 
-print("\nistop with triples")
-xpModel = istop.Istop(new_fl_list, triples=True)
-xpModel.run(True)
-xpModel.print_performance()
+# print("\nistop with triples")
+# xpModel = istop.Istop(new_fl_list, triples=True)
+# xpModel.run(True)
+# xpModel.print_performance()
 
 """
 TO CONSIDER - TO DO

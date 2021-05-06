@@ -41,8 +41,8 @@ print(xpModel.offers_selected)
 
 
 
-print("\nistop with triples")
-xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=True)
-xpModel.run(True)
-xpModel.print_performance()
+# print("\nistop with triples")
+# xpModel = istop.Istop(udpp_model_xp.get_new_df(), costFun, triples=True)
+# xpModel.run(True)
+# xpModel.print_performance()
 
