@@ -6,8 +6,6 @@ import numpy as np
 import random
 from UDPP import udppModel
 
-
-
 # ************* init or convertion from other models
 random.seed(0)
 np.random.seed(0)
