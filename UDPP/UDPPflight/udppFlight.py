@@ -15,10 +15,6 @@ class UDPPflight(fl.Flight):
 
         self.priorityValue = "M"
 
-        self.tna = self.margin
-
-        self.tnb = self.eta
-
         self.test_slots = []
 
         self.priorityNumber = None

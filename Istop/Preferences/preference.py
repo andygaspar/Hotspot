@@ -3,7 +3,6 @@ import scipy
 import math
 import numpy as np
 import dill as pickle
-import matplotlib.pyplot as plt
 import time
 import multiprocessing
 from multiprocessing import Pool
