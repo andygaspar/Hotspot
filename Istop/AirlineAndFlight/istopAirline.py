@@ -55,7 +55,7 @@ class IstopAirline(air.Airline):
             costs = np.array([flight.delay_cost_fun(t) for t in x])
             f = lambda t: slope/max_val if t < margin_1 else jump_2/max_val if t < margin_2 else jump_3/max_val
             p = np.array([f(t) for t in x])
-            plt.plot(x, costs)
+            # plt.plot(x, costs)
             # plt.plot(x, p)
             plt.show()
 

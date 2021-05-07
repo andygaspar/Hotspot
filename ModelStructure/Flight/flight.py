@@ -27,11 +27,6 @@ class Flight:
 
         self.flight_id = None
 
-        try:
-            self.margin = margins
-        except:
-            self.margin = None
-
         # attribute  handled by ModelStructure
 
         self.airline = None
@@ -99,7 +94,7 @@ class Flight:
 
     def get_attributes(self):
         return self.type, self.slot, self.num, self.name, self.airlineName, self.eta, \
-               self.delay_cost_fun, self.udppPriority, self.margin
+               self.delay_cost_fun, self.udppPriority
 
     def set_cost_fun(self, delay_cost_fun):
         self.delay_cost_fun = delay_cost_fun

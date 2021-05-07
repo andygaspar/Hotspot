@@ -2,15 +2,15 @@ from Istop import istop
 from NNBound import nnBound
 from ScheduleMaker import scheduleMaker, df_to_schedule as converter
 from ModelStructure.Costs.costFunctionDict import CostFuns
-
-
+import numpy as np
+import random
 from UDPP import udppModel
 
 
 
 # ************* init or convertion from other models
-# random.seed(0)
-# np.random.seed(0)
+random.seed(0)
+np.random.seed(0)
 scheduleType = scheduleMaker.schedule_types(show=False)
 
 num_flights = 50
@@ -23,8 +23,6 @@ print("schedule type: ", distribution)
 df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution)
 
 costFun = CostFuns()
-
-
 
 fl_list = converter.make_flight_list(df, None)
 for flight in fl_list:
