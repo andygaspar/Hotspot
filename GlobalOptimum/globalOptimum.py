@@ -46,7 +46,7 @@ class GlobalOptimum(mS.ModelStructure):
     def set_objective(self):
         flight: Flight
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, slot.index] * flight.costFun(flight, slot)
+            xp.Sum(self.x[flight.slot.index, slot.index] * flight.costFun(slot)
                    for flight in self.flights for slot in self.slots)
         )
 
