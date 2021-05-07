@@ -1,12 +1,15 @@
 from typing import Union, List, Callable
+
+from ModelStructure.Costs.costFunctionDict import CostFuns
 from ModelStructure.Slot.slot import Slot
 from ModelStructure.Airline import airline as air
 from ModelStructure.Flight import flight as fl
 import numpy as np
 import pandas as pd
 
+cost_funs = CostFuns()
 
-def make_flight(line, cost_fun):
+def make_flight(line, slot_times):
     flight_type = line["type"]
     slot_index = line["slot"]
     num = line["num"]
@@ -25,16 +28,17 @@ def make_flight(line, cost_fun):
     # ISTOP attributes  *************
     udpp_priority = line["priority"]
 
-    cost_fun = lambda t: t
+    cost_vect = cost_funs.get_random_cost_vect(slot_times, eta)
 
     return fl.Flight(flight_type, slot, num, flight_name, airline_name,
-                     eta, cost_fun, udpp_priority, margin)
+                     eta, cost_vect, udpp_priority, margin)
 
 
-def make_flight_list(df: pd.DataFrame, cost_fun):
+def make_flight_list(df: pd.DataFrame):
     flight_list = []
+    slot_times = df.time.to_numpy()
     for i in range(df.shape[0]):
         line = df.iloc[i]
-        flight_list.append(make_flight(line, cost_fun))
+        flight_list.append(make_flight(line,slot_times))
 
     return flight_list

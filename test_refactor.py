@@ -1,14 +1,15 @@
+from GlobalOptimum import globalOptimum
 from Istop import istop
 from NNBound import nnBound
-from ScheduleMaker import scheduleMaker, df_to_schedule as converter
+from ScheduleMaker import scheduleMaker, df_to_schedule
 from ModelStructure.Costs.costFunctionDict import CostFuns
 import numpy as np
 import random
 from UDPP import udppModel
 
-# ************* init or convertion from other models
-random.seed(0)
-np.random.seed(0)
+# ************* init or conversion from other models
+# random.seed(0)
+# np.random.seed(0)
 scheduleType = scheduleMaker.schedule_types(show=False)
 
 num_flights = 50
@@ -22,12 +23,14 @@ df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution
 
 costFun = CostFuns()
 
-fl_list = converter.make_flight_list(df, None)
-for flight in fl_list:
-    flight.flight_id = costFun.get_random_id()
-    flight.set_WM_cost_fun(costFun)
+fl_list = df_to_schedule.make_flight_list(df)
 
 # ****************
+print("\n global optimum")
+global_model = globalOptimum.GlobalOptimum(fl_list)
+global_model.run()
+global_model.print_performance()
+
 
 print("\nnn bound")
 max_model = nnBound.NNBoundModel(fl_list)

@@ -13,6 +13,8 @@ class IstopFlight(fl.Flight):
 
         self.flight_id = None
 
+        self.standardisedVector = None
+
     def set_preference(self, sum_priorities, f):
         self.preference = self.compute_preference(self.airline.numFlights, sum_priorities, f)
 

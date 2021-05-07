@@ -47,9 +47,11 @@ class CostFuns:
             "gate": lambda flight, slot: compute_gate_costs(flight, slot),
 
             "realistic": dict(zip(flights_dict_keys,
-                                  [lambda t: dict_cost_func[flight_id](t*2, True) for flight_id in flights_dict_keys]))
+                                  [lambda t: dict_cost_func[flight_id](t, True) for flight_id in flights_dict_keys]))
 
         }
 
-    def get_random_id(self):
-        return np.random.choice(get_flight_id_keys(), 1)[0]
+    def get_random_cost_vect(self, slot_times, eta):
+        fl_id = np.random.choice(get_flight_id_keys(), 1)[0]
+        cost_vect = np.array([dict_cost_func[fl_id](t- eta, True)for t in slot_times])
+        return cost_vect

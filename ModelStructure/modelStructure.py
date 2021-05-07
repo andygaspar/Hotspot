@@ -6,7 +6,7 @@ from ModelStructure.Airline.airline import Airline
 from ModelStructure.Slot import slot as sl
 from ModelStructure.Flight.flight import Flight
 
-
+import matplotlib.pyplot as plt
 class ModelStructure:
 
     def __init__(self, flights: List[Flight], air_ctor=Airline):
@@ -20,10 +20,6 @@ class ModelStructure:
         self.numAirlines = len(self.airlines)
 
         self.set_flights_attributes()
-
-        self.set_flights_cost_vect()
-
-        self.set_delay_vect()
 
         self.numFlights = len(self.flights)
 
@@ -56,7 +52,7 @@ class ModelStructure:
     def make_schedule_matrix(self):
         arr = []
         for flight in self.flights:
-            arr.append([flight.slot.time] + [flight.eta] + flight.costVect)
+            arr.append([flight.slot.time] + [flight.eta] + list(flight.costVect))
         return np.array(arr)
 
     def __str__(self):
@@ -88,8 +84,6 @@ class ModelStructure:
     def set_delay_vect(self):
         for flight in self.flights:
             flight.delayVect = [slot.time for slot in self.slots if slot.time >= flight.eta]
-
-
 
 
     def make_slots(self):

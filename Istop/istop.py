@@ -62,9 +62,9 @@ class Istop(mS.ModelStructure):
         istop_flights = [IstopFlight(flight) for flight in flights]
 
         super().__init__(istop_flights, air_ctor=IstopAirline)
-        airline: IstopAirline
-        for airline in self.airlines:
-            airline.set_preferences(max_delay=self.slots[-1].time - self.slots[0].time)
+        # airline: IstopAirline
+        # for airline in self.airlines:
+        #     airline.set_preferences(max_delay=self.slots[-1].time - self.slots[0].time)
 
         self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
         self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
@@ -142,9 +142,9 @@ class Istop(mS.ModelStructure):
 
             for pair in match:
                 self.m.addConstraint(
-                    xp.Sum(self.x[i.slot.index, j.slot.index] * i.costVect[j.slot.index] for i in pair for j in flights) -
+                    xp.Sum(self.x[i.slot.index, j.slot.index] * i.standardisedVector[j.slot.index] for i in pair for j in flights) -
                     (1 - self.c[k]) * 10000000 \
-                    <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.costVect[i.slot.index] for i in pair for j in flights) - \
+                    <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.standardisedVector[i.slot.index] for i in pair for j in flights) - \
                     self.epsilon)
 
             k += 1
@@ -152,9 +152,8 @@ class Istop(mS.ModelStructure):
 
 
     def set_objective(self):
-
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, j.index] * flight.costFun(j)
+            xp.Sum(self.x[flight.slot.index, j.index] * flight.standardisedVector[j.index]
                    for flight in self.flights for j in self.slots), sense=xp.minimize) #self.scrore instead of cost
 
     def run(self, timing=False):

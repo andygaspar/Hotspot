@@ -31,6 +31,11 @@ class IstopAirline(air.Airline):
 
         self.flight_triplets = self.triplet(self.flights)
 
+        max_cost = max([cost for flight in self.flights for cost in flight.costVect])
+
+        for flight in self.flights:
+            flight.standardisedVector = flight.costVect/max_cost
+
     # def set_preferences(self, priorityFunction):
     #     flight: IstopFlight
     #     for flight in self.flights:
@@ -38,24 +43,24 @@ class IstopAirline(air.Airline):
     #         flight.set_priority(df_flight["priority"].values[0])
     #         flight.set_preference(self.sum_priorities, priorityFunction)
 
-    def set_preferences(self, max_delay):
-        max_val = 0
-        for flight in self.flights:
-            f_max = max(flight.costVect)
-            if f_max > max_val:
-                max_val = f_max
-
-        for flight in self.flights:
-            slope, margin_1, jump_2, margin_2, jump_3 = \
-                preference.make_preference_fun(max_delay, flight.delay_cost_fun)
-            flight.preference = lambda slot: slope/max_val if slot.time - flight.eta < margin_1 \
-                else jump_2/max_val if slot.time - flight.eta < margin_2 else jump_3/max_val
-
-            x = np.linspace(0,100, 100)
-            costs = np.array([flight.delay_cost_fun(t) for t in x])
-            f = lambda t: slope/max_val if t < margin_1 else jump_2/max_val if t < margin_2 else jump_3/max_val
-            p = np.array([f(t) for t in x])
-            # plt.plot(x, costs)
-            # plt.plot(x, p)
-            plt.show()
+    # def set_preferences(self, max_delay):
+    #     max_val = 0
+    #     for flight in self.flights:
+    #         f_max = max(flight.costVect)
+    #         if f_max > max_val:
+    #             max_val = f_max
+    #
+    #     for flight in self.flights:
+    #         slope, margin_1, jump_2, margin_2, jump_3 = \
+    #             preference.make_preference_fun(max_delay, flight.delay_cost_fun)
+    #         flight.preference = lambda slot: slope/max_val if slot.time - flight.eta < margin_1 \
+    #             else jump_2/max_val if slot.time - flight.eta < margin_2 else jump_3/max_val
+    #
+    #         x = np.linspace(0,100, 100)
+    #         costs = np.array([flight.delay_cost_fun(t) for t in x])
+    #         f = lambda t: slope/max_val if t < margin_1 else jump_2/max_val if t < margin_2 else jump_3/max_val
+    #         p = np.array([f(t) for t in x])
+    #         # plt.plot(x, costs)
+    #         # plt.plot(x, p)
+    #         plt.show()
 
