@@ -28,23 +28,6 @@ class Istop(mS.ModelStructure):
             if np.array_equiv(array[i], elem):
                 return i
 
-    # def get_couple(self, couple):
-    #     index = 0
-    #     for c in self.couples:
-    #         if couple[0].num == c[0].num and couple[1].num == c[1].num:
-    #             return index
-    #         index += 1
-
-    # @staticmethod
-    # def get_tuple(flight):
-    #     j = 0
-    #     indexes = []
-    #     for pair in flight.airline.flight_pairs:
-    #         if flight in pair:
-    #             indexes.append(j)
-    #         j += 1
-    #     return indexes
-
     def get_match_for_flight(self, flight):
         j = 0
         indexes = []

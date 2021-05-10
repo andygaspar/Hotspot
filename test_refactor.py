@@ -8,8 +8,8 @@ import random
 from UDPP import udppModel
 
 # ************* init or conversion from other models
-# random.seed(0)
-# np.random.seed(0)
+random.seed(0)
+np.random.seed(0)
 scheduleType = scheduleMaker.schedule_types(show=False)
 
 num_flights = 50

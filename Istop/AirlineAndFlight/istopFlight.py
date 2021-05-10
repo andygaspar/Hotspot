@@ -9,7 +9,7 @@ class IstopFlight(fl.Flight):
 
         self.priority = None
 
-        self.preference = None
+        self.fitCostVect = self.costVect
 
         self.flight_id = None
 

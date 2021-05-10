@@ -7,7 +7,7 @@ from ModelStructure.Slot.slot import Slot
 class Flight:
 
     def __init__(self, flight_type: str, slot: Slot, num, flight_name: str, airline_name: str,
-                 eta: int, cost_vect: np.array, udpp_priority: int = None, margins: int = None):
+                 eta: int, cost_vect: np.array, delay_cost_vect=None, udpp_priority: int = None):
 
         self.type = flight_type
 
@@ -32,6 +32,8 @@ class Flight:
         self.etaSlot = None
 
         self.costVect = cost_vect
+
+        self.delayCostVect = delay_cost_vect
 
         self.delayVect = None
 
@@ -100,6 +102,3 @@ class Flight:
     def costFun(self, slot):
         # delay = slot.time - self.eta
         return self.costVect[slot.index]
-
-    # def set_WM_cost_fun(self, cost_fun_obj):
-    #     self.delay_cost_fun = cost_fun_obj.costFun["realistic"][self.flight_id]
