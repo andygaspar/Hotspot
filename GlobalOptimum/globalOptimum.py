@@ -34,6 +34,7 @@ class GlobalOptimum(mS.ModelStructure):
         
             self.m.addVariable(self.x)
 
+
     def set_constraints(self):
         flight: modFl.Flight
         airline: air.Airline
