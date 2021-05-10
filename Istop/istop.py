@@ -17,6 +17,7 @@ import pandas as pd
 import time
 import xpress as xp
 
+
 # xp.controls.outputlog = 0
 
 
@@ -45,6 +46,15 @@ class Istop(mS.ModelStructure):
         istop_flights = [IstopFlight(flight) for flight in flights]
 
         super().__init__(istop_flights, air_ctor=IstopAirline)
+
+        self.airlines: List[IstopAirline]
+
+        for flight in self.flights:
+            flight.fitCostVect = flight.costVect
+
+        for airline in self.airlines:
+            airline.set_and_standardise_fit_vect()
+
         # airline: IstopAirline
         # for airline in self.airlines:
         #     airline.set_preferences(max_delay=self.slots[-1].time - self.slots[0].time)
@@ -65,7 +75,6 @@ class Istop(mS.ModelStructure):
 
         self.offers_selected = []
 
-
     def check_and_set_matches(self):
         start = time.time()
         self.matches = self.offerChecker.all_couples_check(self.airlines_pairs)
@@ -81,7 +90,7 @@ class Istop(mS.ModelStructure):
                     if not self.f_in_matched(couple[1]):
                         self.flights_in_matches.append(couple[1])
 
-        print("preprocess concluded in sec:", time.time()-start, "   Number of possible offers: ", len(self.matches))
+        print("preprocess concluded in sec:", time.time() - start, "   Number of possible offers: ", len(self.matches))
         return len(self.matches) > 0
 
     def set_variables(self):
@@ -92,6 +101,9 @@ class Istop(mS.ModelStructure):
         self.m.addVariable(self.x, self.c)
 
     def set_constraints(self):
+
+        self.flights: List[IstopFlight]
+
         for i in self.emptySlots:
             for j in self.slots:
                 self.m.addConstraint(self.x[i, j] == 0)
@@ -111,9 +123,9 @@ class Istop(mS.ModelStructure):
 
         for flight in self.flights_in_matches:
             self.m.addConstraint(
-                                 xp.Sum(self.x[flight.slot.index, slot.index]
-                                        for slot in self.slots if slot != flight.slot) \
-                                 <= xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]))
+                xp.Sum(self.x[flight.slot.index, slot.index]
+                       for slot in self.slots if slot != flight.slot) \
+                <= xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]))
 
             self.m.addConstraint(xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]) <= 1)
 
@@ -125,19 +137,22 @@ class Istop(mS.ModelStructure):
 
             for pair in match:
                 self.m.addConstraint(
-                    xp.Sum(self.x[i.slot.index, j.slot.index] * i.standardisedVector[j.slot.index] for i in pair for j in flights) -
+                    xp.Sum(self.x[i.slot.index, j.slot.index] * i.fitCostVect[j.slot.index] for i in pair for j in
+                           flights) -
                     (1 - self.c[k]) * 10000000 \
-                    <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.standardisedVector[i.slot.index] for i in pair for j in flights) - \
+                    <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.fitCostVect[i.slot.index] for i in pair for j in
+                              flights) - \
                     self.epsilon)
 
             k += 1
 
-
-
     def set_objective(self):
+
+        self.flights: List[IstopFlight]
+
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, j.index] * flight.standardisedVector[j.index]
-                   for flight in self.flights for j in self.slots), sense=xp.minimize) #self.scrore instead of cost
+            xp.Sum(self.x[flight.slot.index, j.index] * flight.fitCostVect[j.index]
+                   for flight in self.flights for j in self.slots), sense=xp.minimize)  # self.scrore instead of cost
 
     def run(self, timing=False):
         feasible = self.check_and_set_matches()
@@ -211,7 +226,6 @@ class Istop(mS.ModelStructure):
         self.offers = pd.DataFrame({"airline": airline_names, "flights": flights_numbers, "offers": offers})
         self.offers.sort_values(by="flights", inplace=True, ascending=False)
 
-
     @staticmethod
     def is_in(couple, couples):
         for c in couples:
@@ -260,6 +274,7 @@ class Istop(mS.ModelStructure):
     #
     #     self.offers_selected = []
 
+
 """
 0   total           50  299101.666667  298623.000000         0.16
 1       B           16  104410.000000  102681.333333         1.66
@@ -269,7 +284,6 @@ class Istop(mS.ModelStructure):
 5       D            4   42556.000000   42556.000000         0.00
 
 """
-
 
 """
 rows 936

@@ -7,7 +7,10 @@ from ModelStructure.Slot.slot import Slot
 class Flight:
 
     def __init__(self, flight_type: str, slot: Slot, num, flight_name: str, airline_name: str,
-                 eta: int, cost_vect: np.array, delay_cost_vect=None, udpp_priority: int = None):
+                 eta: int, delay_cost_vect=np.array, udpp_priority=None, tna=None,
+                 slope=None, margin_1=None, jump_1=None, margin_2=None, jump_2=None):
+
+        self.temp = None
 
         self.type = flight_type
 
@@ -21,17 +24,13 @@ class Flight:
 
         self.num = num
 
-        self.udppPriority = udpp_priority
-
-        self.flight_id = None
-
         # attribute  handled by ModelStructure
 
         self.airline = None
 
         self.etaSlot = None
 
-        self.costVect = cost_vect
+        self.costVect = None
 
         self.delayCostVect = delay_cost_vect
 
@@ -45,9 +44,24 @@ class Flight:
 
         self.newSlot = None
 
+        # UDPP attributes
+
+        self.udppPriority = None
+
+        self.tna = None
+
+
         # ISTOP attributes  *************
 
-        self.preference = None
+        self.slope = None
+
+        self.margin1 = None
+
+        self.jump1 = None
+
+        self.margin2 = None
+
+        self.jump2 = None
 
     def __str__(self):
         return self.name
@@ -93,8 +107,8 @@ class Flight:
         self.etaSlot = slots[i]
 
     def get_attributes(self):
-        return self.type, self.slot, self.num, self.name, self.airlineName, self.eta, \
-               self.costVect, self.udppPriority
+        return self.type, self.slot, self.num, self.name, self.airlineName, self.eta, self.delayCostVect, \
+               self.udppPriority, self.tna, self.slope, self.margin1, self.jump1, self.margin2, self.jump2
 
     def set_cost_fun(self, delay_cost_fun):
         self.delay_cost_fun = delay_cost_fun
