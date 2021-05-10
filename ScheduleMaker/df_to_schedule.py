@@ -4,6 +4,7 @@ from ModelStructure.Costs.costFunctionDict import CostFuns
 from ModelStructure.Slot.slot import Slot
 from ModelStructure.Airline import airline as air
 from ModelStructure.Flight import flight as fl
+from Istop.Preferences import preference
 import numpy as np
 import pandas as pd
 
@@ -30,9 +31,12 @@ def make_flight(line, slot_times):
     udpp_priority = line["priority"]
 
     cost_vect, delay_cost_vect = cost_funs.get_random_cost_vect(slot_times, eta)
+    # print(delay_cost_vect)
+    max_delay = slot_times[-1] - slot_times[1]
+    slope, margin_1, jump_2, margin_2, jump_2 = preference.make_preference_fun(max_delay, delay_cost_vect)
 
     return fl.Flight(flight_type, slot, num, flight_name, airline_name,
-                     eta, cost_vect, udpp_priority, margin)
+                     eta, delay_cost_vect)
 
 
 def make_flight_list(df: pd.DataFrame):

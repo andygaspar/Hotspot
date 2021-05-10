@@ -15,6 +15,8 @@ class ModelStructure:
 
         self.slots = [flight.slot for flight in self.flights]
 
+        self.set_cost_vect()
+
         self.airlines, self.airDict = self.make_airlines(air_ctor)
 
         self.numAirlines = len(self.airlines)
@@ -81,9 +83,20 @@ class ModelStructure:
         for flight in self.flights:
             flight.costVect = [flight.costFun(slot) for slot in self.slots]
 
-    def set_delay_vect(self):
+    def set_cost_vect(self):
         for flight in self.flights:
-            flight.delayVect = [slot.time for slot in self.slots if slot.time >= flight.eta]
+            i = 0
+            flight.costVect = []
+            for slot in self.slots:
+                if slot.time < flight.eta:
+                    flight.costVect.append(0)
+                else:
+                    flight.costVect.append(flight.delayCostVect[i])
+                    i += 1
+
+            flight.costVect = np.array(flight.costVect)
+
+
 
 
     def make_slots(self):
@@ -117,6 +130,10 @@ class ModelStructure:
             flight.set_eta_slot(self.slots)
             flight.set_compatible_slots(self.slots)
             flight.set_not_compatible_slots(self.slots)
+
+    def set_delay_vect(self):
+        for flight in self.flights:
+            flight.delayVect = np.array([0 if slot.time < flight.eta else slot.time-flight.eta for slot in self.slots])
 
     def get_new_flight_list(self):
         new_flight_list = []
