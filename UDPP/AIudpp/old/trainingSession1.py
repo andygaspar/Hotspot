@@ -1,4 +1,4 @@
-import random
+import numpy as np
 
 from UDPP.AIudpp.trainAuxFuns1 import make_network_input, make_prioritisation
 from UDPP.udppModel import UDPPmodel
@@ -50,7 +50,7 @@ net.load_weights("netWeights.pt")
 for i in range(10):
     print("\n\n\n", "run ", i)
     df = scheduleMaker.df_maker(custom=[6, 4, 3, 7, 2, 8])
-    df["margins"] = [random.choice(range(10, 50)) for i in range(df.shape[0])]
+    df["margins"] = [np.random.choice(range(10, 50)) for i in range(df.shape[0])]
     df1 = df.copy(deep=True)
     udMod = UDPPmodel(df, costFun)
     udMod.run(optimised=True)

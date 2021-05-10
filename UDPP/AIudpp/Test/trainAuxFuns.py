@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 
 from Programma.ModelStructure.Costs.costFunctionDict import CostFuns
@@ -28,7 +26,7 @@ def make_batch(batchSize):
 
     for run in range(batchSize):
         df = df_maker(custom=[6, 4, 3, 7, 2, 8])
-        df["margins"] = [random.choice(range(10, 50)) for i in range(df.shape[0])]
+        df["margins"] = [np.random.choice(range(10, 50)) for i in range(df.shape[0])]
         costFun = CostFuns().costFun["linear"]
 
         udMod = udppModel.UDPPmodel(df, costFun)
