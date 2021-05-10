@@ -1,2 +1,10 @@
 /venv
 /.idea
+.ipynb_checkpoints
+*__pycache__*
+*.sublime-project
+*.sublime-workspace
+*.orig
+*.sublime-project
+*.sublime-workspace
+*.jupyterlab-workspace

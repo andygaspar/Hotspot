@@ -8,7 +8,6 @@ from Programma.Istop import istop
 
 from Programma.ModelStructure.Costs.costFunctionDict import CostFuns
 from Programma.UDPP import udppModel
-import random
 import pandas as pd
 
 # df = pd.read_csv("../data/data_ruiz.csv")

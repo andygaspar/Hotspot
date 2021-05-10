@@ -1,10 +1,13 @@
-from ModelStructure.modelStructure import ModelStructure
-from ModelStructure.Flight.flight import Flight
-from ModelStructure.Slot.slot import Slot
 import pandas as pd
 import os
+from pathlib import Path
 
-at_gate = pd.read_csv("ModelStructure/Costs/costs_table_gate.csv", sep=" ")
+from Hotspot.ModelStructure.modelStructure import ModelStructure
+from Hotspot.ModelStructure.Flight.flight import Flight
+from Hotspot.ModelStructure.Slot.slot import Slot
+
+dir_path = Path(__file__).resolve().parent
+at_gate = pd.read_csv(dir_path / 'costs_table_gate.csv', sep=" ")
 delay_range = list(at_gate.columns[1:].astype(int))
 
 def get_interval(time):
@@ -35,8 +38,10 @@ class CostFuns:
             if (slot.time - flight.eta) < flight.margin else
             ((slot.time - flight.eta) * flight.cost*10 + flight.cost * 30),
 
+            "jump": lambda flight, slot: 0 if slot.time - flight.eta < 0 else (slot.time - flight.eta) * flight.cost
+            if (slot.time - flight.eta) < flight.margin else
+            (slot.time - flight.eta) * flight.cost + flight.jump,
+
             "realistic": lambda flight, slot: compute(flight, slot)
 
         }
-
-

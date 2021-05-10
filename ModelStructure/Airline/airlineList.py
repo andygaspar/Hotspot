@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from typing import List, Callable
 
-from ModelStructure.Slot import slot
-from ModelStructure.Airline import airline as air
+from Hotspot.ModelStructure.Slot import slot
+from Hotspot.ModelStructure.Airline import airline as air
 
 
 def make_airlines_list(df: pd.DataFrame, slots: List[slot.Slot], airline_ctor: Callable):

@@ -1,5 +1,7 @@
 from typing import Union, List
 
+from pathlib import Path
+
 import numpy as np
 import random
 import string
@@ -74,7 +76,25 @@ def distribution_maker(num_flights, num_airlines, distribution="uniform"):
     return dist
 
 
-def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1, new_capacity=2, custom:Union[None, List[int]]= None):
+def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1, new_capacity=2,
+    n_flights_first_airlines=None, custom:Union[None, List[int]]= None, min_margin=10,
+    max_margin=45, min_jump=10, max_jump=100):
+
+    """
+    n_flights_first_airlines can be passed as list of ints and represents number
+    of fligihts per airlines. For instance, num_airlines=3 and n_flights_first_airlines=[3]
+    can create distribution of flights [3, 4, 3] or [3, 5, 2] etc. All number of flights
+    if given by n_flights_first_airlines, they are used as is, for instance 
+    num_airlines=3 and n_flights_first_airlines=[1, 5, 4]
+    """
+
+    if len(n_flights_first_airlines)==num_airlines and custom is None:
+        custom = n_flights_first_airlines
+    elif not n_flights_first_airlines is None:
+        dist_other_flights = distribution_maker(num_flights-sum(n_flights_first_airlines),
+                                                num_airlines-len(n_flights_first_airlines),
+                                                distribution)
+        custom = n_flights_first_airlines + list(dist_other_flights)
 
     if custom is None:
         dist = distribution_maker(num_flights, num_airlines, distribution)
@@ -94,7 +114,7 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
     priority = np.random.uniform(0.5, 2, num_flights)
     priority = []
     for i in range(num_flights):
-        m = random.choice([0, 1])
+        m = np.random.choice([0, 1])
         if m == 0:
             priority.append(np.random.normal(0.7, 0.1))
         else:
@@ -102,14 +122,17 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
 
     priority = np.abs(priority)
     cost = priority
+
     num = range(num_flights)
-    margins_gap = np.array([random.choice(range(15, 45)) for i in num])
-    at_gate = pd.read_csv("ModelStructure/Costs/costs_table_gate.csv", sep=" ")
+    margins_gap = np.array([random.choice(range(min_margin, max_margin)) for i in num])
+    dir_path = Path(__file__).resolve().parent.parent
+    at_gate = pd.read_csv(dir_path / "Costs/costs_table_gate.csv", sep=" ")
     flights_type = [np.random.choice(at_gate["flight"].to_numpy()) for i in range(num_flights)]
+    jump = np.random.randint(min_jump, max_jump, len(num))
 
     return pd.DataFrame(
         {"slot": slot, "flight": flights, "eta": eta, "fpfs": fpfs, "time": fpfs, "priority": priority,
-         "margins":margins_gap, "airline": airline, "cost": cost, "num": num, "type": flights_type})
+         "margins":margins_gap, "airline": airline, "cost": cost, "num": num, "jump":jump, "type": flights_type})
 
 
 def schedule_types(show=False):

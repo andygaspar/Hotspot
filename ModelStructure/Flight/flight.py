@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List, Callable
 
-from ModelStructure.Slot import slot as sl
+from Hotspot.ModelStructure.Slot import slot as sl
 
 
 class Flight:
@@ -46,6 +46,8 @@ class Flight:
         # ISTOP attributes  *************
 
         self.priority = line["priority"]
+
+        self.jump = line["jump"]
 
         self.preference = None
 

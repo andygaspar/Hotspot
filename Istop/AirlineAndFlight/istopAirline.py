@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 from itertools import combinations
-from Istop.AirlineAndFlight.istopFlight import IstopFlight
-from ModelStructure.Airline import airline as air
+
+from Hotspot.Istop.AirlineAndFlight.istopFlight import IstopFlight
+from Hotspot.ModelStructure.Airline import airline as air
 
 
 class IstopAirline(air.Airline):
