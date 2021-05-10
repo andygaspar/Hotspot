@@ -50,18 +50,15 @@ def fit_curve(vals):
     return loss_fun(y, approx_fun(x, *params))
 
 
-def fit_cost_curve(x, y, max_delay, steps= 6):
+def fit_cost_curve(x, y, max_delay, steps=6):
     test_values = []
     for slope in np.linspace(0, 1, steps):
         for margin_1 in np.linspace(0, 2*max_delay//3, steps):
             for jump_1 in np.linspace(10, 90, steps//2):
-                for margin_2 in np.linspace(margin_1 , max_delay, steps//2):
+                for margin_2 in np.linspace(margin_1, max_delay, steps//2):
                     for jump_2 in np.linspace(jump_1, 100, steps//2):
-                        for margin_3 in np.linspace(margin_2 , max_delay, steps//2):
-                            for jump_3 in np.linspace(jump_2, 100, steps//2):
-                                test_values.append(
-                                    (x, y, slope, margin_1, jump_1, margin_2, jump_2,
-                                     margin_3, jump_3, approx_three_margins))
+                        test_values.append(
+                            (x, y, slope, margin_1, jump_1, margin_2, jump_2, approx_two_margins))
     pool = Pool(num_cpu)
     guesses = pool.map(fit_curve, test_values)
     best_initial_guess = np.array(test_values[np.argmin(guesses)][2:-1])
@@ -71,12 +68,9 @@ def fit_cost_curve(x, y, max_delay, steps= 6):
     return solution.x
 
 
-def make_preference_fun(max_delay, cost_fun):
-    delays_vect = np.linspace(0, max_delay, 50)
-    cost_vect = np.array([cost_fun(d) for d in delays_vect])
-    scale_factor = max(cost_vect) / 100
-    scaled_costs = cost_vect / scale_factor
-    result = fit_cost_curve(delays_vect, scaled_costs, max_delay)
-    slope, margin_1, jump_1, margin_2, jump_2, margin_3, jump_3 = result
-    return slope*scale_factor, margin_1, jump_2*scale_factor, margin_2, jump_3*scale_factor
+def make_preference_fun(max_delay, delay_cost_vect):
+    delays = np.linspace(0, max_delay, 50)
+    result = fit_cost_curve(delays, delay_cost_vect, max_delay)
+    slope, margin_1, jump_1, margin_2, jump_2 = result
+    return slope, margin_1, jump_2, margin_2, jump_2
 

@@ -54,4 +54,6 @@ class CostFuns:
     def get_random_cost_vect(self, slot_times, eta):
         fl_id = np.random.choice(get_flight_id_keys(), 1)[0]
         cost_vect = np.array([dict_cost_func[fl_id](t- eta, True)for t in slot_times])
-        return cost_vect
+        min_t = min(slot_times)
+        delay_cost_vect = np.array([dict_cost_func[fl_id](t - min_t, True) for t in slot_times])
+        return cost_vect, delay_cost_vect
