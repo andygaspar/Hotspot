@@ -3,6 +3,7 @@ import time
 from typing import List
 
 import xpress as xp
+xp.controls.outputlog = 0
 import numpy as np
 
 from Istop.AirlineAndFlight.istopFlight import IstopFlight
@@ -10,9 +11,10 @@ from Istop.AirlineAndFlight.istopFlight import IstopFlight
 
 class XpressSolver:
 
-    def __init__(self, model):
+    def __init__(self, model, max_time):
 
         self.m = xp.problem()
+        self.m.controls.maxtime = max_time
         self.flights = model.flights
         self.airlines = model.airlines
         self.slots = model.slots
@@ -27,6 +29,8 @@ class XpressSolver:
 
         self.epsilon = sys.float_info.min
 
+        self.x = None
+        self.c = None
 
     def set_variables(self):
         self.x = np.array([[xp.var(vartype=xp.binary) for _ in self.slots] for _ in self.slots], dtype=xp.npvar)
@@ -35,8 +39,8 @@ class XpressSolver:
 
         self.m.addVariable(self.x, self.c)
 
-
     def set_constraints(self):
+
         self.flights: List[IstopFlight]
 
         for i in self.emptySlots:
@@ -81,7 +85,6 @@ class XpressSolver:
 
             k += 1
 
-
     def set_objective(self):
         self.flights: List[IstopFlight]
 
@@ -90,6 +93,7 @@ class XpressSolver:
                    for flight in self.flights for j in self.slots), sense=xp.minimize)  # s
 
     def run(self, timing=False):
+
         self.set_variables()
 
         start = time.time()
@@ -107,8 +111,6 @@ class XpressSolver:
             print("Simplex time ", end)
 
         print("problem status, explained: ", self.m.getProbStatusString(), self.m.getObjVal())
-        xpSolution = self.x
-        # print(self.m.getSolution(self.x))
         print(self.m.getObjVal())
 
 
@@ -119,9 +121,6 @@ class XpressSolver:
         #         print("********************** danno *********************************",
         #               flight, flight.eta, flight.newSlot.time)
 
-        offers = 0
-        for i in range(len(self.matches)):
-            # print(self.m.getSolution(self.c[i]))
-            if self.m.getSolution(self.c[i]) > 0.9:
-                offers += 1
-        print("Number of offers selected: ", offers)
+
+
+        return self.m.getSolution(self.x), self.m.getSolution(self.c)
