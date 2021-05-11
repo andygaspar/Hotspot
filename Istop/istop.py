@@ -2,6 +2,7 @@ from typing import Callable, Union, List
 
 from GlobalFuns.globalFuns import HiddenPrints
 from Istop.AirlineAndFlight.istopFlight import IstopFlight
+from Istop.Solvers.xpress_solver import XpressSolver
 from ModelStructure import modelStructure as mS
 # from mip import *
 import sys
@@ -54,10 +55,6 @@ class Istop(mS.ModelStructure):
 
         for airline in self.airlines:
             airline.set_and_standardise_fit_vect()
-
-        # airline: IstopAirline
-        # for airline in self.airlines:
-        #     airline.set_preferences(max_delay=self.slots[-1].time - self.slots[0].time)
 
         self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
         self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
@@ -157,10 +154,6 @@ class Istop(mS.ModelStructure):
     def run(self, timing=False):
         feasible = self.check_and_set_matches()
         if feasible:
-            # print("before", self.m.getControl('presolve'))
-            # # self.m.setControl({'presolve': 0})
-            # self.m.setControl({'maxnode': 100})
-            # print("after", self.m.getControl('presolve'))
             self.set_variables()
 
             start = time.time()
@@ -187,7 +180,7 @@ class Istop(mS.ModelStructure):
                 flight.newSlot = flight.slot
 
         solution.make_solution(self)
-        # 24170.971882985057
+
         self.offer_solution_maker()
 
         for flight in self.flights:
@@ -202,6 +195,11 @@ class Istop(mS.ModelStructure):
                 self.offers_selected.append(self.matches[i])
                 offers += 1
         print("Number of offers selected: ", offers)
+
+        print("objval = ", self.m.getObjVal)
+
+        m = XpressSolver(self)
+        m.run()
 
     def other_airlines_compatible_slots(self, flight):
         others_slots = []
