@@ -56,10 +56,10 @@ xpModel.print_performance()
 print(xpModel.offers_selected)
 
 
-print("\nistop with triples")
-xpModel = istop.Istop(new_fl_list, triples=True)
-xpModel.run(True)
-xpModel.print_performance()
+# print("\nistop with triples")
+# xpModel = istop.Istop(new_fl_list, triples=True)
+# xpModel.run(True)
+# xpModel.print_performance()
 
 """
 TO CONSIDER - TO DO

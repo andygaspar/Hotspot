@@ -19,7 +19,6 @@ import pandas as pd
 import time
 
 
-
 class Istop(mS.ModelStructure):
 
     @staticmethod
