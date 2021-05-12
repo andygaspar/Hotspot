@@ -35,7 +35,7 @@ def make_flight(line, slot_times):
     max_delay = slot_times[-1] - slot_times[1]
     slope, margin_1, jump_2, margin_2, jump_2 = preference.make_preference_fun(max_delay, delay_cost_vect)
 
-    return fl.Flight(flight_type, slot, num, flight_name, airline_name,
+    return fl.Flight(flight_type, slot, flight_name, airline_name,
                      eta, delay_cost_vect)
 
 

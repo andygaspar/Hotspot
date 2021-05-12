@@ -135,15 +135,15 @@ class Istop(mS.ModelStructure):
     @staticmethod
     def is_in(couple, couples):
         for c in couples:
-            if couple[0].num == c[0].num and couple[1].num == c[1].num:
+            if couple[0].name == c[0].name and couple[1].name == c[1].name:
                 return True
-            if couple[1].num == c[0].num and couple[0].num == c[1].num:
+            if couple[1].name == c[0].name and couple[0].name == c[1].name:
                 return True
             return False
 
     def f_in_matched(self, flight):
         for f in self.flights_in_matches:
-            if f.num == flight.num:
+            if f.name == flight.name:
                 return True
         return False
 

@@ -7,7 +7,7 @@ from typing import Union, List
 
 class Slot:
 
-    def __init__(self, index: Union[int, None] = None, time: Union[int, None] = None):
+    def __init__(self, index: Union[int, None] = None, time: Union[float, None] = None):
         self.index = index
         self.time = time
 
