@@ -6,13 +6,11 @@ from ModelStructure.Slot.slot import Slot
 
 class Flight:
 
-    def __init__(self, flight_type: str, slot: Slot, num, flight_name: str, airline_name: str,
+    def __init__(self, slot: Slot, flight_name: str, airline_name: str,
                  eta: int, delay_cost_vect=np.array, udpp_priority=None, tna=None,
                  slope=None, margin_1=None, jump_1=None, margin_2=None, jump_2=None):
 
         self.temp = None
-
-        self.type = flight_type
 
         self.slot = slot
 
@@ -21,8 +19,6 @@ class Flight:
         self.airlineName = airline_name
 
         self.eta = eta
-
-        self.num = num
 
         # attribute  handled by ModelStructure
 
@@ -107,7 +103,7 @@ class Flight:
         self.etaSlot = slots[i]
 
     def get_attributes(self):
-        return self.type, self.slot, self.num, self.name, self.airlineName, self.eta, self.delayCostVect, \
+        return self.slot, self.name, self.airlineName, self.eta, self.delayCostVect, \
                self.udppPriority, self.tna, self.slope, self.margin1, self.jump1, self.margin2, self.jump2
 
     def set_cost_fun(self, delay_cost_fun):
