@@ -7,6 +7,10 @@ from ModelStructure.Slot import slot as sl
 from ModelStructure.Flight.flight import Flight
 
 import matplotlib.pyplot as plt
+
+from ModelStructure.Slot.slot import Slot
+
+
 class ModelStructure:
 
     def __init__(self, flights: List[Flight], air_ctor=Airline):
@@ -96,9 +100,6 @@ class ModelStructure:
 
             flight.costVect = np.array(flight.costVect)
 
-
-
-
     def make_slots(self):
         pass
 
@@ -144,3 +145,31 @@ class ModelStructure:
             new_flight_list.append(new_flight)
 
         return sorted(new_flight_list, key=lambda f: f.slot)
+
+    # @staticmethod
+    # def make_flight_and_slot(slot_time: float, slot_index: int, flight_name: str,
+    #                          airline_name: str, eta: float, type: str, cost_vect, max_delay):
+    #     flight_type = line["type"]
+    #     slot_index = line["slot"]
+    #     num = line["num"]
+    #     flight_name = line["flight"]
+    #     airline_name = line["airline"]
+    #     eta = line["eta"]
+    #     slot_time = line['fpfs']
+    #
+    #     slot = Slot(slot_index, slot_time)
+    #
+    #     try:
+    #         margin = line["margins"]
+    #     except:
+    #         margin = None
+    #
+    #     # ISTOP attributes  *************
+    #     udpp_priority = line["priority"]
+    #
+    #     cost_vect, delay_cost_vect = cost_funs.get_random_cost_vect(slot_times, eta)
+    #     # print(delay_cost_vect)
+    #     max_delay = slot_times[-1] - slot_times[1]
+    #     slope, margin_1, jump_2, margin_2, jump_2 = preference.make_preference_fun(max_delay, delay_cost_vect)
+    #
+    #     return slot, Flight(flight_type, slot, num, flight_name, airline_name, eta, delay_cost_vect)
