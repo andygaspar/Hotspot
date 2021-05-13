@@ -21,7 +21,7 @@ class UDPPmodel(ModelStructure):
 
     def __init__(self, slot_list: List[Slot], flights: List[fl.Flight]):
 
-        udpp_flights = [UDPPflight(flight) for flight in flights]
+        udpp_flights = [UDPPflight(flight) for flight in flights if flight is not None]
         super().__init__(slot_list, udpp_flights, air_ctor=Airline)
 
     def run(self, optimised=True):

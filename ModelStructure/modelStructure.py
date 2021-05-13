@@ -20,6 +20,8 @@ class ModelStructure:
 
         self.flights = [flight for flight in flights if flight is not None]
 
+        self.set_flight_index()
+
         self.set_cost_vect()
 
         self.airlines, self.airDict = self.make_airlines(air_ctor)
@@ -91,6 +93,10 @@ class ModelStructure:
 
         return sorted(new_flight_list, key=lambda f: f.slot)
 
+    def set_flight_index(self):
+        for i in range(len(self.flights)):
+            self.flights[i].index = i
+
     def set_flights_cost_vect(self):
         for flight in self.flights:
             flight.costVect = [flight.cost_fun(slot) for slot in self.slots]
@@ -145,8 +151,11 @@ class ModelStructure:
         flights = [flight.name for flight in self.flights]
         airlines = [flight.airlineName for flight in self.flights]
         slot_time = [flight.slot.time for flight in self.flights]
+        eta = [flight.eta for flight in self.flights]
+        airline = [flight.airlineName for flight in self.flights]
 
-        return pd.DataFrame({"slot": slot_index, "flight": flights, "airline": airlines, "time": slot_time})
+        return pd.DataFrame({"slot": slot_index, "flight": flights, "airline": airlines, "time": slot_time,
+                             "eta": eta})
 
 
 def make_slot_and_flight(slot_time: float, slot_index: int,
@@ -163,3 +172,5 @@ def make_slot_and_flight(slot_time: float, slot_index: int,
     else:
         flight = None
     return slot, flight
+
+

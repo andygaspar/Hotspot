@@ -49,20 +49,20 @@ class XpressSolver:
 
         for flight in self.flights:
             if not self.f_in_matched(flight):
-                self.m.addConstraint(self.x[flight.slot.index, flight.slot.index] == 1)
+                self.m.addConstraint(self.x[flight.index, flight.index] == 1)
             else:
-                self.m.addConstraint(xp.Sum(self.x[flight.slot.index, j.index] for j in flight.compatibleSlots) == 1)
+                self.m.addConstraint(xp.Sum(self.x[flight.index, j.index] for j in flight.compatibleSlots) == 1)
 
         for j in self.slots:
             self.m.addConstraint(xp.Sum(self.x[i.index, j.index] for i in self.slots) <= 1)
 
         for flight in self.flights:
             for j in flight.notCompatibleSlots:
-                self.m.addConstraint(self.x[flight.slot.index, j.index] == 0)
+                self.m.addConstraint(self.x[flight.index, j.index] == 0)
 
         for flight in self.flights_in_matches:
             self.m.addConstraint(
-                xp.Sum(self.x[flight.slot.index, slot.index]
+                xp.Sum(self.x[flight.index, slot.index]
                        for slot in self.slots if slot != flight.slot) \
                 <= xp.Sum([self.c[j] for j in self.get_match_for_flight(flight)]))
 
@@ -71,15 +71,15 @@ class XpressSolver:
         k = 0
         for match in self.matches:
             flights = [flight for pair in match for flight in pair]
-            self.m.addConstraint(xp.Sum(xp.Sum(self.x[i.slot.index, j.slot.index] for i in pair for j in flights)
+            self.m.addConstraint(xp.Sum(xp.Sum(self.x[i.index, j.index] for i in pair for j in flights)
                                         for pair in match) >= (self.c[k]) * len(flights))
 
             for pair in match:
                 self.m.addConstraint(
-                    xp.Sum(self.x[i.slot.index, j.slot.index] * i.fitCostVect[j.slot.index] for i in pair for j in
+                    xp.Sum(self.x[i.index, j.index] * i.fitCostVect[j.index] for i in pair for j in
                            flights) -
                     (1 - self.c[k]) * 10000000 \
-                    <= xp.Sum(self.x[i.slot.index, j.slot.index] * i.fitCostVect[i.slot.index] for i in pair for j in
+                    <= xp.Sum(self.x[i.index, j.index] * i.fitCostVect[i.index] for i in pair for j in
                               flights) - \
                     self.epsilon)
 
@@ -89,7 +89,7 @@ class XpressSolver:
         self.flights: List[IstopFlight]
 
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, j.index] * flight.fitCostVect[j.index]
+            xp.Sum(self.x[flight.index, j.index] * flight.fitCostVect[j.index]
                    for flight in self.flights for j in self.slots), sense=xp.minimize)  # s
 
     def run(self, timing=False):

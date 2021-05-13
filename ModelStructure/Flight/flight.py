@@ -13,6 +13,8 @@ class Flight:
                  slope: float = None, margin_1: float = None, jump_1: float = None,
                  margin_2: float = None, jump_2: float = None):
 
+        self.index = None
+
         self.slot = slot
 
         self.name = flight_name
