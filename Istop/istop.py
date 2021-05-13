@@ -10,6 +10,7 @@ import sys
 from itertools import combinations
 from Istop.AirlineAndFlight.istopAirline import IstopAirline
 from ModelStructure.Flight.flight import Flight
+from ModelStructure.Slot.slot import Slot
 from ModelStructure.Solution import solution
 from OfferChecker.offerChecker import OfferChecker
 
@@ -37,18 +38,22 @@ class Istop(mS.ModelStructure):
             j += 1
         return indexes
 
-    def __init__(self, flights: List[Flight], triples=False):
+    def __init__(self, slot_list: List[Slot], flights: List[Flight], triples=False):
         self.offers = None
         self.triples = triples
 
         istop_flights = [IstopFlight(flight) for flight in flights]
 
-        super().__init__(istop_flights, air_ctor=IstopAirline)
+        super().__init__(slot_list, istop_flights, air_ctor=IstopAirline)
 
         self.airlines: List[IstopAirline]
 
+        max_delay = self.slots[-1].time - self.slots[0].time
         for flight in self.flights:
             flight.fitCostVect = flight.costVect
+
+            if flight.not_paramtrised():
+                flight.set_automatic_preference_vect(max_delay)
 
         for airline in self.airlines:
             airline.set_and_standardise_fit_vect()

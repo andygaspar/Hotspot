@@ -9,11 +9,9 @@ from ModelStructure.Slot.slot import Slot
 
 class Airline:
 
-    def __init__(self, airline_name: str, airline_index: int, flights: List[Flight]):
+    def __init__(self, airline_name: str, flights: List[Flight]):
 
         self.name = airline_name
-
-        self.index = airline_index
 
         self.numFlights = len(flights)
 

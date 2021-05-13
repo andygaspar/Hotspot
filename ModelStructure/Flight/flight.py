@@ -1,16 +1,17 @@
 import numpy as np
 from typing import List, Callable
 
+from Istop.Preferences import preference
 from ModelStructure.Slot.slot import Slot
 
 
 class Flight:
 
     def __init__(self, slot: Slot, flight_name: str, airline_name: str,
-                 eta: int, delay_cost_vect=np.array, udpp_priority=None, tna=None,
-                 slope=None, margin_1=None, jump_1=None, margin_2=None, jump_2=None):
-
-        self.temp = None
+                 eta: float, delay_cost_vect=np.array,
+                 udpp_priority: str = None, udpp_priority_number: int = None, tna: float = None,
+                 slope: float = None, margin_1: float = None, jump_1: float = None,
+                 margin_2: float = None, jump_2: float = None):
 
         self.slot = slot
 
@@ -42,22 +43,23 @@ class Flight:
 
         # UDPP attributes
 
-        self.udppPriority = None
+        self.udppPriority = udpp_priority
 
-        self.tna = None
+        self.udppPriorityNumber = udpp_priority_number
 
+        self.tna = tna
 
         # ISTOP attributes  *************
 
-        self.slope = None
+        self.slope = slope
 
-        self.margin1 = None
+        self.margin1 = margin_1
 
-        self.jump1 = None
+        self.jump1 = jump_1
 
-        self.margin2 = None
+        self.margin2 = margin_2
 
-        self.jump2 = None
+        self.jump2 = jump_2
 
     def __str__(self):
         return self.name
@@ -73,9 +75,6 @@ class Flight:
             return self.name == other
         return self.name == other.name
 
-    def set_num(self, i):
-        self.num = i
-
     def set_local_num(self, i):
         self.localNum = i
 
@@ -90,11 +89,11 @@ class Flight:
         self.compatibleSlots = compatible_slots
 
     def set_not_compatible_slots(self, slots):
-        notCompatibleSlots = []
+        not_compatible_slots = []
         for slot in slots:
             if slot not in self.compatibleSlots:
-                notCompatibleSlots.append(slot)
-        self.notCompatibleSlots = notCompatibleSlots
+                not_compatible_slots.append(slot)
+        self.notCompatibleSlots = not_compatible_slots
 
     def set_eta_slot(self, slots):
         i = 0
@@ -104,11 +103,8 @@ class Flight:
 
     def get_attributes(self):
         return self.slot, self.name, self.airlineName, self.eta, self.delayCostVect, \
-               self.udppPriority, self.tna, self.slope, self.margin1, self.jump1, self.margin2, self.jump2
+               self.udppPriority, self.udppPriorityNumber, self.tna, \
+               self.slope, self.margin1, self.jump1, self.margin2, self.jump2
 
-    def set_cost_fun(self, delay_cost_fun):
-        self.delay_cost_fun = delay_cost_fun
-
-    def costFun(self, slot):
-        # delay = slot.time - self.eta
+    def cost_fun(self, slot):
         return self.costVect[slot.index]

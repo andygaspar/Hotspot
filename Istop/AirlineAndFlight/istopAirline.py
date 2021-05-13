@@ -21,11 +21,9 @@ class IstopAirline(air.Airline):
     def triplet(list_to_comb):
         return np.array(list(combinations(list_to_comb, 3)))
 
-    def __init__(self, airline_name: str, airline_index: int, flights: List[IstopFlight]):
+    def __init__(self, airline_name: str, flights: List[IstopFlight]):
 
-        super().__init__(airline_name, airline_index, flights)
-
-        self.sum_priorities = None  # sum(self.df["priority"])
+        super().__init__(airline_name, flights)
 
         self.flight_pairs = self.pairs(self.flights)
 
@@ -40,10 +38,3 @@ class IstopAirline(air.Airline):
 
         for flight in self.flights:
             flight.standardisedVector = flight.fitCostVect / max_cost
-
-    # def set_preferences(self, priorityFunction):
-    #     flight: IstopFlight
-    #     for flight in self.flights:
-    #         df_flight = self.df[self.df["flight"] == flight.name]
-    #         flight.set_priority(df_flight["priority"].values[0])
-    #         flight.set_preference(self.sum_priorities, priorityFunction)

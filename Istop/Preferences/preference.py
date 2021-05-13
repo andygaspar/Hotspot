@@ -82,8 +82,8 @@ def fit_cost_curve(x, y, max_delay, steps=8):
     return solution.x
 
 
-def make_preference_fun(max_delay, delay_cost_vect):
-    delays = np.linspace(0, max_delay, 50)
+def make_preference_fun(max_delay: float, delay_cost_vect: np.array):
+    delays = np.linspace(0, max_delay + 0.1, 50)
     result = fit_cost_curve(delays, delay_cost_vect, max_delay)
     slope, margin_1, jump_1, margin_2, jump_2 = result
     # plt.plot(delay_cost_vect)

@@ -17,10 +17,9 @@ class MipSolver:
         self.m.threads = -1
         self.maxTime = max_time
         self.m.preprocess = 1
-        self.m.pump_passes = 1000
-        self.m.max_solutions = 1
-        self.m.emphasis = 1
-
+        # self.m.pump_passes = 1000
+        # self.m.max_solutions = 1
+        # self.m.emphasis = 1
 
         self.flights = model.flights
         self.airlines = model.airlines
@@ -98,7 +97,7 @@ class MipSolver:
     def run(self, timing=False):
 
         self.set_variables()
-        self.m.start = [(self.x[i, i], 1.0) for i in range(len(self.flights))]
+        # self.m.start = [(self.x[i, i], 1.0) for i in range(len(self.flights))]
         start = time.time()
         self.set_constraints()
         end = time.time() - start

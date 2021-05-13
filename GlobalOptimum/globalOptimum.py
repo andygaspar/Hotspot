@@ -15,9 +15,9 @@ import time
 
 class GlobalOptimum(mS.ModelStructure):
 
-    def __init__(self, flight_list: List[Flight]):
+    def __init__(self, slot_list: List[Slot], flight_list: List[Flight]):
 
-        super().__init__(flight_list)
+        super().__init__(slot_list, flight_list)
 
         self.m = xp.problem()
         self.x = None
@@ -46,7 +46,7 @@ class GlobalOptimum(mS.ModelStructure):
     def set_objective(self):
         flight: Flight
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, slot.index] * flight.costFun(slot)
+            xp.Sum(self.x[flight.slot.index, slot.index] * flight.cost_fun(slot)
                    for flight in self.flights for slot in self.slots)
         )
 
