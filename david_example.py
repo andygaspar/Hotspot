@@ -31,9 +31,8 @@ for i in range(df.shape[0]):
 # WE START FROM HERE
 
 # from your model we get
-slot_times = range(0, 98, 2) # or an np array or list or whatever
-empty_slots_times = [34, 60, 86] # if needed, in this case yes
-
+slot_times = range(0, 98, 2)  # or an np array or list or whatever
+empty_slots_times = [34, 60, 86]  # if needed, in this case yes
 
 # make the slot list and the flight list as follow (without empty slots is much easier)
 slot_list = []
@@ -50,15 +49,14 @@ for i in range(len(slot_times)):
     else:
         f = david_flights[flight_list_index]
         slot, flight = make_slot_and_flight(slot_index=i, slot_time=slot_times[i],
-                                                           flight_name=f.name, airline_name=f.airlineName, eta=f.eta,
-                                                           delay_cost_vect=
-                                                           np.array([f.cost_fun(time - hotspot_start)
-                                                                     for time in slot_times])
-                                                           )
+                                            flight_name=f.name, airline_name=f.airlineName, eta=f.eta,
+                                            delay_cost_vect=
+                                            np.array([f.cost_fun(time - hotspot_start)
+                                                      for time in slot_times])
+                                            )
         flight_list_index += 1
     slot_list.append(slot)
     flight_list.append(flight)
-
 
 # **************** models run
 print("\n global optimum")
@@ -74,8 +72,7 @@ max_model = NNBoundModel(slot_list, flight_list)
 max_model.run()
 max_model.print_performance()
 
-
-#this can be used also for an agent only, initialising one AU's flight only, but all slots as needed for the protection
+# this can be used also for an agent only, initialising one AU's flight only, but all slots as needed for the protection
 print("\nudpp")
 udpp_model_xp = UDPPmodel(slot_list, flight_list)
 udpp_model_xp.run(optimised=True)
@@ -87,8 +84,7 @@ print(udpp_model_xp.flights[0].get_attributes())
 udpp_model_xp.run(optimised=False)
 udpp_model_xp.print_performance()
 
-
-#remember to run Istop after the UDPP
+# remember to run Istop after the UDPP
 new_fl_list = udpp_model_xp.get_new_flight_list()
 
 print("\nistop only pairs")
