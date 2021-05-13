@@ -18,16 +18,12 @@ class IstopFlight(fl.Flight):
 
         self.standardisedVector = None
 
-    def set_preference(self, sum_priorities, f):
-        self.preference = self.compute_preference(self.airline.numFlights, sum_priorities, f)
+    def set_automatic_preference_vect(self, max_delay):
+        self.slope, self.margin1, self.jump2, self.margin2, self.jump2 = \
+            preference.make_preference_fun(max_delay, self.delayCostVect)
 
-    def compute_preference(self, num_flights, sum_priorities, f):
-        if sum_priorities < 1:
-            sum_priorities = 1
-        return f(self.priority, num_flights) / sum_priorities
-
-    def set_priority(self, priority):
-        self.priority = priority
+    def not_paramtrised(self):
+        return self.slope == self.margin1 == self.jump2 == self.margin2 == self.jump2 is None
 
     def set_fit_vect(self):
 

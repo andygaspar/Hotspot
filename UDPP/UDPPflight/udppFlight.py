@@ -13,19 +13,13 @@ class UDPPflight(fl.Flight):
 
         self.UDPPlocalSolution = None
 
-        self.priorityValue = "M"
-
         self.test_slots = []
 
-        self.priorityNumber = None
+    def set_prioritisation(self, udpp_priority: str, udpp_priority_number: int = None, tna: float = None):
+        self.udppPriority = udpp_priority
+        self.udppPriorityNumber = udpp_priority_number
+        self.tna = tna
 
-    def set_prioritisation(self, num: float, margin: int):
-        pass
-
-    def assign(self, solutionSlot):
-        self.newSlot = solutionSlot
-        solutionSlot.free = False
-        solutionSlot.flight = self
 
 
 
