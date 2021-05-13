@@ -25,28 +25,28 @@ class GlobalOptimum(mS.ModelStructure):
     def set_variables(self):
         flight: Flight
         airline: air.Airline
-        self.x = np.array([[xp.var(vartype=xp.binary) for k in self.slots] for flight in self.flights])
+        self.x = np.array([[xp.var(vartype=xp.binary) for _ in self.slots] for _ in self.flights])
         self.m.addVariable(self.x)
 
-
     def set_constraints(self):
+
         flight: Flight
         airline: air.Airline
         for flight in self.flights:
             self.m.addConstraint(
-                xp.Sum(self.x[flight.slot.index, slot.index] for slot in flight.compatibleSlots) == 1
+                xp.Sum(self.x[flight.index, slot.index] for slot in flight.compatibleSlots) == 1
             )
 
         for slot in self.slots:
             self.m.addConstraint(
-                xp.Sum(self.x[flight.slot.index, slot.index] for flight in self.flights) <= 1
+                xp.Sum(self.x[flight.index, slot.index] for flight in self.flights) <= 1
             )
 
 
     def set_objective(self):
         flight: Flight
         self.m.setObjective(
-            xp.Sum(self.x[flight.slot.index, slot.index] * flight.cost_fun(slot)
+            xp.Sum(self.x[flight.index, slot.index] * flight.cost_fun(slot)
                    for flight in self.flights for slot in self.slots)
         )
 
@@ -79,5 +79,5 @@ class GlobalOptimum(mS.ModelStructure):
     def assign_flights(self, sol):
         for flight in self.flights:
             for slot in self.slots:
-                if self.m.getSolution(sol[flight.slot.index, slot.index]) > 0.5:
+                if self.m.getSolution(sol[flight.index, slot.index]) > 0.5:
                     flight.newSlot = slot

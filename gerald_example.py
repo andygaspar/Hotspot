@@ -7,12 +7,15 @@ import numpy as np
 import random
 from UDPP import udppModel
 
-
-
-
-# ************* init or conversion from other models
+# in case remember both
 random.seed(0)
 np.random.seed(0)
+
+
+# ************* init
+
+
+
 scheduleType = scheduleMaker.schedule_types(show=False)
 
 num_flights = 50
@@ -23,18 +26,20 @@ distribution = scheduleType[3]
 print("schedule type: ", distribution)
 
 df = scheduleMaker.df_maker(num_flights, num_airlines, distribution=distribution)
-costFun = CostFuns()
 
 slot_list, fl_list = df_to_schedule.make_flight_list(df)
 
 
-
+# fl_list has flight objects: you can now manually set slot, margin1, jump2, margin2, jump2
 
 # **************** models run
 print("\n global optimum")
 global_model = globalOptimum.GlobalOptimum(slot_list, fl_list)
 global_model.run()
 global_model.print_performance()
+
+print("how to get attributes")
+print(global_model.flights[0].get_attributes())
 
 print("\nnn bound")
 max_model = nnBound.NNBoundModel(slot_list, fl_list)
@@ -52,10 +57,8 @@ udpp_model_xp.run(optimised=False)
 udpp_model_xp.print_performance()
 
 new_fl_list = udpp_model_xp.get_new_flight_list()
-# for flight in new_fl_list:
-#     if flight.udppPriority == "P":
-#         print(flight, flight.tna)
 
+#remember to run Istop after the UDPP
 print("\nistop only pairs")
 xpModel = istop.Istop(slot_list, new_fl_list, triples=False)
 xpModel.run(True)
@@ -68,10 +71,3 @@ print(xpModel.offers_selected)
 # xpModel.run(True)
 # xpModel.print_performance()
 
-"""
-TO CONSIDER - TO DO
-
--slot holes due to multiple hotspot
--cost function definition
-
-"""
