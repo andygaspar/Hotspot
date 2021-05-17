@@ -312,12 +312,11 @@ class ContMGame(gym.Env):
 		self.margin_price = price
 
 	def step(self, action):
-		#print ('STEP!!!!')
 		# Apply action (modification of margin and cost) on flights
 		self.apply_action(action)
 
 		# Compute reward
-		rewards, reward_tot, cost_tot, cost_per_c, allocation, rewards_fake, transferred_cost = self.compute_reward()
+		rewards, rewards_tot, cost_tot, cost_per_c, allocation, rewards_fake, transferred_cost = self.compute_reward()
 
 		# Remember stuff
 		names = [self.flight_per_company[player] for player in self.players]
@@ -329,16 +328,20 @@ class ContMGame(gym.Env):
 						'df_sch_init':self.df_sch_init.copy(),
 						'best_allocation':copy(self.best_allocation),
 						'base_allocation':copy(self.base_allocation),
-						'transferred_cost':transferred_cost}
+						'transferred_cost':transferred_cost,
+						'rewards_tot':rewards_tot,
+						'cost_tot':cost_tot,
+						'cost_per_c':cost_per_c,
+						'rewards_fake':rewards_fake,
+						'transferred_cost':transferred_cost,
+						'best_cost_per_c':self.best_cost_per_c,
+						'rewards':rewards,
+						'base_cost_per_c':self.base_cost_per_c}	
 
 		# Compute new schedule for next state
 		self.make_new_schedules()
 
 		state = self.get_state()
-
-		# print ()
-		# print ('state=', state)
-		# print ()
 
 		#print ('rewards in game:', rewards)
 		return state, np.array(rewards), done, information
@@ -423,9 +426,9 @@ class ContMGameMargin(ContMGame):
 
 			action_p = ll[nfp1*2:nfp2*2].reshape(nfp2-nfp1, 1)[:, 0]
 
-			for i, ac in enumerate(action_p):
+			for j, ac in enumerate(action_p):
 				# for each flight
-				name = self.flight_per_company[player][i]
+				name = self.flight_per_company[player][j]
 
 				new_cost = self.flights[name].cost_declared
 				new_jump = self.flights[name].jump_declared
@@ -437,6 +440,10 @@ class ContMGameMargin(ContMGame):
 class ContMGameJump(ContMGame):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+
+		self.lims_simple = self.n_f_players[:-1]
+		self.lims_simple = np.cumsum(self.lims_simple)
+		self.lims_triple = [3 * lim for lim in self.lims_simple]
 
 		if self.normed_state:
 			self.observation_space =  gym.spaces.Box(0., 1., shape=(sum(self.n_f_players)*3, ))#, dtype=int)
@@ -451,15 +458,15 @@ class ContMGameJump(ContMGame):
 			if i==0:
 				nfp1 = 0
 			else:
-				nfp1 = self.n_f_players[i-1]
+				nfp1 = sum(self.n_f_players[:i])
 				
 			if i==len(self.n_f_players)-1:
 				nfp2 = sum(self.n_f_players)#len(self.n_f_players)
 			else:
-				nfp2 = self.n_f_players[i]
+				nfp2 = nfp1+self.n_f_players[i]
 
 			action_p = action[nfp1:nfp2].reshape(nfp2-nfp1, 1)[:, 0]
-				
+			
 			for j, ac in enumerate(action_p):
 				# for each flight
 				name = self.flight_per_company[player][j]
