@@ -1,10 +1,23 @@
 from collections import OrderedDict
 import numpy as np
 import tensorflow as tf
-from tf_agents.policies.policy_saver import PolicySaver
+import matplotlib.pyplot as plt
+import pandas as pd
 
-from game_trainer import TFAgentTrainer
+# from tf_agents.policies.policy_saver import PolicySaver
+# from tf_agents.trajectories.time_step import TimeStep
 
+from Hotspot.libs.tools import print_allocation
+from Hotspot.libs.general_tools3 import nice_colors
+
+#from Hotspot.RL.continuous_game import ContGame, ContGameJump, ContGameMargin
+from Hotspot.RL.mcontinuous_game import ContMGame, ContMGameJump, ContMGameMargin
+
+from Hotspot.RL.game_trainer import TFAgentWrap, TFAgentTrainer
+
+from Hotspot.RL.agents import RandomAgent, MaxAgent, HonestAgent
+
+#  Functions used to compute metrics
 def compute_cost_diff(row, player='A'):
 	if type(row)==np.float64:
 		row = float(row)
@@ -50,44 +63,6 @@ def compute_cost_diff_ratio_all(row):
 	cost_diff = (c-cb)/cb
 	return cost_diff
 
-class Agent:
-	def __init__(self, kind='TF'):
-		self.kind = kind
-
-
-class TFAgentWrap(Agent):
-	"""
-	Just a wrapper to use easily with training and evaluation.
-	"""
-	def __init__(self, kind='TF'):
-		self.kind = kind
-
-	def wrap_tf_agent(self, tf_agent):
-		self.policy = tf_agent.policy
-
-	def load(self, file_name):
-		saved_policy = tf.compat.v2.saved_model.load(file_name)
-		self.policy = saved_policy
-
-	def save(self, file_name):
-		if file_name is None:
-			file_name = self.agent_type + '_' + self.game + '_' + str(self.n_f_player) + 'a' + str(self.n_f) + '_policy'
-
-		PolicySaver(self.policy).save(file_name)
-
-	def action(self, observation):
-		# TODO: observation wrapper
-		action = self.policy.action(time_step)
-		action = action.action.numpy()[0]
-
-		return action
-
-	def action_tf(self, time_step):
-		# Unwrapped action results
-		action = self.policy.action(time_step)
-
-		return action
-
 def merge_actions(actions):
 	l = []
 	for action in actions:
@@ -95,11 +70,11 @@ def merge_actions(actions):
 
 	return np.array(l)
 
-def split_observation(obs):
+def split_observation(obs, lims=[]):
 	n = len(obs)
 	lims = list(lims)
 	lims = [0] + lims
-	lims.append(n)    
+	lims.append(n)
 
 	obss = []
 	for i in range(len(lims)-1):
@@ -110,58 +85,45 @@ def split_observation(obs):
 
 	return obss
 
-class MaxAgent(agent):
-	pass
-
-
-class HonestAgent(agent):
-	pass
-
-
-class RandomAgent(agent):
-	pass
-
 
 class PlayingGround:
 	"""
 	Can use single or multi games.
 	"""
-	def __init__(self, game='jump', multi=False, **kwargs_game):
-		self.multi = multi
+	def __init__(self, game='jump', kind='multi', **kwargs_game):
+		#self.multi = kind !='single' # TODO improve that
 		self.game = game
 
 		if game=='jump':
-			self.gym_env = ContGameJump(**kwargs_game)
+			self.gym_env = ContMGameJump(**kwargs_game)
 		elif game=='margin':
-			self.gym_env = ContGameMargin(**kwargs_game)
+			self.gym_env = ContMGameMargin(**kwargs_game)
 		elif game=='jump_margin':
-			self.gym_env = ContGame(**kwargs_game)
+			self.gym_env = ContMGame(**kwargs_game)
 		else:
 			raise Exception('Unknown game:', game)
-		pass
+
+		self.agents = OrderedDict([(player, None) for player in self.gym_env.players])
+		self.agents_ids = {name:i for i, name in enumerate(self.agents.keys())}
 
 	def build_tf_trainer(self):
-		if not self.multi:
-			self.trainer = TFAgentTrainer()
-		else:
-			self.trainer = TFAgentMultiTrainer()
+		self.trainer = TFAgentTrainer()
 
 		self.trainer.build_game_wrapper(self.gym_env)
 
 	def build_tf_agents(self, **kwargs):
-		if not self.multi:
-			self.trainer.build_agents(**kwargs)
-		else:
-			self.trainer.build_agent(**kwargs)
+		self.trainer.build_agents(gym_env=self.gym_env, **kwargs)
 
 	def train(self, **kwargs):
-		self.train(**kwargs)
+		# TODO: support arguments for prepare_buffers
+		self.trainer.prepare_buffers()
+		self.trainer.train_agents(**kwargs)
 
 	def wrap_tf_agents_from_trainer(self):
 		self.agents = OrderedDict()
 		for i, tf_agent in enumerate(self.trainer.tf_agents):
 			player = self.gym_env.players[i]
-			self.agents[players] = TFAgentWrap(tf_agent)
+			self.agents[player] = TFAgentWrap(tf_agent)
 
 	def set_agents(self, agents):
 		"""
@@ -178,7 +140,6 @@ class PlayingGround:
 		"""
 		To set different agents in different positions
 		"""
-
 		self.agents[name] = agent
 
 	def load_tf_agent(self, load_into=None, file_name=None):
@@ -190,8 +151,57 @@ class PlayingGround:
 		else:
 			return agent
 
+	def save_all_agents(self, file_names=[]):
+		for i, (name, agent) in enumerate(self.agents.items()):
+			agent.save(file_names[i])
+
+	def load_random_agent(self, load_into=None):
+		n = self.gym_env.action_space.shape[0]
+		lims = list(self.gym_env.lims_simple)
+		lims = [0] + lims
+		lims.append(n)
+
+		lim1 = lims[self.agents_ids[load_into]]
+		lim2 = lims[self.agents_ids[load_into]+1]
+		
+		# TODO: random, max, and honest agents should be created
+		# by the game itself (gym_env)
+		self.agents[load_into] = RandomAgent(gym_env=self.gym_env,
+											lims=(lim1, lim2),
+											name=load_into)
+
+	def load_max_agent(self, load_into=None):
+		n = self.gym_env.action_space.shape[0]
+		lims = list(self.gym_env.lims_simple)
+		lims = [0] + lims
+		lims.append(n)
+
+		lim1 = lims[self.agents_ids[load_into]]
+		lim2 = lims[self.agents_ids[load_into]+1]
+		
+		self.agents[load_into] = MaxAgent(gym_env=self.gym_env,
+											lims=(lim1, lim2),
+											name=load_into)
+
+	def load_honest_agent(self, load_into=None):
+		n = self.gym_env.action_space.shape[0]
+		lims = list(self.gym_env.lims_simple)
+		lims = [0] + lims
+		lims.append(n)
+
+		lim1 = lims[self.agents_ids[load_into]]
+		lim2 = lims[self.agents_ids[load_into]+1]
+		
+		self.agents[load_into] = HonestAgent(gym_env=self.gym_env,
+											lims=(lim1, lim2),
+											name=load_into)
+
 	def game_summary(self):
 		self.gym_env.game_summary()
+
+		print ('Agents loaded:')
+		for name, agent in self.agents.items():
+			print (agent)
 
 	def print_agents(self):
 		print ('Agents in simulation:')
@@ -204,7 +214,7 @@ class PlayingGround:
 
 		for i in range(n_evaluations):
 			obs = self.gym_env.reset()
-			action = 
+			action = None
 			#time_step = self.collect_env.reset()
 			#action = self.tf_agent.policy.action(time_step)
 			#stuff = self.train_env.step(action)
@@ -262,47 +272,9 @@ class PlayingGround:
 
 		return rewards_agent, rewards_best
 
-	def compare_airlines(self, n_iter=100, show_results=True, file_name=None):
-		results = {}
-		# builder = get_results_builder_multi(self.collect_env)
-		# for i in range(n_iter):
-		# 	if n_iter>=10 and i%int(n_iter/10)==0:
-		# 		print ('i=', i)
-		# 	time_step = self.collect_env.reset()
-		# 	rew = tf.constant([[100.]*len(self.tf_agents)], dtype=tf.float32)
-		# 	step_type = tf.constant([[1]*len(self.tf_agents)], dtype=tf.int32)
-		# 	time_step = TimeStep(step_type=step_type,
-		# 						  reward=rew,
-		# 						  discount=time_step.discount,
-		# 						  observation=time_step.observation)
-
-		# 	# ADD lims
-		# 	#  Split time step
-		# 	sts = split_time_step(time_step, lims=self.lims_triple)
-
-		# 	# Get action based on partial observation
-		# 	asts = []
-		# 	for j, ts in enumerate(sts):
-		# 		asts.append(self.tf_agents[j].policy.action(ts))
-
-		# 	# Merge actions
-		# 	action_step = merge_action_steps(asts)
-
-		# 	# # Get next state
-		# 	# next_time_step = environment.step(action_step.action)
-
-		# 	#action = self.tf_agent.policy.action(time_step)
-		# 	results[i] = builder(action_step.action.numpy()[0])
-		# 	#stuff = self.collect_env.step(action)
-
-		results = {}
-		for i in range(n_iter):
-			if n_iter>=10 and i%int(n_iter/10)==0:
-		 		print ('i=', i)
-
-		 	res = self.observe_one_step()
-
-			results[i] = res
+	def compare_airlines(self, n_iter=100, show_results=True, file_name=None, 
+		mets=['rewards', 'rewards_tot', 'cost_tot', 'cost_per_c', 'allocation', 'rewards_fake',
+		'best_cost_per_c', 'transferred_cost']):
 
 		def build_extract_col(i):
 			def extract_col(r):
@@ -310,20 +282,27 @@ class PlayingGround:
 
 			return extract_col
 
-		df = pd.DataFrame(results, index=['rewards', 'reward_tot', 'cost_tot', 'cost_per_c', 'allocation', 'reward_fake', 'transferred_cost', 'best_cost_per_c']).T
+		results = {}
+		for i in range(n_iter):
+			if n_iter>=10 and i%int(n_iter/10)==0:
+				print ('i=', i)
 
-		players = self.collect_env.pyenv.envs[0].gym.players
-		for i in range(len(self.tf_agents)):
+			res = self.observe_one_step()
+
+			results[i] = [res[met] for met in mets]
+
+		df = pd.DataFrame(results, index=mets).T
+
+		for i, (name, agent) in enumerate(self.agents.items()):
 			extrator_col = build_extract_col(i)
-			df['reward {}'.format(players[i])] = df['rewards'].apply(extrator_col)
+			df['reward {}'.format(name)] = df['rewards'].apply(extrator_col)
 
-		#print (df)
 		to_concat = [df]
-		for i, player in enumerate(players):
-			compute_cost_diff_p = lambda x:compute_cost_diff(x, player=player)
-			compute_cost_diff_ratio_p = lambda x:compute_cost_diff_ratio(x, player=player)
-			compute_cost_diff_others_p = lambda x:compute_cost_diff_others(x, player=player)
-			compute_cost_diff_ratio_others_p = lambda x:compute_cost_diff_ratio_others(x, player=player)
+		for i, (name, agent) in enumerate(self.agents.items()):
+			compute_cost_diff_p = lambda x:compute_cost_diff(x, player=name)
+			compute_cost_diff_ratio_p = lambda x:compute_cost_diff_ratio(x, player=name)
+			compute_cost_diff_others_p = lambda x:compute_cost_diff_others(x, player=name)
+			compute_cost_diff_ratio_others_p = lambda x:compute_cost_diff_ratio_others(x, player=name)
 
 			to_apply = [compute_cost_diff_p,
 						compute_cost_diff_ratio_p,
@@ -333,15 +312,15 @@ class PlayingGround:
 						compute_cost_diff_ratio_all]
 			dg = df.T.apply(to_apply).T
 
-			dg.columns = ['compute_cost_diff_{}'.format(player),
-						'compute_cost_diff_ratio_{}'.format(player),
-						'compute_cost_diff_others_{}'.format(player),
-						'compute_cost_diff_ratio_others_{}'.format(player),
+			dg.columns = ['compute_cost_diff_{}'.format(name),
+						'compute_cost_diff_ratio_{}'.format(name),
+						'compute_cost_diff_others_{}'.format(name),
+						'compute_cost_diff_ratio_others_{}'.format(name),
 						'compute_cost_diff_all',
 						'compute_cost_diff_ratio_all']
 
 			to_concat.append(dg)
-		
+
 		df = pd.concat(to_concat, axis=1)
 
 		# Unravel cost per company
@@ -350,7 +329,7 @@ class PlayingGround:
 		dg2 = pd.DataFrame(list(df['best_cost_per_c']))
 		dg2.rename(columns={k:'Best cost {}'.format(k) for k in dg2.columns}, inplace=True)
 		df = pd.concat([df, dg, dg2], axis=1)
-		df.drop(columns=['rewards', 'reward_fake', 'cost_per_c', 'best_cost_per_c', 'allocation'], inplace=True)
+		df.drop(columns=['rewards', 'rewards_fake', 'cost_per_c', 'best_cost_per_c', 'allocation'], inplace=True)
 
 		if show_results:
 			print ('Average results:')
@@ -363,28 +342,31 @@ class PlayingGround:
 
 	def observe_one_step(self, reset=True):
 		obs = self.gym_env.reset()
-	 	
-	 	# TODO: split observation
-	 	obss = split_observation(obs, lims=self.lims_triple)
 
-	 	actions = [agent.action(obss[i]) for i, (name, agent) in enumerate(self.agents.items())]
+		obss = split_observation(obs, lims=self.gym_env.lims_triple)
 
-	 	# TODO: merge action
-	 	action_merged = merge_actions(actions)
+		#print ('obss=', obss)
 
-	 	# TODO: put all stuff in info and use step method instead
-	 	self.gym_env.apply_action(action)
+		actions = [agent.action(obss[i]) for i, (name, agent) in enumerate(self.agents.items())]
 
-		res = self.gym_env.compute_reward()
+		#print ('actions=', actions)
 
-		return res
+		action_merged = merge_actions(actions)
 
-	def do_plots(self, file_name=None, instantaneous=False):
+		# print('action_merged=', action_merged)
+
+		state, rewards, _, information = self.gym_env.step(action_merged)
+
+		return information
+
+	def do_training_plots(self, file_name=None, instantaneous=False):
 		try:
 			dir_name = '/'.join(file_name.split('/')[:-1])
 			os.makedirs(dir_name)
 		except OSError as e:
 			#if e.errno != errno.EEXIST:
+			pass
+		except AttributeError as e:
 			pass
 		except:
 			raise
@@ -396,16 +378,16 @@ class PlayingGround:
 
 		fig, ax = plt.subplots()
 		if instantaneous:
-			for i, rew in enumerate(self.rewards):
+			for i, rew in enumerate(self.trainer.rewards):
 				ax.plot(rew, lw=0.5, label='Instantaneous reward {}'.format(i), alpha=0.6, c=nc[i])
 
-		N = 50	
-		y = pd.DataFrame(self.rewards).T.rolling(window=N).mean().iloc[N-1:].values.T
+		N = 50
+		y = pd.DataFrame(self.trainer.rewards).T.rolling(window=N).mean().iloc[N-1:].values.T
 		for i in range(len(y)):
 			yy = y[i]
 			ax.plot(yy, label='Average 50 runs {}'.format(i), c=nc[i])
 		N = 500
-		y = pd.DataFrame(self.rewards).T.rolling(window=N).mean().iloc[N-1:].values.T
+		y = pd.DataFrame(self.trainer.rewards).T.rolling(window=N).mean().iloc[N-1:].values.T
 		for i in range(len(y)):
 			yy = y[i]
 			ax.plot(yy, label='Average 500 runs {}'.format(i), c=nc[i])
@@ -417,54 +399,44 @@ class PlayingGround:
 			plt.savefig(file_name, bbox_inches='tight')
 
 	def show_examples(self, n_ex=3):
-		#sg = WrapperSingleGame(self.collect_env)
-		#gym_env = self.collect_env.pyenv.envs[0].gym
-	
 		for i in range(n_ex):
-			# time_step = self.collect_env.reset()
+			print ('Example', i)
+			print ()
 
-			# action = self.tf_agent.policy.action(time_step)
-
-			# action = action.action.numpy()[0]
-
-			# gym_env = self.collect_env.pyenv.envs[0].gym
-			# #results[i] = builder(action.action.numpy()[0])
-			# gym_env.apply_action(action)
-
-			reward, reward_tot, cost_tot, cost_per_c, allocation, reward_fake, cost_true_per_c, transferred_cost = self.observe_one_step()
+			information = self.observe_one_step()
 
 			print ('initial state:')
-			print (gym_env.df_sch_init)
+			print (information['df_sch_init'])
 			print ()
 
 			print ('declared state:')
-			print (gym_env.df_sch)
+			print (information['df_sch'])
 			print ()
 
 			print ('Base allocation:')
-			print_allocation(gym_env.base_allocation)
+			print_allocation(information['base_allocation'])
 			print ()
 
 			print ('Costs in base allocation:')
-			print (gym_env.base_cost_per_c)
+			print (information['base_cost_per_c'])
 			print ()
 
 			print ('Best allocation:')
-			print_allocation(gym_env.best_allocation)
+			print_allocation(information['best_allocation'])
 			print ()
 
 			print ('Costs in best allocation:')
-			print (gym_env.best_cost_per_c)
+			print (information['best_cost_per_c'])
 			print ()
 
 			print ('Final allocation:')
-			print_allocation(allocation)
+			print_allocation(information['allocation'])
 			print ()
 
 			print ('Cost of final allocation:')
-			print (cost_per_c)
+			print (information['cost_per_c'])
 			print ()
 
-			print ('Reward:', reward)
+			print ('Rewards:', information['rewards'])
 			print ()
 			print ()
