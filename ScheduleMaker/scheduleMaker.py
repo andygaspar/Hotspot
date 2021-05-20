@@ -88,13 +88,14 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
     num_airlines=3 and n_flights_first_airlines=[1, 5, 4]
     """
 
-    if len(n_flights_first_airlines)==num_airlines and custom is None:
-        custom = n_flights_first_airlines
-    elif not n_flights_first_airlines is None:
-        dist_other_flights = distribution_maker(num_flights-sum(n_flights_first_airlines),
-                                                num_airlines-len(n_flights_first_airlines),
-                                                distribution)
-        custom = n_flights_first_airlines + list(dist_other_flights)
+    if not n_flights_first_airlines is None:
+        if len(n_flights_first_airlines)==num_airlines and custom is None:
+            custom = n_flights_first_airlines
+        elif not n_flights_first_airlines is None:
+            dist_other_flights = distribution_maker(num_flights-sum(n_flights_first_airlines),
+                                                    num_airlines-len(n_flights_first_airlines),
+                                                    distribution)
+            custom = n_flights_first_airlines + list(dist_other_flights)
 
     if custom is None:
         dist = distribution_maker(num_flights, num_airlines, distribution)
@@ -126,7 +127,7 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
     num = range(num_flights)
     margins_gap = np.array([random.choice(range(min_margin, max_margin)) for i in num])
     dir_path = Path(__file__).resolve().parent.parent
-    at_gate = pd.read_csv(dir_path / "Costs/costs_table_gate.csv", sep=" ")
+    at_gate = pd.read_csv(dir_path / "ModelStructure/Costs/costs_table_gate.csv", sep=" ")
     flights_type = [np.random.choice(at_gate["flight"].to_numpy()) for i in range(num_flights)]
     jump = np.random.randint(min_jump, max_jump, len(num))
 

@@ -5,6 +5,7 @@ import time
 from itertools import permutations
 import copy
 import os
+from pathlib import Path
 
 
 class OfferChecker(object):
@@ -12,7 +13,8 @@ class OfferChecker(object):
     def __init__(self, schedule_mat):
 
         self.numProcs = os.cpu_count()
-        self.lib = ctypes.CDLL('./OfferChecker/liboffers_parallel.so')
+        roor_dir = Path(__file__).resolve().parents[1]
+        self.lib = ctypes.CDLL(roor_dir / 'OfferChecker/liboffers_parallel.so')
         self.lib.OfferChecker_.argtypes = [ctypes.c_void_p, ctypes.c_short, ctypes.c_short,
                                            ctypes.c_void_p, ctypes.c_short, ctypes.c_short, ctypes.c_void_p,
                                            ctypes.c_short, ctypes.c_short, ctypes.c_short]
