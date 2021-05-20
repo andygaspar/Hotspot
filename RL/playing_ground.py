@@ -7,15 +7,15 @@ import pandas as pd
 # from tf_agents.policies.policy_saver import PolicySaver
 # from tf_agents.trajectories.time_step import TimeStep
 
-from Hotspot.libs.tools import print_allocation
-from Hotspot.libs.general_tools3 import nice_colors
+from Hotspot.libs.other_tools import print_allocation
+from Hotspot.uow_tool_belt.general_tools import nice_colors
 
 #from Hotspot.RL.continuous_game import ContGame, ContGameJump, ContGameMargin
 from Hotspot.RL.mcontinuous_game import ContMGame, ContMGameJump, ContMGameMargin
 
-from Hotspot.RL.game_trainer import TFAgentWrap, TFAgentTrainer
+from Hotspot.RL.game_trainer import TFAgentWrap, TFAgentTrainer, SBAgentTrainer, SBAgentWarp
 
-from Hotspot.RL.agents import RandomAgent, MaxAgent, HonestAgent
+#from Hotspot.RL.agents import RandomAgent, MaxAgent, HonestAgent
 
 #  Functions used to compute metrics
 def compute_cost_diff(row, player='A'):
@@ -66,6 +66,10 @@ def compute_cost_diff_ratio_all(row):
 def merge_actions(actions):
 	l = []
 	for action in actions:
+		#print (action)
+		if len(np.array(action).shape)>1:
+			action = np.array(action).flatten()
+		#print (action)
 		l += list(action)
 
 	return np.array(l)
@@ -111,12 +115,22 @@ class PlayingGround:
 
 		self.trainer.build_game_wrapper(self.gym_env)
 
+	def build_sb_trainer(self):
+		self.trainer = SBAgentTrainer()
+
+		self.trainer.set_env(self.gym_env)
+
 	def build_tf_agents(self, **kwargs):
 		self.trainer.build_agents(gym_env=self.gym_env, **kwargs)
 
+	def build_sb_agents(self, players=None, **kwargs):
+		if players is None:
+			players = self.gym_env.players
+
+		self.trainer.build_agents(players=players, **kwargs)
+
 	def train(self, **kwargs):
-		# TODO: support arguments for prepare_buffers
-		self.trainer.prepare_buffers()
+		# TODO: support arguments for prepare_buffers for TF
 		self.trainer.train_agents(**kwargs)
 
 	def wrap_tf_agents_from_trainer(self):
@@ -124,6 +138,12 @@ class PlayingGround:
 		for i, tf_agent in enumerate(self.trainer.tf_agents):
 			player = self.gym_env.players[i]
 			self.agents[player] = TFAgentWrap(tf_agent)
+
+	def wrap_sb_agents_from_trainer(self):
+		self.agents = OrderedDict()
+		for i, model in enumerate(self.trainer.models):
+			player = self.gym_env.players[i]
+			self.agents[player] = SBAgentWarp(model)
 
 	def set_agents(self, agents):
 		"""
@@ -155,46 +175,49 @@ class PlayingGround:
 		for i, (name, agent) in enumerate(self.agents.items()):
 			agent.save(file_names[i])
 
-	def load_random_agent(self, load_into=None):
-		n = self.gym_env.action_space.shape[0]
-		lims = list(self.gym_env.lims_simple)
-		lims = [0] + lims
-		lims.append(n)
+	def load_agent_from_collection(self, kind='', load_into=None, **kwargs):
+		self.agents[load_into] = self.gym_env.build_agent_from_collection(kind=kind, name=load_into, **kwargs)
 
-		lim1 = lims[self.agents_ids[load_into]]
-		lim2 = lims[self.agents_ids[load_into]+1]
+	# def load_random_agent(self, load_into=None):
+	# 	n = self.gym_env.action_space.shape[0]
+	# 	lims = list(self.gym_env.lims_simple)
+	# 	lims = [0] + lims
+	# 	lims.append(n)
+
+	# 	lim1 = lims[self.agents_ids[load_into]]
+	# 	lim2 = lims[self.agents_ids[load_into]+1]
 		
-		# TODO: random, max, and honest agents should be created
-		# by the game itself (gym_env)
-		self.agents[load_into] = RandomAgent(gym_env=self.gym_env,
-											lims=(lim1, lim2),
-											name=load_into)
+	# 	# TODO: random, max, and honest agents should be created
+	# 	# by the game itself (gym_env)
+	# 	self.agents[load_into] = RandomAgent(gym_env=self.gym_env,
+	# 										lims=(lim1, lim2),
+	# 										name=load_into)
 
-	def load_max_agent(self, load_into=None):
-		n = self.gym_env.action_space.shape[0]
-		lims = list(self.gym_env.lims_simple)
-		lims = [0] + lims
-		lims.append(n)
+	# def load_max_agent(self, load_into=None):
+	# 	# n = self.gym_env.action_space.shape[0]
+	# 	# lims = list(self.gym_env.lims_simple)
+	# 	# lims = [0] + lims
+	# 	# lims.append(n)
 
-		lim1 = lims[self.agents_ids[load_into]]
-		lim2 = lims[self.agents_ids[load_into]+1]
+	# 	# lim1 = lims[self.agents_ids[load_into]]
+	# 	# lim2 = lims[self.agents_ids[load_into]+1]
 		
-		self.agents[load_into] = MaxAgent(gym_env=self.gym_env,
-											lims=(lim1, lim2),
-											name=load_into)
+	# 	self.agents[load_into] = MaxAgent(gym_env=self.gym_env,
+	# 										lims=(lim1, lim2),
+	# 										name=load_into)
 
-	def load_honest_agent(self, load_into=None):
-		n = self.gym_env.action_space.shape[0]
-		lims = list(self.gym_env.lims_simple)
-		lims = [0] + lims
-		lims.append(n)
+	# def load_honest_agent(self, load_into=None):
+	# 	n = self.gym_env.action_space.shape[0]
+	# 	lims = list(self.gym_env.lims_simple)
+	# 	lims = [0] + lims
+	# 	lims.append(n)
 
-		lim1 = lims[self.agents_ids[load_into]]
-		lim2 = lims[self.agents_ids[load_into]+1]
+	# 	lim1 = lims[self.agents_ids[load_into]]
+	# 	lim2 = lims[self.agents_ids[load_into]+1]
 		
-		self.agents[load_into] = HonestAgent(gym_env=self.gym_env,
-											lims=(lim1, lim2),
-											name=load_into)
+	# 	self.agents[load_into] = HonestAgent(gym_env=self.gym_env,
+	# 										lims=(lim1, lim2),
+	# 										name=load_into)
 
 	def game_summary(self):
 		self.gym_env.game_summary()
@@ -343,7 +366,7 @@ class PlayingGround:
 	def observe_one_step(self, reset=True):
 		obs = self.gym_env.reset()
 
-		obss = split_observation(obs, lims=self.gym_env.lims_triple)
+		obss = split_observation(obs, lims=self.gym_env.lims_observation)
 
 		#print ('obss=', obss)
 
@@ -353,7 +376,7 @@ class PlayingGround:
 
 		action_merged = merge_actions(actions)
 
-		# print('action_merged=', action_merged)
+		#print('action_merged=', action_merged)
 
 		state, rewards, _, information = self.gym_env.step(action_merged)
 

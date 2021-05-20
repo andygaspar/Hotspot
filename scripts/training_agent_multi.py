@@ -7,7 +7,8 @@ sys.path.insert(1,'../..')
 import argparse
 
 from Hotspot.RL.game_trainer import ContinuousMGameTrainer
-from Hotspot.libs.tools import loop, agent_file_name, root_file_name
+from Hotspot.libs.other_tools import agent_file_name, root_file_name
+from Hotspot.libs.uow_tool_belt import loop
 
 def wrapper_training(paras={}):
 	do_training(**paras)

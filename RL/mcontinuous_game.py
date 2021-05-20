@@ -9,8 +9,9 @@ from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
 from Hotspot.RL.wrapper_UDPP import allocation_from_df
 from Hotspot.RL.wrapper_UDPP import df_sch_from_flights
 from Hotspot.RL.wrapper_UDPP import OptimalAllocationComputer #, compute_optimal_allocation
+from Hotspot.RL.agents import Agent
 from Hotspot.RL.flight import Flight
-from Hotspot.libs.tools import clock_time
+from Hotspot.libs.uow_tool_belt.general_tools import clock_time
 
 def linear_function(min_y, max_y):
 	def f(x):
@@ -37,6 +38,8 @@ class ContMGame(gym.Env):
 	The state is the set of indices of its flight in the queue. The reward is the
 	opposite of the sum of the cost across flights from airline player (plus an offset).
 	"""
+	agent_collection = {}
+
 	def __init__(self, n_f=10, n_a=3, players=None, seed=None,
 		offset=100., cost_type='jump', min_jump=10, max_jump=100,
 		trading_alg='nnbound', n_f_players=[4, 3], new_capacity=5.,
@@ -120,6 +123,9 @@ class ContMGame(gym.Env):
 
 		self.n_f_players = n_f_players
 
+		self.n_f_players_dict = {player:n_f_players[i] for i, player in enumerate(self.players)}
+
+		self.players_id = {player:i for i, player in enumerate(self.players)}
 		#self.observation_space =  gym.spaces.Box(0, 100, shape=(self.n_f_player, 3))#, dtype=float)
 		self.observation_space =  gym.spaces.Box(0, 100, shape=(sum(self.n_f_players)*3, ))#, dtype=int)
 
@@ -153,6 +159,16 @@ class ContMGame(gym.Env):
 
 		self.flight_per_company = {company:list(self.df_sch[self.df_sch['airline']==company]['flight'])
 									   for company in self.df_sch['airline'].unique()}
+
+	def build_agent_from_collection(self, kind='', name='', as_player=None):
+		agentClass = self.agent_collection[kind]
+
+		agent = agentClass(kind=kind, gym_env=self, name=name, as_player=as_player)
+
+		return agent
+
+	def build_action_selector_for(self, player):
+		return lambda x: self.extract_action_like_from_array(x, player=player)
 
 	def cost_of_allocation(self, allocation, only_for_player=None):
 		# True cost
@@ -223,6 +239,14 @@ class ContMGame(gym.Env):
 			return cost_c[only_for_player]
 		else:
 			return cost_tot , cost_c
+
+	def extract_action_like_from_array(self, ar, player=''):
+		"""
+		Allows to extract from an action-like array the part related to the player.
+		"""
+		lim1, lim2 = self.action_selector[player]
+
+		return ar[lim1:lim2]
 
 	def make_new_schedules(self):
 		# Prepare new hotspot
@@ -400,7 +424,66 @@ class ContMGame(gym.Env):
 				self.flights[name].set_declared_charac(margin=scaled_action_margin, cost=new_cost, jump=scaled_action_jump)
 
 
+class MaxAgentMargin(Agent):
+	"""
+	Select always the lowest margin possible.
+	"""
+	def __init__(self, kind='max', gym_env=None, name='', as_player=None):
+		super().__init__(kind=kind, name=name)
+		if as_player is None:
+			as_player = name
+
+		self.high = gym_env.action_space.low
+		self.action_selector = gym_env.build_action_selector_for(as_player)
+
+	def action(self, observation):
+		#action = self.high[self.lims[0]:self.lims[1]]
+		action = self.action_selector(self.high)
+		#print (self, action)
+		return action
+
+
+class HonestAgentMargin(Agent):
+	def __init__(self, kind='honest', gym_env=None, name='', as_player=None):
+		super().__init__(kind=kind, name=name)
+		if as_player is None:
+			as_player = name
+
+		#self.lims = lims
+		#self.n_f = lims[1]-lims[0]
+		self.n_f = gym_env.n_f_players_dict[as_player]
+
+	def action(self, observation):
+		# extract the (real) jumps and pass them down as action
+		# TODO: works only for jumps...
+		state = np.array(observation).reshape(self.n_f, 3)
+		action = state[:, 0]
+		#print (self, action)
+		return action
+
+
+class RandomAgentMargin(Agent):
+	def __init__(self, kind='random', gym_env=None, name='', as_player=None):
+		super().__init__(kind=kind, name=name)
+		if as_player is None:
+			as_player = name
+
+		self.draw_func = gym_env.action_space.sample
+		#self.lims = lims
+		self.action_selector = gym_env.build_action_selector_for(as_player)
+
+	def action(self, observation):
+		#action = self.draw_func()[self.lims[0]:self.lims[1]]
+		action = self.action_selector(self.draw_func())
+		#print (self, action)
+		return action
+
+
 class ContMGameMargin(ContMGame):
+	agent_collection = {'max':MaxAgentMargin,
+						'honest':HonestAgentMargin,
+						'random':RandomAgentMargin}
+
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
@@ -411,20 +494,36 @@ class ContMGameMargin(ContMGame):
 
 		self.action_space = gym.spaces.Box(0, 1, shape=(sum(self.n_f_players), ))#, dtype=float)
 
+		self.lims_action = self.n_f_players[:-1]
+		self.lims_action = np.cumsum(self.lims_action)
+		self.lims_observation = [3 * lim for lim in self.lims_action]
+
+		n = self.action_space.shape[0]
+		lims = list(self.lims_action)
+		lims = [0] + lims
+		lims.append(n)
+
+		self.action_selector = {}
+		for player in self.players:
+			lim1 = lims[self.players_id[player]]
+			lim2 = lims[self.players_id[player]+1]
+
+			self.action_selector[player] = (lim1, lim2)
+
 	def apply_action(self, action):
 		for i in range(len(self.n_f_players)):
 			player = self.players[i]
 			if i==0:
 				nfp1 = 0
 			else:
-				nfp1 = self.n_f_players[i-1]
+				nfp1 = sum(self.n_f_players[:i])
 				
 			if i==len(self.n_f_players)-1:
-				nfp2 = len(self.n_f_players)
+				nfp2 = sum(self.n_f_players)#len(self.n_f_players)
 			else:
-				nfp2 = self.n_f_players[i]
+				nfp2 = nfp1+self.n_f_players[i]
 
-			action_p = ll[nfp1*2:nfp2*2].reshape(nfp2-nfp1, 1)[:, 0]
+			action_p = action[nfp1:nfp2].reshape(nfp2-nfp1, 1)[:, 0]
 
 			for j, ac in enumerate(action_p):
 				# for each flight
@@ -437,13 +536,65 @@ class ContMGameMargin(ContMGame):
 				self.flights[name].set_declared_charac(margin=scaled_action_margin, cost=new_cost, jump=new_jump)
 
 
+class MaxAgentJump(Agent):
+	def __init__(self, kind='max', gym_env=None, name='', as_player=None):
+		super().__init__(kind=kind, name=name)
+		if as_player is None:
+			as_player = name
+
+		self.high = gym_env.action_space.high
+		self.action_selector = gym_env.build_action_selector_for(as_player)
+
+	def action(self, observation):
+		#action = self.high[self.lims[0]:self.lims[1]]
+		action = self.action_selector(self.high)
+		#print (self, action)
+		return action
+
+
+class HonestAgentJump(Agent):
+	def __init__(self, kind='honest', gym_env=None, name='', as_player=None):
+		super().__init__(kind=kind, name=name)
+		if as_player is None:
+			as_player = name
+
+		#self.lims = lims
+		#self.n_f = lims[1]-lims[0]
+		self.n_f = gym_env.n_f_players_dict[as_player]
+
+	def action(self, observation):
+		# extract the (real) jumps and pass them down as action
+		# TODO: works only for jumps...
+		state = np.array(observation).reshape(self.n_f, 3)
+		action = state[:, 1]
+		#print (self, action)
+		return action
+
+
+class RandomAgentJump(Agent):
+	def __init__(self, kind='random', gym_env=None, name='', as_player=None):
+		super().__init__(kind=kind, name=name)
+		if as_player is None:
+			as_player = name
+
+		self.draw_func = gym_env.action_space.sample
+		#self.lims = lims
+		self.action_selector = gym_env.build_action_selector_for(as_player)
+
+	def action(self, observation):
+		#action = self.draw_func()[self.lims[0]:self.lims[1]]
+		action = self.action_selector(self.draw_func())
+		#print (self, action)
+		return action
+
+
 class ContMGameJump(ContMGame):
+	agent_collection = {'max':MaxAgentJump,
+						'honest':HonestAgentJump,
+						'random':RandomAgentJump}
+
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-
-		self.lims_simple = self.n_f_players[:-1]
-		self.lims_simple = np.cumsum(self.lims_simple)
-		self.lims_triple = [3 * lim for lim in self.lims_simple]
 
 		if self.normed_state:
 			self.observation_space =  gym.spaces.Box(0., 1., shape=(sum(self.n_f_players)*3, ))#, dtype=int)
@@ -451,6 +602,22 @@ class ContMGameJump(ContMGame):
 			self.observation_space =  gym.spaces.Box(self.min_jump, self.max_jump, shape=(sum(self.n_f_players)*3, ))#, dtype=int)
 
 		self.action_space = gym.spaces.Box(0, 1, shape=(sum(self.n_f_players), ))#, dtype=float)
+
+		self.lims_action = self.n_f_players[:-1]
+		self.lims_action = np.cumsum(self.lims_action)
+		self.lims_observation = [3 * lim for lim in self.lims_action]
+
+		n = self.action_space.shape[0]
+		lims = list(self.lims_action)
+		lims = [0] + lims
+		lims.append(n)
+
+		self.action_selector = {}
+		for player in self.players:
+			lim1 = lims[self.players_id[player]]
+			lim2 = lims[self.players_id[player]+1]
+
+			self.action_selector[player] = (lim1, lim2)
 
 	def apply_action(self, action):
 		for i in range(len(self.n_f_players)):
@@ -475,5 +642,5 @@ class ContMGameJump(ContMGame):
 				new_margin = self.flights[name].margin_declared
 
 				scaled_action_jump = self.func_jump(ac)
-				
 				self.flights[name].set_declared_charac(margin=new_margin, cost=new_cost, jump=scaled_action_jump)
+
