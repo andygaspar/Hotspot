@@ -1,4 +1,8 @@
-from Hotspot_package import *
+#from Hotspot_package import *
+import sys
+sys.path.insert(1, '../..')
+
+from Hotspot import *
 import numpy as np
 import random
 
