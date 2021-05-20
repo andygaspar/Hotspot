@@ -1,13 +1,13 @@
 from typing import Callable, List, Union
 
-from ModelStructure import modelStructure as mS
+from Hotspot.ModelStructure import modelStructure as mS
 import xpress as xp
 xp.controls.outputlog = 0
 from Hotspot.ModelStructure.Airline import airline as air
 from Hotspot.ModelStructure.Flight.flight import Flight
 from Hotspot.ModelStructure.Solution import solution
 from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.libs.uow_tool_belt import write_on_file as print_to_void
+from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_void
 
 from Hotspot.GlobalFuns.globalFuns import HiddenPrints
 
