@@ -6,7 +6,7 @@ import xpress as xp
 xp.controls.outputlog = 0
 import numpy as np
 
-from Istop.AirlineAndFlight.istopFlight import IstopFlight
+from Hotspot.Istop.AirlineAndFlight.istopFlight import IstopFlight
 
 
 class XpressSolver:

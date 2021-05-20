@@ -16,34 +16,34 @@ class ModelStructure:
 
     def __init__(self, slots: List[Slot], flights: List[Flight], air_ctor=Airline):
 
-	if not flights is None:
-		self.slots = slots
+        if not flights is None:
+            self.slots = slots
 
-		self.flights = [flight for flight in flights if flight is not None]
+            self.flights = [flight for flight in flights if flight is not None]
 
-		self.set_flight_index()
+            self.set_flight_index()
 
-		self.set_cost_vect()
+            self.set_cost_vect()
 
-		self.airlines, self.airDict = self.make_airlines(air_ctor)
+            self.airlines, self.airDict = self.make_airlines(air_ctor)
 
-		self.numAirlines = len(self.airlines)
+            self.numAirlines = len(self.airlines)
 
-		self.set_flights_attributes()
+            self.set_flights_attributes()
 
-		self.numFlights = len(self.flights)
+            self.numFlights = len(self.flights)
 
-		self.initialTotalCosts = self.compute_costs(self.flights, "initial")
+            self.initialTotalCosts = self.compute_costs(self.flights, "initial")
 
-		self.scheduleMatrix = self.set_schedule_matrix()
+            self.scheduleMatrix = self.set_schedule_matrix()
 
-		self.emptySlots = []
+            self.emptySlots = []
 
-		self.solution = None
+            self.solution = None
 
-		self.report = None
+            self.report = None
 
-		self.df = self.make_df()
+            self.df = self.make_df()
 
     @staticmethod
     def compute_costs(flights, which):
