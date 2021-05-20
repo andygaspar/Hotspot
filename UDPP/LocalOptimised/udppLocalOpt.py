@@ -1,14 +1,11 @@
 # from mip import *
 from typing import List
-
 import numpy as np
-import xpress as xp
 
-from Hotspot.UDPP.AirlineAndFlightAndSlot import udppAirline as air
-from Hotspot.UDPP.AirlineAndFlightAndSlot import udppFlight as fl
+from Hotspot.ModelStructure.Airline.airline import Airline
+from Hotspot.UDPP.UDPPflight import udppFlight as fl
 from Hotspot.ModelStructure.Slot import slot as sl
-import Hotspot.ModelStructure.modelStructure as ms
-
+import xpress as xp
 xp.controls.outputlog = 0
 
 
@@ -24,19 +21,19 @@ def eta_limit_slot(flight: fl.UDPPflight, AUslots: List[sl.Slot]):
         i += 1
 
 
-def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
+def UDPPlocalOpt(airline: Airline, slots: List[sl.Slot]):
 
     m = xp.problem()
 
-    x = np.array([[xp.var(vartype=xp.binary) for j in slots] for i in airline.flights])
+    x = np.array([[xp.var(vartype=xp.binary) for _ in slots] for _ in airline.flights])
 
-    z = np.array([xp.var(vartype=xp.integer) for i in airline.flights])
+    z = np.array([xp.var(vartype=xp.integer) for _ in airline.flights])
 
-    y = np.array([[xp.var(vartype=xp.binary) for j in slots] for i in airline.flights])
+    y = np.array([[xp.var(vartype=xp.binary) for _ in slots] for _ in airline.flights])
 
     m.addVariable(x, z, y)
 
-    flight: fl.Flight
+    flight: fl.UDPPflight
 
     m.addConstraint(
         xp.Sum(x[0, k] for k in range(airline.numFlights)) == 1
@@ -105,31 +102,34 @@ def UDPPlocalOpt(airline: air.UDPPairline, slots: List[sl.Slot]):
     )
 
     m.setObjective(
-            xp.Sum(y[flight.localNum][slot.index] * flight.costFun(flight, slot)
+            xp.Sum(y[flight.localNum][slot.index] * flight.cost_fun(slot)
              for flight in airline.flights for slot in slots) +
-            xp.Sum(x[flight.localNum][k] * flight.costFun(flight, airline.AUslots[k])
+            xp.Sum(x[flight.localNum][k] * flight.cost_fun(airline.AUslots[k])
              for flight in airline.flights for k in range(airline.numFlights))
     )
 
     m.solve()
     # print("airline ",airline)
+    n_flights = []
     for flight in airline.flights:
-
-        for k in range(airline.numFlights):
-            if m.getSolution(x[flight.localNum, k]) > 0.5:
-                flight.newSlot = airline.flights[k].slot
-                flight.priorityNumber = k
-                flight.priorityValue = "N"
-                # print(flight.slot, flight.newSlot)
-
-
 
         for slot in slots:
             if m.getSolution(y[flight.localNum, slot.index]) > 0.5:
                 flight.newSlot = slot
-                flight.priorityNumber = slot.time
-                flight.priorityValue = "P"
-    #             print(flight.slot, flight.newSlot, "P")
-    #
-    # print(sum([flight.costFun(flight, flight.slot) for flight in airline.flights]),
-    #       sum([flight.costFun(flight, flight.newSlot) for flight in airline.flights]))
+                flight.udppPriority = "P"
+                flight.tna = slot.time
+
+        for k in range(airline.numFlights):
+            if m.getSolution(x[flight.localNum, k]) > 0.5:
+                flight.newSlot = airline.flights[k].slot
+                flight.udppPriority = "N"
+                flight.udppPriorityNumber = k
+                n_flights.append(flight)
+                # print(flight.slot, flight.newSlot)
+
+    n_flights.sort(key=lambda f: f.udppPriorityNumber)
+    for i in range(len(n_flights)):
+        n_flights[i].udppPriorityNumber = i
+
+
+

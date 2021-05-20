@@ -1,9 +1,13 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
 from itertools import combinations
 
 from Hotspot.Istop.AirlineAndFlight.istopFlight import IstopFlight
+from Hotspot.Istop.Preferences import preference
 from Hotspot.ModelStructure.Airline import airline as air
+import matplotlib.pyplot as plt
 
 
 class IstopAirline(air.Airline):
@@ -11,26 +15,27 @@ class IstopAirline(air.Airline):
     @staticmethod
     def pairs(list_to_comb):
         comb = np.array(list(combinations(list_to_comb, 2)))
-        offers = comb #[pair for pair in comb if np.abs(pair[0].priority-pair[1].priority) > 0.2]
+        offers = comb
         return offers
 
     @staticmethod
     def triplet(list_to_comb):
         return np.array(list(combinations(list_to_comb, 3)))
 
-    def __init__(self, df_airline: pd.DataFrame, airline_index, slots):
+    def __init__(self, airline_name: str, flights: List[IstopFlight]):
 
-        super().__init__(df_airline=df_airline, airline_index=airline_index, slots=slots, flight_ctor=IstopFlight)
-
-        self.sum_priorities = sum(self.df["priority"])
+        super().__init__(airline_name, flights)
 
         self.flight_pairs = self.pairs(self.flights)
 
         self.flight_triplets = self.triplet(self.flights)
 
-    def set_preferences(self, priorityFunction):
-        flight: IstopFlight
+    def set_and_standardise_fit_vect(self):
+        self.flights: List[IstopFlight]
+
         for flight in self.flights:
-            df_flight = self.df[self.df["flight"] == flight.name]
-            flight.set_priority(df_flight["priority"].values[0])
-            flight.set_preference(self.sum_priorities, priorityFunction)
+            flight.set_fit_vect()
+        max_cost = max([cost for flight in self.flights for cost in flight.fitCostVect])
+
+        for flight in self.flights:
+            flight.standardisedVector = flight.fitCostVect / max_cost

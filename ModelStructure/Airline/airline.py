@@ -10,25 +10,13 @@ from Hotspot.ModelStructure.Slot.slot import Slot
 
 class Airline:
 
-    def make_airline_flight_list(self, slots: List[Slot], flight_ctor: Callable):
-        flight_list = []
-        for i in range(self.df.shape[0]):
-            line = self.df.iloc[i]
-            flight_list.append(flight_ctor(line, self, slots))
+    def __init__(self, airline_name: str, flights: List[Flight]):
 
-        return np.array(flight_list)
+        self.name = airline_name
 
-    def __init__(self, df_airline: pd.DataFrame, airline_index: int, slots: List[Slot], flight_ctor: Callable = Flight):
+        self.numFlights = len(flights)
 
-        self.df = df_airline
-
-        self.name = self.df["airline"].unique()[0]
-
-        self.index = airline_index
-
-        self.numFlights = df_airline.shape[0]
-
-        self.flights = self.make_airline_flight_list(slots, flight_ctor)
+        self.flights = flights
 
         self.AUslots = np.array([flight.slot for flight in self.flights])
 
@@ -43,6 +31,10 @@ class Airline:
     def __repr__(self):
         return self.name
 
-    def __eq__(self, other: Airline):
-        return self.index == other.index
+    def __eq__(self, other):
+        if type(other) == str:
+            return self.name == other
+        return self.name == other.name
 
+    def __hash__(self):
+        return hash(self.name)
