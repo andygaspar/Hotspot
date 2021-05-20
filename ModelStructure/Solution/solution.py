@@ -15,8 +15,8 @@ def make_performance_df(model):
     final_costs = [model.compute_costs(model.flights, "final")]
     reduction = [np.round(
         10000 * (model.initialTotalCosts - model.compute_costs(model.flights, "final")) / model.initialTotalCosts
-        ) / 100
-    ]
+    ) / 100
+                 ]
     initial_delay = ["-"]
     final_delay = ["-"]
     for airline in model.airlines:
@@ -25,7 +25,7 @@ def make_performance_df(model):
         final_costs.append(model.compute_costs(airline.flights, "final"))
         initial_delay.append(model.compute_delays(airline.flights, "initial"))
         final_delay.append(model.compute_delays(airline.flights, "final"))
-        reduction.append(np.round(
+        reduction.append(0 if model.compute_costs(airline.flights, "initial") == 0 else np.round(
             10000 * (model.compute_costs(airline.flights, "initial")
                      - model.compute_costs(airline.flights, "final")) /
             model.compute_costs(airline.flights, "initial")
@@ -43,11 +43,9 @@ def make_df_solution(model):
     model: ModelStructure
 
     model.solution = model.df.copy(deep=True)
-    priorities = [flight.priority for flight in model.flights]
     new_slot = [flight.newSlot.index for flight in model.flights]
     new_arrival = [flight.newSlot.time for flight in model.flights]
     eta_slot = [flight.etaSlot for flight in model.flights]
-    model.solution["priority"] = priorities
     model.solution["new slot"] = new_slot
     model.solution["new arrival"] = new_arrival
     model.solution["eta slot"] = eta_slot

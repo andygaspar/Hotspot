@@ -6,35 +6,38 @@ import time
 import pandas as pd
 
 from Hotspot.GlobalFuns.globalFuns import HiddenPrints
+from Hotspot.ModelStructure.Airline.airline import Airline
 from Hotspot.ModelStructure.modelStructure import ModelStructure
 from Hotspot.UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
-from Hotspot.UDPP.udppMerge import UDPPmerge
+from Hotspot.UDPP.udppMerge import udpp_merge
 from Hotspot.ModelStructure.Solution import solution
-from Hotspot.UDPP.AirlineAndFlightAndSlot.udppAirline import UDPPairline
-from Hotspot.UDPP.AirlineAndFlightAndSlot.udppFlight import UDPPflight
-from Hotspot.UDPP.Local.udppLocal import udpp_local
+from Hotspot.UDPP.UDPPflight.udppFlight import UDPPflight
 from Hotspot.ModelStructure.Slot.slot import Slot
+from Hotspot.ModelStructure.Flight import flight as fl
 import Hotspot.ModelStructure.modelStructure as ms
-
+from Hotspot.UDPP.Local import local
 
 class UDPPmodel(ModelStructure):
 
-    def __init__(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]]):
+    def __init__(self, slot_list: List[Slot], flights: List[fl.Flight]):
 
-        super().__init__(df_init=df_init, costFun=costFun, airline_ctor=UDPPairline)
+        udpp_flights = [UDPPflight(flight) for flight in flights if flight is not None]
+        super().__init__(slot_list, udpp_flights, air_ctor=Airline)
 
     def run(self, optimised=True):
-        airline: UDPPairline
+        airline: Airline
         start = time.time()
         for airline in self.airlines:
-            if optimised:
-                with HiddenPrints():
-                    UDPPlocalOpt(airline, self.slots)
-
+            if airline.numFlights > 1:
+                if optimised:
+                    with HiddenPrints():
+                        UDPPlocalOpt(airline, self.slots)
+                else:
+                    local.udpp_local(airline, self.slots)
             else:
-                udpp_local(airline, self.slots)
+                airline.flights[0].newSlot = airline.flights[0].slot
 
-        UDPPmerge(self.flights, self.slots)
+        udpp_merge(self.flights, self.slots)
         # print(time.time() - start)
         solution.make_solution(self)
         for flight in self.flights:
@@ -42,26 +45,17 @@ class UDPPmodel(ModelStructure):
                 print("************** damage, some negative impact has occured****************",
                       flight, flight.eta, flight.newSlot.time)
 
-    def get_new_df(self):
-        self.df: pd.DataFrame
-        new_df = self.solution.copy(deep=True)
-        new_df.reset_index(drop=True, inplace=True)
-        new_df["slot"] = new_df["new slot"]
-        new_df["fpfs"] = new_df["new arrival"]
-        return new_df
+    def compute_optimal_prioritisation(self):
+        airline: Airline
+        for airline in self.airlines:
+            if airline.numFlights > 1:
+                with HiddenPrints():
+                    UDPPlocalOpt(airline, self.slots)
+            else:
+                airline.flights[0].udppPriority = "N"
+                airline.flights[0].udppPriorityNumber = 0
 
-    @staticmethod
-    def compute_UDPP_local_cost(flights: List[UDPPflight]):
-        return sum([flight.costFun(flight, Slot(None, flight.UDPPlocalSolution)) for flight in flights])
 
-    def change_CCS(self, percentage: int):
-        for flight in self.flights:
-            flight.slot.time = flight.eta * 3
-            self.initialTotalCosts = self.compute_costs(self.flights, "initial")
-
-    def set_priority_value(self, val: string):
-        for flight in self.flights:
-            flight.priorityValue = val
 
     def reset(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]]):
         super().__init__(df_init=df_init, costFun=costFun, airline_ctor=UDPPairline)
