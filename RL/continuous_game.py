@@ -10,7 +10,7 @@ from Hotspot.RL.wrapper_UDPP import allocation_from_df
 from Hotspot.RL.wrapper_UDPP import df_sch_from_flights
 from Hotspot.RL.wrapper_UDPP import OptimalAllocationComputer #, compute_optimal_allocation
 from Hotspot.RL.flight import Flight
-from Hotspot.libs.tools import clock_time
+from Hotspot.libs.uow_tool_belt.general_tools import clock_time
 
 def linear_function(min_y, max_y):
     def f(x):

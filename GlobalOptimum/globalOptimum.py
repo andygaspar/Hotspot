@@ -12,7 +12,7 @@ from Hotspot.ModelStructure.Airline import airline as air
 from Hotspot.ModelStructure.Flight import flight as modFl
 from Hotspot.ModelStructure.Solution import solution
 from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.libs.tools import print_to_void
+from Hotspot.libs.uow_tool_belt import write_on_file as print_to_void
 
 
 class GlobalOptimum(mS.ModelStructure):
