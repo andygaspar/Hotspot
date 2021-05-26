@@ -8,7 +8,7 @@ from Hotspot.ModelStructure.Slot.slot import Slot
 class Flight:
 
     def __init__(self, slot: Slot, flight_name: str, airline_name: str,
-                 eta: float, delay_cost_vect=np.array,
+                 eta: float, delay_cost_vect=np.array, cost_vect: np.array = None,
                  udpp_priority: str = None, udpp_priority_number: int = None, tna: float = None,
                  slope: float = None, margin_1: float = None, jump_1: float = None,
                  margin_2: float = None, jump_2: float = None):
@@ -29,7 +29,7 @@ class Flight:
 
         self.etaSlot = None
 
-        self.costVect = None
+        self.costVect = cost_vect
 
         self.delayCostVect = delay_cost_vect
 
@@ -104,9 +104,34 @@ class Flight:
         self.etaSlot = slots[i]
 
     def get_attributes(self):
-        return self.slot, self.name, self.airlineName, self.eta, self.delayCostVect, \
-               self.udppPriority, self.udppPriorityNumber, self.tna, \
-               self.slope, self.margin1, self.jump1, self.margin2, self.jump2
+        d = {'slot':self.slot,
+            'flight_name':self.name,
+            'airline_name':self.airlineName,
+            'eta':self.eta,
+            'delay_cost_vect':self.delayCostVect,
+            'cost_vect':self.costVect,
+            'udpp_priority':self.udppPriority,
+            'udpp_priority_number':self.udppPriorityNumber,
+            'tna':self.tna,
+            'slope':self.slope,
+            'margin_1':self.margin1,
+            'jump_1':self.jump1,
+            'margin_2':self.margin2,
+            'jump_2':self.jump2}
+
+        return d
 
     def cost_fun(self, slot):
         return self.costVect[slot.index]
+
+    def update_slot(self):
+        """
+        replace .slot by .newSlot if the latter exists
+        """
+
+        if not self.newSlot is None:
+            self.slot = self.newSlot
+            self.newSlot = None
+
+    def reset_slot(self):
+        self.newSlot = None

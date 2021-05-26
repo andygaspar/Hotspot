@@ -1,12 +1,27 @@
+from collections import OrderedDict
 from pathlib import Path
 
 def print_allocation(allocation):
+	al_sorted = OrderedDict(sorted(allocation.items(), key=lambda t: t[1]))
 	s = ''
-	for slot, name in allocation.items():
+	for flight, slot in al_sorted.items():
 		
-		s += str(name) + ' -> ' + str(slot) + ' ; '
+		s += str(slot) + ' -> ' + str(flight) + ' ; '
 		
 	print (s)
+
+def compare_allocations(allocation1, allocation2):
+	print ('Comparison between allocations:')
+	s = ''
+	for i, (slot1, name1) in enumerate(allocation1.items()):
+		name2 = allocation2[slot1]
+		if name1!=name2:
+			s += 'Slot {} : {} -> {}\n'.format(slot1, name1, name2)
+			#print ('Slot', slot, ':', name1, '->', name2)
+	if len(s)>0:
+		print (s)
+	else:
+		print ('Allocations are the same!')
 
 # TODO: make it work for any version
 def agent_file_name(nfp, nn=128, n_h=2, v='v1.0', nf_tot_game=10, n_a=3,

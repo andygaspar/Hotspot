@@ -5,7 +5,7 @@ from typing import List
 import mip
 import numpy as np
 
-from Hotspot.Istop.AirlineAndFlight.istopFlight import IstopFlight
+from Hotspot.ModelStructure.Flight.flight import Flight
 
 
 class MipSolver:

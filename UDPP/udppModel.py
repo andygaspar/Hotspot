@@ -11,7 +11,7 @@ from Hotspot.ModelStructure.modelStructure import ModelStructure
 from Hotspot.UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
 from Hotspot.UDPP.udppMerge import udpp_merge
 from Hotspot.ModelStructure.Solution import solution
-from Hotspot.UDPP.UDPPflight.udppFlight import UDPPflight
+from Hotspot.UDPP.UDPPflight.udppFlight import wrap_flight_udpp#UDPPflight
 from Hotspot.ModelStructure.Slot.slot import Slot
 from Hotspot.ModelStructure.Flight import flight as fl
 import Hotspot.ModelStructure.modelStructure as ms
@@ -19,10 +19,12 @@ from Hotspot.UDPP.Local import local
 
 class UDPPmodel(ModelStructure):
 
-    def __init__(self, slot_list: List[Slot], flights: List[fl.Flight]):
+    def __init__(self, slot_list: List[Slot] = None, flights: List[fl.Flight] = None):
 
-        udpp_flights = [UDPPflight(flight) for flight in flights if flight is not None]
-        super().__init__(slot_list, udpp_flights, air_ctor=Airline)
+        if not flights is None:
+            #udpp_flights = [UDPPflight(flight) for flight in flights if flight is not None]
+            [wrap_flight_udpp(flight) for flight in flights if flight is not None]
+            super().__init__(slot_list, flights, air_ctor=Airline)
 
     def run(self, optimised=True):
         airline: Airline
@@ -55,7 +57,9 @@ class UDPPmodel(ModelStructure):
                 airline.flights[0].udppPriority = "N"
                 airline.flights[0].udppPriorityNumber = 0
 
+    #def reset(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]]):
+    # def reset(self, slot_list: List[Slot], flights: List[fl.Flight]):
 
-
-    def reset(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]]):
-        super().__init__(df_init=df_init, costFun=costFun, airline_ctor=UDPPairline)
+    #     udpp_flights = [UDPPflight(flight) for flight in flights if flight is not None]
+    #     super().__init__(slot_list, udpp_flights, air_ctor=Airline)
+    #     #super().__init__(df_init=df_init, costFun=costFun, airline_ctor=UDPPairline)

@@ -6,7 +6,7 @@ import xpress as xp
 xp.controls.outputlog = 0
 import numpy as np
 
-from Hotspot.Istop.AirlineAndFlight.istopFlight import IstopFlight
+from Hotspot.ModelStructure.Flight.flight import Flight
 
 
 class XpressSolver:
@@ -41,7 +41,7 @@ class XpressSolver:
 
     def set_constraints(self):
 
-        self.flights: List[IstopFlight]
+        self.flights: List[Flight]
 
         for i in self.emptySlots:
             for j in self.slots:
@@ -111,7 +111,7 @@ class XpressSolver:
             print("Simplex time ", end)
 
         print("problem status, explained: ", self.m.getProbStatusString(), self.m.getObjVal())
-        print(self.m.getObjVal())
+        #print(self.m.getObjVal())
 
 
 
@@ -120,7 +120,6 @@ class XpressSolver:
         #     if flight.eta > flight.newSlot.time:
         #         print("********************** danno *********************************",
         #               flight, flight.eta, flight.newSlot.time)
-
 
 
         return self.m.getSolution(self.x), self.m.getSolution(self.c)

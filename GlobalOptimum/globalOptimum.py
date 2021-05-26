@@ -8,6 +8,7 @@ import time
 import xpress as xp
 
 
+from Hotspot.GlobalFuns.globalFuns import HiddenPrints
 from Hotspot.ModelStructure import modelStructure as mS
 from Hotspot.ModelStructure.Airline import airline as air
 from Hotspot.ModelStructure.Flight.flight import Flight
@@ -18,7 +19,7 @@ from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_v
 
 class GlobalOptimum(mS.ModelStructure):
 
-    def __init__(self, slot_list: List[Slot], flight_list: List[Flight]):
+    def __init__(self, slot_list: List[Slot] = None, flight_list: List[Flight] = None):
 
         super().__init__(slot_list, flight_list)
         with print_to_void():
@@ -47,7 +48,6 @@ class GlobalOptimum(mS.ModelStructure):
                     xp.Sum(self.x[flight.index, slot.index] for flight in self.flights) <= 1
                 )
 
-
     def set_objective(self):
         flight: Flight
         with print_to_void():
@@ -56,7 +56,7 @@ class GlobalOptimum(mS.ModelStructure):
                        for flight in self.flights for slot in self.slots)
             )
 
-    def run(self, timing=False):
+    def run(self, timing=False, update_flights=False):
         start = time.time()
         with print_to_void():
             self.set_variables()
@@ -82,9 +82,20 @@ class GlobalOptimum(mS.ModelStructure):
                 print("********************** negative impact *********************************",
                       flight, flight.eta, flight.newSlot.time)
 
+        if update_flights:
+            self.update_flights()
+
     def assign_flights(self, sol):
         with print_to_void():
             for flight in self.flights:
                 for slot in self.slots:
                     if self.m.getSolution(sol[flight.index, slot.index]) > 0.5:
                         flight.newSlot = slot
+
+    def reset(self, slot_list, flight_list):
+        super().__init__(slot_list, flight_list)
+
+        with HiddenPrints():
+            self.m.reset()
+
+        self.x = None

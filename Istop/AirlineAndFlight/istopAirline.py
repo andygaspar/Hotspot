@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from itertools import combinations
 
-from Hotspot.Istop.AirlineAndFlight.istopFlight import IstopFlight
+from Hotspot.ModelStructure.Flight.flight import Flight
 from Hotspot.Istop.Preferences import preference
 from Hotspot.ModelStructure.Airline import airline as air
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ class IstopAirline(air.Airline):
     def triplet(list_to_comb):
         return np.array(list(combinations(list_to_comb, 3)))
 
-    def __init__(self, airline_name: str, flights: List[IstopFlight]):
+    def __init__(self, airline_name: str, flights: List[Flight]):
 
         super().__init__(airline_name, flights)
 
@@ -31,7 +31,7 @@ class IstopAirline(air.Airline):
         self.flight_triplets = self.triplet(self.flights)
 
     def set_and_standardise_fit_vect(self):
-        self.flights: List[IstopFlight]
+        self.flights: List[Flight]
 
         for flight in self.flights:
             flight.set_fit_vect()
