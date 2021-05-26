@@ -1,7 +1,7 @@
 from typing import Callable, Union, List
 
 from Hotspot.GlobalFuns.globalFuns import HiddenPrints
-from Hotspot.Istop.AirlineAndFlight.istopFlight import IstopFlight
+from Hotspot.Istop.AirlineAndFlight.istopFlight import wrap_flight_istop#, IstopFlight
 from Hotspot.Istop.Solvers.mip_solver import MipSolver
 from Hotspot.Istop.Solvers.xpress_solver import XpressSolver
 from Hotspot.ModelStructure import modelStructure as mS
@@ -42,9 +42,14 @@ class Istop(mS.ModelStructure):
         self.offers = None
         self.triples = triples
 
-        istop_flights = [IstopFlight(flight) for flight in flights]
+        #istop_flights = [IstopFlight(flight) for flight in flights]
+        [wrap_flight_istop(flight) for flight in flights]
 
-        super().__init__(slot_list, istop_flights, air_ctor=IstopAirline)
+        #super().__init__(slot_list, istop_flights, air_ctor=IstopAirline)
+        super().__init__(slot_list, flights, air_ctor=IstopAirline)
+
+        # Compute delayCostVect from costVect if does not exist.
+        self.compute_delay_cost_vect()
 
         self.airlines: List[IstopAirline]
 
@@ -97,6 +102,7 @@ class Istop(mS.ModelStructure):
                 solution_vect, offers_vect = m.run(timing=True)
 
             except:
+                #raise
                 print("using MIP")
                 p = MipSolver(self, max_time)
                 solution_vect, offers_vect = p.run(timing=True)

@@ -8,6 +8,9 @@ import string
 from scipy import stats
 import pandas as pd
 
+from Hotspot.ModelStructure.Slot.slot import Slot
+from Hotspot.ModelStructure.Flight.flight import Flight
+
 
 def avoid_zero(flight_list, num_flights):
     while len(flight_list[flight_list < 1]) > 0:
@@ -76,7 +79,55 @@ def distribution_maker(num_flights, num_airlines, distribution="uniform"):
     return dist
 
 
-def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1, new_capacity=2,
+def df_maker(*args, **kwargs):
+
+    slots, flights, eta, fpfs, priority, margins_gap, airline, cost, num,jump, flights_type = schedule_maker(*args, **kwargs)
+
+    return pd.DataFrame(
+        {"slot": slots, "flight": flights, "eta": eta, "fpfs": fpfs, "time": fpfs, "priority": priority,
+         "margins":margins_gap, "airline": airline, "cost": cost, "num": num, "jump":jump, "type": flights_type})
+
+def slots_flights_maker(*args, **kwargs):
+    # TODO modify schedule_maker to inclde margin2/jump2
+    slots, flights, etas, fpfss, priorities, margins_gap, airlines, costs, nums, jumps, flights_types = schedule_maker(*args, **kwargs)
+
+    slots_obj, flights_obj = [], []
+    for i in range(len(slots)):
+        slot_index = slots[i]
+        slot_time = fpfss[i]
+        slot = Slot(slot_index, slot_time)
+
+        flight_name = flights[i]
+        airline_name = airlines[i]
+        eta = etas[i]
+        delay_cost_vect = None
+        udpp_priority = priorities[i]
+        tna = None
+        slope = costs[i]
+        margin_1 = margins_gap[i]
+        jump_1 = jumps[i]
+        margin_2 = None
+        jump_2 = None
+
+        flight = Flight(slot,
+                        flight_name,
+                        airline_name,
+                        eta,
+                        delay_cost_vect,
+                        udpp_priority=udpp_priority,
+                        tna=tna,
+                        slope=slope,
+                        margin_1=margin_1,
+                        jump_1=jump_1,
+                        margin_2=margin_2,
+                        jump_2=jump_2)
+
+        slots_obj.append(slot)
+        flights_obj.append(flight)
+
+    return slots_obj, flights_obj
+
+def schedule_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1, new_capacity=2,
     n_flights_first_airlines=None, custom:Union[None, List[int]]= None, min_margin=10,
     max_margin=45, min_jump=10, max_jump=100):
 
@@ -130,11 +181,8 @@ def df_maker(num_flights=20, num_airlines=3, distribution="uniform", capacity=1,
     at_gate = pd.read_csv(dir_path / "ModelStructure/Costs/costs_table_gate.csv", sep=" ")
     flights_type = [np.random.choice(at_gate["flight"].to_numpy()) for i in range(num_flights)]
     jump = np.random.randint(min_jump, max_jump, len(num))
-
-    return pd.DataFrame(
-        {"slot": slot, "flight": flights, "eta": eta, "fpfs": fpfs, "time": fpfs, "priority": priority,
-         "margins":margins_gap, "airline": airline, "cost": cost, "num": num, "jump":jump, "type": flights_type})
-
+    
+    return slot, flights, eta, fpfs, priority, margins_gap, airline, cost, num,jump, flights_type
 
 def schedule_types(show=False):
     dfTypeList = ("uniform", "few_low", "few_high", "increasing", "hub")

@@ -32,7 +32,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3 import PPO
 
 from Hotspot.RL.agents import Agent
-from Hotspot.RL.continuous_game import ContGame, ContGameJump, ContGameMargin
+#from Hotspot.RL.continuous_game import ContGame, ContGameJump, ContGameMargin
 from Hotspot.RL.mcontinuous_game import ContMGame, ContMGameJump, ContMGameMargin
 
 from Hotspot.libs.other_tools import print_allocation

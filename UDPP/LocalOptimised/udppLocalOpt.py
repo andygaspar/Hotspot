@@ -3,7 +3,8 @@ from typing import List
 import numpy as np
 
 from Hotspot.ModelStructure.Airline.airline import Airline
-from Hotspot.UDPP.UDPPflight import udppFlight as fl
+#from Hotspot.UDPP.UDPPflight import udppFlight as fl
+from Hotspot.ModelStructure.Flight.flight import Flight as fl
 from Hotspot.ModelStructure.Slot import slot as sl
 import xpress as xp
 xp.controls.outputlog = 0
@@ -13,7 +14,7 @@ def slot_range(k: int, AUslots: List[sl.Slot]):
     return range(AUslots[k].index + 1, AUslots[k + 1].index)
 
 
-def eta_limit_slot(flight: fl.UDPPflight, AUslots: List[sl.Slot]):
+def eta_limit_slot(flight: fl, AUslots: List[sl.Slot]):
     i = 0
     for slot in AUslots:
         if slot >= flight.etaSlot:

@@ -14,7 +14,7 @@ from Hotspot.ScheduleMaker.df_to_schedule import cost_funs
 
 class ModelStructure:
 
-    def __init__(self, slots: List[Slot], flights: List[Flight], air_ctor=Airline):
+    def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None, air_ctor=Airline):
 
         if not flights is None:
             self.slots = slots
@@ -51,6 +51,13 @@ class ModelStructure:
             return sum([flight.cost_fun(flight.slot) for flight in flights])
         if which == "final":
             return sum([flight.cost_fun(flight.newSlot) for flight in flights])
+
+    @staticmethod
+    def compute_costs_list(flights, which):
+        if which == "initial":
+            return [flight.cost_fun(flight.slot) for flight in flights]
+        if which == "final":
+            return [flight.cost_fun(flight.newSlot) for flight in flights]
 
     @staticmethod
     def compute_delays(flights, which):
@@ -91,11 +98,18 @@ class ModelStructure:
                 return flight
 
     def get_new_flight_list(self):
+        """
+        Creates a new list of flight objects with newSlot as slot,
+        except if the former is None, in which case the new objects
+        have the same slot attribute than the old one.
+        """
         new_flight_list = []
         for flight in self.flights:
-            new_flight = Flight(*flight.get_attributes())
-            new_flight.slot = flight.newSlot
-            new_flight.newSlot = None
+            new_flight = Flight(**flight.get_attributes())
+            if not flight.newSlot is None:
+
+                new_flight.slot = flight.newSlot
+                new_flight.newSlot = None
             new_flight_list.append(new_flight)
 
         return sorted(new_flight_list, key=lambda f: f.slot)
@@ -104,22 +118,39 @@ class ModelStructure:
         for i in range(len(self.flights)):
             self.flights[i].index = i
 
-    def set_flights_cost_vect(self):
+    # def set_flights_cost_vect(self):
+    #     for flight in self.flights:
+    #         flight.costVect = [flight.cost_fun(slot) for slot in self.slots]
+
+    def compute_delay_cost_vect(self):
+        """
+        This is used when costVect is given instead of delayCostVect, but
+        the latter is still required, for instance for ISTOP
+        """
         for flight in self.flights:
-            flight.costVect = [flight.cost_fun(slot) for slot in self.slots]
+            if flight.delayCostVect is None:
+                flight.delayCostVect = []
+                i = 0
+                for slot in self.slots:
+                    if slot.time >= flight.eta:
+                        flight.delayCostVect.append(flight.costVect[i])
+                    i += 1
+
+                flight.delayCostVect = np.array(flight.delayCostVect)
 
     def set_cost_vect(self):
         for flight in self.flights:
-            i = 0
-            flight.costVect = []
-            for slot in self.slots:
-                if slot.time < flight.eta:
-                    flight.costVect.append(0)
-                else:
-                    flight.costVect.append(flight.delayCostVect[i])
-                    i += 1
+            if flight.costVect is None:
+                i = 0
+                flight.costVect = []
+                for slot in self.slots:
+                    if slot.time < flight.eta:
+                        flight.costVect.append(0)
+                    else:
+                        flight.costVect.append(flight.delayCostVect[i])
+                        i += 1
 
-            flight.costVect = np.array(flight.costVect)
+                flight.costVect = np.array(flight.costVect)
 
     def set_flights_attributes(self):
         for flight in self.flights:
@@ -164,18 +195,31 @@ class ModelStructure:
         return pd.DataFrame({"slot": slot_index, "flight": flights, "airline": airlines, "time": slot_time,
                              "eta": eta})
 
+    def update_flights(self):
+        [flight.update_slot() for flight in self.flights]
 
 def make_slot_and_flight(slot_time: float, slot_index: int,
                          flight_name: str = None, airline_name: str = None, eta: float = None,
                          delay_cost_vect: np.array = None, udpp_priority=None, tna=None,
                          slope: float = None, margin_1: float = None, jump_1: float = None, margin_2: float = None,
                          jump_2: float = None,
-                         empty_slot=False):
+                         empty_slot=False, cost_vect=None):
 
     slot = Slot(slot_index, slot_time)
     if not empty_slot:
-        flight = Flight(slot, flight_name, airline_name, eta, delay_cost_vect,
-                        udpp_priority, tna, slope, margin_1, jump_1, margin_2, jump_2)
+        flight = Flight(slot=slot,
+                        flight_name=flight_name,
+                        airline_name=airline_name,
+                        eta=eta,
+                        delay_cost_vect=delay_cost_vect,
+                        cost_vect=cost_vect,
+                        udpp_priority=udpp_priority,
+                        tna=tna,
+                        slope=slope,
+                        margin_1=margin_1,
+                        jump_1=jump_1,
+                        margin_2=margin_2,
+                        jump_2=jump_2)
     else:
         flight = None
     return slot, flight

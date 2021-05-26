@@ -8,7 +8,7 @@ import pandas as pd
 # from tf_agents.trajectories.time_step import TimeStep
 
 from Hotspot.libs.other_tools import print_allocation
-from Hotspot.uow_tool_belt.general_tools import nice_colors
+from Hotspot.libs.uow_tool_belt.general_tools import nice_colors
 
 #from Hotspot.RL.continuous_game import ContGame, ContGameJump, ContGameMargin
 from Hotspot.RL.mcontinuous_game import ContMGame, ContMGameJump, ContMGameMargin

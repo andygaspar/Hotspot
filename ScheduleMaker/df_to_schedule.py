@@ -17,14 +17,39 @@ def make_flight(line, slot_times):
     airline_name = line["airline"]
     eta = line["eta"]
     slot_time = line['fpfs']
+    margin = line['margins']
+    jump = line['jump']
+    slope = line['cost']
+
+    class DummyFlight:
+        pass
+
+    class DummySlot:
+        def __init__(self, slot_time):
+            self.time = slot_time
+
+    flight = DummyFlight()
+
+    flight.margin1 = margin
+    flight.jump1 = jump
+    flight.slope = slope
+    flight.eta = eta
+
+    slots = [DummySlot(st) for st in slot_times]
+
+    cost_vect = [CostFuns().costFun['jump'](flight, slot) for slot in slots]
 
     # slot = Slot(slot_index, slot_time)
 
-    delay_cost_vect = cost_funs.get_random_cost_vect(slot_times, eta)
+    #delay_cost_vect = cost_funs.get_random_cost_vect(slot_times, eta)
 
-    return modelStructure.make_slot_and_flight(slot_time=slot_time, slot_index=slot_index, eta=eta,
-                                               flight_name=flight_name, airline_name=airline_name,
-                                               delay_cost_vect=delay_cost_vect)
+    return modelStructure.make_slot_and_flight(slot_time=slot_time,
+                                                slot_index=slot_index,
+                                                eta=eta,
+                                                flight_name=flight_name,
+                                                airline_name=airline_name,
+                                                #delay_cost_vect=delay_cost_vect
+                                                cost_vect=cost_vect)
 
 
 def make_flight_list(df: pd.DataFrame):

@@ -19,11 +19,10 @@ import time
 
 class NNBoundModel(mS.ModelStructure):
 
-    def __init__(self, slot_list: List[Slot], flight_list: List[Flight],
+    def __init__(self, slot_list: List[Slot] = None, flight_list: List[Flight] = None,
 	xp_problem=None):
 
         super().__init__(slot_list, flight_list)
-
         if xp_problem is None:
             with print_to_void():
                 self.m = xp.problem()
@@ -95,3 +94,13 @@ class NNBoundModel(mS.ModelStructure):
             for slot in self.slots:
                 if self.m.getSolution(sol[flight.index, slot.index]) > 0.5:
                     flight.newSlot = slot
+
+
+    def reset(self, slot_list: List[Slot] = None, flight_list: List[Flight] = None):
+
+        super().__init__(slot_list, flight_list)
+
+        with HiddenPrints():
+            self.m.reset()
+
+        self.x = None
