@@ -6,8 +6,8 @@ from copy import copy, deepcopy
 from Hotspot.ScheduleMaker import scheduleMaker
 from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
 
-#from Hotspot.RL.wrapper_UDPP import df_sch_from_flights
-from Hotspot.RL.wrapper_UDPP import OptimalAllocationComputer, Flight, df_from_flights, allocation_from_flights
+#from Hotspot.RL.wrapper import df_sch_from_flights
+from Hotspot.RL.wrapper import OptimalAllocationComputer, Flight, df_from_flights, allocation_from_flights
 from Hotspot.RL.agents import Agent
 #from Hotspot.RL.flight import Flight
 from Hotspot.libs.uow_tool_belt.general_tools import clock_time
@@ -226,19 +226,19 @@ class ContMGame(gym.Env):
 
 		# Drawing some flights and slots ar random
 		self.slots, hflights = scheduleMaker.slots_flights_maker(self.n_f,
-												self.n_a,
-												distribution=scheduleType[0],
-												new_capacity=self.new_capacity,
-												n_flights_first_airlines=self.n_f_players,
-												min_margin=self.min_margin,
-												max_margin=self.max_margin,
-												min_jump=self.min_jump,
-												max_jump=self.max_jump)
+																self.n_a,
+																distribution=scheduleType[0],
+																new_capacity=self.new_capacity,
+																n_flights_first_airlines=self.n_f_players,
+																min_margin=self.min_margin,
+																max_margin=self.max_margin,
+																min_jump=self.min_jump,
+																max_jump=self.max_jump)
 
 		self.slot_times = {slot.index:slot.time for slot in self.slots}
 
 		# Wrapping flights
-		flights = [Flight(hflight=hflight, cost_function=self.costFun) for hflight in hflights]
+		flights = [Flight(hflight=hflight, cost_function_paras=self.costFun) for hflight in hflights]
 
 		# Compute cost vector for slots
 		[flight.compute_cost_vect(self.slots) for flight in flights]

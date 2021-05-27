@@ -5,8 +5,6 @@ from Hotspot.NNBound.nnBound import NNBoundModel
 from Hotspot.UDPP.udppModel import UDPPmodel
 from Hotspot.ScheduleMaker.scheduleMaker import schedule_types, df_maker
 from Hotspot.ScheduleMaker.df_to_schedule import make_flight_list
+from Hotspot.RL.wrapper import Flight, OptimalAllocationComputer, models
 
-models = {'istop':Istop,
-		'nnbound':NNBoundModel,
-		'udpp':UDPPmodel,
-		'globaloptimum':GlobalOptimum}
+

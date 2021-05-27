@@ -429,7 +429,7 @@ class PlayingGround:
 			information = self.observe_one_step()
 
 			print ('initial state:')
-			print (information['df_sch_init'])
+			print (information['df_sch_base'])
 			print ()
 
 			print ('declared state:')

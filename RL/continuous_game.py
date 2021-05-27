@@ -6,9 +6,9 @@ from copy import copy
 from Hotspot.ModelStructure.ScheduleMaker import scheduleMaker
 from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
 
-from Hotspot.RL.wrapper_UDPP import allocation_from_df
-from Hotspot.RL.wrapper_UDPP import df_sch_from_flights
-from Hotspot.RL.wrapper_UDPP import OptimalAllocationComputer #, compute_optimal_allocation
+from Hotspot.RL.wrapper import allocation_from_df
+from Hotspot.RL.wrapper import df_sch_from_flights
+from Hotspot.RL.wrapper import OptimalAllocationComputer #, compute_optimal_allocation
 from Hotspot.RL.flight import Flight
 from Hotspot.libs.uow_tool_belt.general_tools import clock_time
 
