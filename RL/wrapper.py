@@ -4,10 +4,17 @@ import numpy as np
 import pandas as pd
 
 from Hotspot.ModelStructure.Flight.flight import Flight as HFlight
-
+from Hotspot.Istop.istop import Istop
+from Hotspot.NNBound.nnBound import NNBoundModel
+from Hotspot.UDPP.udppModel import UDPPmodel
+from Hotspot.GlobalOptimum.globalOptimum import GlobalOptimum
 from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
-from Hotspot import models
 from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
+
+models = {'istop':Istop,
+		'nnbound':NNBoundModel,
+		'udpp':UDPPmodel,
+		'globaloptimum':GlobalOptimum}
 
 def allocation_from_df(df, name_slot='new slot'):
 	return OrderedDict(df[['flight', name_slot]].set_index('flight').to_dict()[name_slot])
@@ -43,8 +50,8 @@ def df_from_flights(flights, name_slot='newSlot'):
 	return df
 
 class Flight(HFlight):
-	def __init__(self, hflight=None, eta=None, name=None, margin=None, slope=None, cost_function=None,
-		jump=None):
+	def __init__(self, hflight=None, eta=None, name=None, margin=None, slope=None, cost_function_paras=None,
+		jump=None, cost_function_lambda=None):
 
 		"""
 		You can just extend ah HFlight instance by passing it in argument. Note that in this case,
@@ -80,7 +87,11 @@ class Flight(HFlight):
 								slope=self.slope,
 								jump=self.jump1)
 		
-		self.set_cost_function(cost_function)
+		if not cost_function_paras is None:
+			self.set_cost_function_from_cf_paras(cost_function_paras)
+		else:
+			if not cost_function_lambda is None:
+				self.set_cost_function_from_lambda_cf(cost_function_lambda)
 
 	def set_true_charac(self, margin=None, slope=None, jump=None):
 		self.margin1 = max(0., margin)
@@ -92,9 +103,9 @@ class Flight(HFlight):
 		self.slope_declared = max(0., slope)
 		self.jump1_declared = max(0., jump)
 
-	def set_cost_function(self, cost_function):
+	def compute_lambda_cf_from_cf_paras(self, cost_function_paras):
 		"""
-		cost_function takes a flight and slot as input.
+		cost_function_paras takes a flight and slot as input.
 		Not that final cost function argument is absolute time, 
 		not delay
 		"""
@@ -108,9 +119,9 @@ class Flight(HFlight):
 		def f(time):
 			slot = DummySlot()
 			slot.time = time
-			return cost_function(self, slot)
+			return cost_function_paras(self, slot)
 		
-		self.cost_f_true = f 
+		#self.cost_f_true = f 
 		
 		def ff(time):
 			# Declared cost function
@@ -119,12 +130,47 @@ class Flight(HFlight):
 			declared_flight.margin1 = self.margin1_declared
 			declared_flight.slope = self.slope_declared
 			declared_flight.jump1 = self.jump1_declared
-
+			
 			slot = DummySlot()
 			slot.time = time
-			return cost_function(declared_flight, slot)
+			return cost_function_paras(declared_flight, slot)
 		
-		self.cost_f_declared = ff
+		#self.cost_f_declared = ff
+
+		return f, ff
+
+	def set_cost_function_from_cf_paras(self, cost_function_paras):
+		f, fd = self.compute_lambda_cf_from_cf_paras(cost_function_paras)
+		self.set_cost_function_from_lambda_cf(f, cost_function_declared=fd, absolute=True)
+
+	def set_cost_function_from_lambda_cf(self, cost_function, cost_function_declared=None,
+		absolute=True, eta=None):
+		"""
+		Useful to set a cost function which has the signature delay -> cost or
+		absolute time -> cost. In the former case, one should select absolute=False
+		and provide an eta from the flight to shift the cost function.
+		"""
+		if absolute:
+			self.cost_f_true = cost_function
+			if not cost_function_declared is None:
+				self.cost_f_declared = cost_function_declared
+		else:
+			def f(x):
+				if x-eta<0.:
+					return 0.
+				else:
+					return cost_function(x-eta)
+
+			self.cost_f_true = f
+
+			if not cost_function_declared is None:
+				def ff(x):
+					if x-eta<0.:
+						return 0.
+					else:
+						return cost_function_declared(x-eta)
+
+				self.cost_f_declared = ff
 
 	def compute_cost_vect(self, slots, declared=True):
 		"""
@@ -146,13 +192,12 @@ class OptimalAllocationComputer:
 
 	def compute_optimal_allocation(self, slots, flights):
 		"""
-		flights is a dict {name:Flight}
+		Flights is a dict {name:Flight}
 		"""
 		flights = list(flights.values())
 		self.model.reset(slots, flights)
 		# with clock_time(message_after='model run executed in'):
 		self.model.run()
-
 		allocation = allocation_from_flights(flights, name_slot='newSlot')
 
 		return allocation
