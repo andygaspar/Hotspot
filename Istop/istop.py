@@ -38,42 +38,44 @@ class Istop(mS.ModelStructure):
             j += 1
         return indexes
 
-    def __init__(self, slot_list: List[Slot], flights: List[Flight], triples=False):
+    def __init__(self, slot_list: List[Slot]=None, flights: List[Flight]=None, triples=False):
         self.offers = None
         self.triples = triples
 
-        #istop_flights = [IstopFlight(flight) for flight in flights]
-        [wrap_flight_istop(flight) for flight in flights]
+        if not flights is None:
 
-        #super().__init__(slot_list, istop_flights, air_ctor=IstopAirline)
-        super().__init__(slot_list, flights, air_ctor=IstopAirline)
+            #istop_flights = [IstopFlight(flight) for flight in flights]
+            [wrap_flight_istop(flight) for flight in flights]
 
-        # Compute delayCostVect from costVect if does not exist.
-        self.compute_delay_cost_vect()
+            #super().__init__(slot_list, istop_flights, air_ctor=IstopAirline)
+            super().__init__(slot_list, flights, air_ctor=IstopAirline)
 
-        self.airlines: List[IstopAirline]
+            # Compute delayCostVect from costVect if does not exist.
+            self.compute_delay_cost_vect()
 
-        max_delay = self.slots[-1].time - self.slots[0].time
-        for flight in self.flights:
-            flight.fitCostVect = flight.costVect
+            self.airlines: List[IstopAirline]
 
-            if flight.not_paramtrised():
-                flight.set_automatic_preference_vect(max_delay)
+            max_delay = self.slots[-1].time - self.slots[0].time
+            for flight in self.flights:
+                flight.fitCostVect = flight.costVect
 
-        for airline in self.airlines:
-            airline.set_and_standardise_fit_vect()
+                if flight.not_paramtrised():
+                    flight.set_automatic_preference_vect(max_delay)
 
-        self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
-        self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
+            for airline in self.airlines:
+                airline.set_and_standardise_fit_vect()
 
-        self.epsilon = sys.float_info.min
-        self.offerChecker = OfferChecker(self.scheduleMatrix)
+            self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
+            self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
 
-        self.matches = []
-        self.couples = []
-        self.flights_in_matches = []
+            self.epsilon = sys.float_info.min
+            self.offerChecker = OfferChecker(self.scheduleMatrix)
 
-        self.offers_selected = []
+            self.matches = []
+            self.couples = []
+            self.flights_in_matches = []
+
+            self.offers_selected = []
 
     def check_and_set_matches(self):
         start = time.time()
@@ -164,29 +166,29 @@ class Istop(mS.ModelStructure):
                 if solution_vect[flight.slot.index, slot.index] > 0.9:
                     flight.newSlot = slot
 
-    def reset(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
-        # To avoid calling xp.problem(), creating a blank line
-        self.preference_function = lambda x, y: x * (y ** alpha)
-        self.offers = None
-        self.triples = triples
-        super().__init__(df_init=df_init, costFun=costFun, airline_ctor=air.IstopAirline)
-        airline: air.IstopAirline
-        for airline in self.airlines:
-            airline.set_preferences(self.preference_function)
+    # def reset(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
+    #     # To avoid calling xp.problem(), creating a blank line
+    #     self.preference_function = lambda x, y: x * (y ** alpha)
+    #     self.offers = None
+    #     self.triples = triples
+    #     super().__init__(df_init=df_init, costFun=costFun, airline_ctor=air.IstopAirline)
+    #     airline: air.IstopAirline
+    #     for airline in self.airlines:
+    #         airline.set_preferences(self.preference_function)
 
-        self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
-        self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
+    #     self.airlines_pairs = np.array(list(combinations(self.airlines, 2)))
+    #     self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
 
-        self.epsilon = sys.float_info.min
-        self.offerChecker = OfferChecker(self.scheduleMatrix)
-        with HiddenPrints():
-            self.m.reset()
+    #     self.epsilon = sys.float_info.min
+    #     self.offerChecker = OfferChecker(self.scheduleMatrix)
+    #     with HiddenPrints():
+    #         self.m.reset()
 
-        self.x = None
-        self.c = None
+    #     self.x = None
+    #     self.c = None
 
-        self.matches = []
-        self.couples = []
-        self.flights_in_matches = []
+    #     self.matches = []
+    #     self.couples = []
+    #     self.flights_in_matches = []
 
-        self.offers_selected = []
+    #     self.offers_selected = []

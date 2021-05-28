@@ -1,8 +1,10 @@
 from collections import OrderedDict
+import inspect
 
 import numpy as np
 import pandas as pd
 
+from Hotspot.ModelStructure.Slot.slot import Slot
 from Hotspot.ModelStructure.Flight.flight import Flight as HFlight
 from Hotspot.Istop.istop import Istop
 from Hotspot.NNBound.nnBound import NNBoundModel
@@ -49,19 +51,220 @@ def df_from_flights(flights, name_slot='newSlot'):
 	df.sort_values("slot", inplace=True)
 	return df
 
+
+def assign_slots_from_allocation(allocation, slots, flights):
+	# TODO
+	pass
+
+def assign_FPFS_slot(slots, flights):
+	flights_ordered = sorted(flights, key=lambda x:x.eta)
+	slots_ordered = sorted(slots, key=lambda x:x.time)
+
+	for i, flight in enumerate(flights_ordered):
+		flight.slot = slots_ordered[i]
+
+def prepare_hotspot(flights_ext, slot_times, paras={},
+	set_cost_function_with={}):
+
+	slots = [Slot(i, time) for i, time in enumerate(slot_times)]
+
+	flights = []
+	for flight_ext in flights_ext:
+		d = {v:getattr(flight_ext, k) for k, v in paras.items()}
+
+		flight = Flight(**d)
+		
+		if len(set_cost_function_with)>0:
+			dd = {}
+			for k, v in set_cost_function_with.items():
+				if type(v) is str and hasattr(flight_ext, v):
+					dd[k] = getattr(flight_ext, v)
+				else:
+					dd[k] = v
+
+			flight.set_cost_function(**dd)
+
+		flight.compute_cost_vect(slots)
+		
+		flights.append(flight)
+
+	assign_FPFS_slot(slots, flights)
+
+	return slots, flights
+
+class FlightHandler:
+	def __init__(self):
+		pass
+
+	def prepare_hotspot_from_dataframe(self, df=None, slot_times=[], attr_map={},
+		set_cost_function_with={}):
+
+		self.slots = [Slot(i, time) for i, time in enumerate(slot_times)]
+		self.flights = []
+		for i, row in df.iterrows():
+			row2 = row[list(attr_map.keys())].rename(attr_map)
+			flight = Flight(**row2)
+
+			if len(set_cost_function_with)>0:
+				# build lambda cost function
+				if 'args' in set_cost_function_with.keys():
+					args = [row[v] for v in set_cost_function_with['args']]
+				else:
+					args = []
+				if 'kwargs' in set_cost_function_with.keys():
+					kwargs = [row[v] for v in set_cost_function_with['kwargs']]
+				else:
+					kwargs = []
+				kwargs = {v:row[v] for v in set_cost_function_with['kwargs']}
+				
+				def f(x):
+					return set_cost_function_with['cost_function'](x, *args, **kwargs)
+
+				if 'eta' in set_cost_function_with.keys():
+					eta = row[set_cost_function_with['eta']]
+				else:
+					eta = None
+
+				flight.set_cost_function(f,
+										kind='lambda',
+										absolute=set_cost_function_with['absolute'],
+										eta=eta)
+				flight.compute_cost_vect(self.slots)
+			
+			self.flights.append(flight)
+
+		assign_FPFS_slot(self.slots, self.flights)
+
+		return self.slots, self.flights
+
+	def prepare_hotspot_from_objects(self, flights_ext=None, slot_times=[], attr_map={},
+		set_cost_function_with={}):
+		self.flights_ext = flights_ext
+		self.slot_times = slot_times
+		self.attr_map = attr_map
+		self.set_cost_function_with = set_cost_function_with
+
+		self.slots = [Slot(i, time) for i, time in enumerate(self.slot_times)]
+
+		self.flights = []
+		self.dic_objs = {}
+		for flight_ext in self.flights_ext:
+			d = {v:getattr(flight_ext, k) for k, v in self.attr_map.items()}
+
+			flight = Flight(**d)
+
+			self.dic_objs[flight] = flight_ext
+			
+			if len(self.set_cost_function_with)>0:
+				dd = {}
+				for k, v in self.set_cost_function_with.items():
+					if type(v) is str and hasattr(flight_ext, v):
+						dd[k] = getattr(flight_ext, v)
+					else:
+						dd[k] = v
+
+				flight.set_cost_function(**dd)
+
+			flight.compute_cost_vect(self.slots)
+			
+			self.flights.append(flight)
+
+		assign_FPFS_slot(self.slots, self.flights)
+
+		return self.slots, self.flights
+
+	def assign_slots_to_objects_from_allocation(self, allocation, attr_slot_ext='slot'):
+		for flight, slot in allocation.items():
+			flight_ext = self.dic_objs[flight]
+
+			setattr(flight_ext, attr_slot_ext, slot)
+			
+	def assign_slots_to_objects_from_internal_flights(self, attr_slot_ext='slot', attr_slot_int='newSlot'):
+		for flight in self.flights:
+			flight_ext = self.dic_objs[flight]
+
+			setattr(flight_ext, attr_slot_ext, getattr(flight, attr_slot_int))
+
+	def update_slots_internal(self):
+		[flight.update_slot() for flight in self.flights]
+
+	def get_new_flight_list(self):
+		"""
+		Creates a new list of flight objects with newSlot as slot,
+		except if the former is None, in which case the new objects
+		have the same slot attribute than the old one.
+		"""
+		new_flight_list = []
+		for flight in self.flights:
+			new_flight = HFlight(**flight.get_attributes())
+			if not flight.newSlot is None:
+
+				new_flight.slot = flight.newSlot
+				new_flight.newSlot = None
+			new_flight_list.append(new_flight)
+
+		return sorted(new_flight_list, key=lambda f: f.slot)
+
+# def prepare_hotspot(flights_ext, slot_times, convert_dic={}, just_wrap=True,
+# 	set_cost_function_with={}):
+# 	"""
+# 	High level function to create slots and wrap flight objects.
+# 	This is aiming at being used with agents (flights_ext). 
+# 	TODO: another with standard input (etas etc) that calls this one in fine.
+# 	"""
+	
+# 	slots = [Slot(i, time) for i, time in enumerate(slot_times)]
+
+# 	for flight_ext in flights_ext:
+# 		if just_wrap:
+# 			wrap_another_flight_object(flight_ext,
+# 										convert_dic=convert_dic,
+# 										set_cost_function_with=set_cost_function_with)
+# 			flight_ext.compute_cost_vect(slots)
+# 		else:
+# 			# TODO
+# 			raise Exception()
+
+# 	return slots, flights_ext
+
+# def wrap_another_flight_object(flight, convert_dic={}, set_cost_function_with={}):
+# 		"""
+# 		Warning: dangerous.
+# 		TODO: Add warning when overwriting.
+# 		TODO: check for mandatory attributes
+# 		"""
+# 		flight.init_hflight = Flight.__init__.__get__(flight)
+# 		flight.init_hflight()
+# 		for name, method in inspect.getmembers(Flight, predicate=inspect.isroutine):
+# 			if name[:2]!='__':
+# 				setattr(flight, name, method.__get__(flight))
+# 				#flight.set_true_charac = Flight.set_true_charac.__get__(flight)
+
+
+# 		for k, v in convert_dic.items():
+# 			setattr(flight, v, getattr(flight, k))
+
+# 		if len(set_cost_function_with)>0:
+# 			d = {}
+# 			for k, v in set_cost_function_with.items():
+# 				if type(v) is str and hasattr(flight, v):
+# 					d[k] = getattr(flight, v)
+# 				else:
+# 					d[k] = v
+
+# 			flight.set_cost_function(**d)
+
 class Flight(HFlight):
-	def __init__(self, hflight=None, eta=None, name=None, margin=None, slope=None, cost_function_paras=None,
-		jump=None, cost_function_lambda=None):
+	def __init__(self, hflight=None, margin=None, cost_function_paras=None,
+		jump=None, slope=None, cost_function_lambda=None, **kwargs):
 
 		"""
 		You can just extend ah HFlight instance by passing it in argument. Note that in this case,
 		all other arguments are ignored, except cost_function which is mandatory.
 		"""
 		if hflight is None:
-			super().__init__(slot=None,
-							flight_name=name,
-							airline_name='',
-							eta=eta,
+			super().__init__(
+							slot=None,
 							delay_cost_vect=None,
 							udpp_priority=None,
 							udpp_priority_number=None,
@@ -70,7 +273,8 @@ class Flight(HFlight):
 							margin_1=margin,
 							jump_1=jump,
 							margin_2=None,
-							jump_2=None)
+							jump_2=None,
+							**kwargs)
 
 		else:
 			# When you pass an hflight instance, 
@@ -94,14 +298,26 @@ class Flight(HFlight):
 				self.set_cost_function_from_lambda_cf(cost_function_lambda)
 
 	def set_true_charac(self, margin=None, slope=None, jump=None):
-		self.margin1 = max(0., margin)
-		self.slope = max(0., slope)
-		self.jump1 = max(0., jump)
+		if not margin is None:
+			self.margin1 = max(0., margin)
+		if not slope is None:
+			self.slope = max(0., slope)
+		if not slope is jump:
+			self.jump1 = max(0., jump)
 
 	def set_declared_charac(self, margin=None, slope=None, jump=None):
-		self.margin1_declared = max(0., margin)
-		self.slope_declared = max(0., slope)
-		self.jump1_declared = max(0., jump)
+		if not margin is None:
+			self.margin1_declared = max(0., margin)
+		if not slope is None:
+			self.slope_declared = max(0., slope)
+		if not slope is jump:
+			self.jump1_declared = max(0., jump)
+
+	def set_cost_function(self, cost_function, kind='lambda', **kwargs):
+		if kind=='lambda':
+			self.set_cost_function_from_lambda_cf(cost_function, **kwargs)
+		elif kind=='paras':
+			self.set_cost_function_from_cf_paras(cost_function)
 
 	def compute_lambda_cf_from_cf_paras(self, cost_function_paras):
 		"""
@@ -154,6 +370,8 @@ class Flight(HFlight):
 			self.cost_f_true = cost_function
 			if not cost_function_declared is None:
 				self.cost_f_declared = cost_function_declared
+			else:
+				self.cost_f_declared = cost_function
 		else:
 			def f(x):
 				if x-eta<0.:
@@ -171,6 +389,8 @@ class Flight(HFlight):
 						return cost_function_declared(x-eta)
 
 				self.cost_f_declared = ff
+			else:
+				self.cost_f_declared = f
 
 	def compute_cost_vect(self, slots, declared=True):
 		"""
@@ -184,20 +404,23 @@ class Flight(HFlight):
 
 
 class OptimalAllocationComputer:
-	def __init__(self, trading_alg='istop'):
+	def __init__(self, algo='istop'):#, **kwargs):
+		self.algo = algo
+		# self.model = models[self.algo](**kwargs)
 
-		self.trading_alg = trading_alg
-		
-		self.model = models[self.trading_alg]()
-
-	def compute_optimal_allocation(self, slots, flights):
+	def compute_optimal_allocation(self, slots, flights, kwargs_init={}, kwargs_run={}):
 		"""
 		Flights is a dict {name:Flight}
 		"""
-		flights = list(flights.values())
-		self.model.reset(slots, flights)
+		#flights = list(flights.values())
+		# TODO: automatically detect arguments going in init and arguments going in run
+		self.model = models[self.algo](slots, flights, **kwargs_init)
 		# with clock_time(message_after='model run executed in'):
-		self.model.run()
-		allocation = allocation_from_flights(flights, name_slot='newSlot')
+		self.model.run(**kwargs_run)
+		self.allocation = allocation_from_flights(flights, name_slot='newSlot')
 
-		return allocation
+		return self.allocation
+
+	def print_optimisation_performance(self):
+		self.model.print_performance()
+

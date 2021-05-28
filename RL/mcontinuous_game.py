@@ -42,7 +42,7 @@ class ContMGame(gym.Env):
 
 	def __init__(self, n_f=10, n_a=3, players=None, seed=None,
 		offset=100., cost_type='jump', min_jump=10, max_jump=100,
-		trading_alg='nnbound', n_f_players=[4, 3], new_capacity=5.,
+		algo='nnbound', n_f_players=[4, 3], new_capacity=5.,
 		min_margin=10, max_margin=45, price_jump=0., price_cost=0.,
 		price_margin=0., min_cost=0.1, max_cost=2., normed_state=True,
 		min_margin_action=None, max_margin_action=None,
@@ -92,8 +92,8 @@ class ContMGame(gym.Env):
 
 		np.random.seed(seed)
 
-		self.trading_alg = trading_alg
-		self.allocation_computer = OptimalAllocationComputer(trading_alg=trading_alg)
+		self.algo = algo
+		self.allocation_computer = OptimalAllocationComputer(algo=algo)
 		
 		self.viewer = None
 
@@ -136,7 +136,7 @@ class ContMGame(gym.Env):
 		print ('New capacity of hotspot:', self.new_capacity)
 		print ('Min/Max margins:', self.min_margin, self.max_margin)
 		print ('Min/Max jumps:', self.min_jump, self.max_jump)
-		print ('Trading algorithm:', self.trading_alg)
+		print ('Trading algorithm:', self.algo)
 
 	def build_agent_from_collection(self, kind='', name='', as_player=None):
 		agentClass = self.agent_collection[kind]
