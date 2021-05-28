@@ -52,45 +52,12 @@ def df_from_flights(flights, name_slot='newSlot'):
 	return df
 
 
-def assign_slots_from_allocation(allocation, slots, flights):
-	# TODO
-	pass
-
 def assign_FPFS_slot(slots, flights):
 	flights_ordered = sorted(flights, key=lambda x:x.eta)
 	slots_ordered = sorted(slots, key=lambda x:x.time)
 
 	for i, flight in enumerate(flights_ordered):
 		flight.slot = slots_ordered[i]
-
-def prepare_hotspot(flights_ext, slot_times, paras={},
-	set_cost_function_with={}):
-
-	slots = [Slot(i, time) for i, time in enumerate(slot_times)]
-
-	flights = []
-	for flight_ext in flights_ext:
-		d = {v:getattr(flight_ext, k) for k, v in paras.items()}
-
-		flight = Flight(**d)
-		
-		if len(set_cost_function_with)>0:
-			dd = {}
-			for k, v in set_cost_function_with.items():
-				if type(v) is str and hasattr(flight_ext, v):
-					dd[k] = getattr(flight_ext, v)
-				else:
-					dd[k] = v
-
-			flight.set_cost_function(**dd)
-
-		flight.compute_cost_vect(slots)
-		
-		flights.append(flight)
-
-	assign_FPFS_slot(slots, flights)
-
-	return slots, flights
 
 class FlightHandler:
 	def __init__(self):
@@ -205,54 +172,6 @@ class FlightHandler:
 
 		return sorted(new_flight_list, key=lambda f: f.slot)
 
-# def prepare_hotspot(flights_ext, slot_times, convert_dic={}, just_wrap=True,
-# 	set_cost_function_with={}):
-# 	"""
-# 	High level function to create slots and wrap flight objects.
-# 	This is aiming at being used with agents (flights_ext). 
-# 	TODO: another with standard input (etas etc) that calls this one in fine.
-# 	"""
-	
-# 	slots = [Slot(i, time) for i, time in enumerate(slot_times)]
-
-# 	for flight_ext in flights_ext:
-# 		if just_wrap:
-# 			wrap_another_flight_object(flight_ext,
-# 										convert_dic=convert_dic,
-# 										set_cost_function_with=set_cost_function_with)
-# 			flight_ext.compute_cost_vect(slots)
-# 		else:
-# 			# TODO
-# 			raise Exception()
-
-# 	return slots, flights_ext
-
-# def wrap_another_flight_object(flight, convert_dic={}, set_cost_function_with={}):
-# 		"""
-# 		Warning: dangerous.
-# 		TODO: Add warning when overwriting.
-# 		TODO: check for mandatory attributes
-# 		"""
-# 		flight.init_hflight = Flight.__init__.__get__(flight)
-# 		flight.init_hflight()
-# 		for name, method in inspect.getmembers(Flight, predicate=inspect.isroutine):
-# 			if name[:2]!='__':
-# 				setattr(flight, name, method.__get__(flight))
-# 				#flight.set_true_charac = Flight.set_true_charac.__get__(flight)
-
-
-# 		for k, v in convert_dic.items():
-# 			setattr(flight, v, getattr(flight, k))
-
-# 		if len(set_cost_function_with)>0:
-# 			d = {}
-# 			for k, v in set_cost_function_with.items():
-# 				if type(v) is str and hasattr(flight, v):
-# 					d[k] = getattr(flight, v)
-# 				else:
-# 					d[k] = v
-
-# 			flight.set_cost_function(**d)
 
 class Flight(HFlight):
 	def __init__(self, hflight=None, margin=None, cost_function_paras=None,
@@ -263,6 +182,7 @@ class Flight(HFlight):
 		all other arguments are ignored, except cost_function which is mandatory.
 		"""
 		if hflight is None:
+			# TODO: improve that
 			super().__init__(
 							slot=None,
 							delay_cost_vect=None,
@@ -280,7 +200,6 @@ class Flight(HFlight):
 			# When you pass an hflight instance, 
 			# get all the attributes
 			self.__dict__.update(hflight.__dict__)
-
 
 		# Following is useful because of clipping
 		self.set_true_charac(margin=self.margin1,
@@ -406,7 +325,8 @@ class Flight(HFlight):
 class OptimalAllocationComputer:
 	def __init__(self, algo='istop'):#, **kwargs):
 		self.algo = algo
-		# self.model = models[self.algo](**kwargs)
+		if self.algo=='nnbound':
+			self.model = models[self.algo]()
 
 	def compute_optimal_allocation(self, slots, flights, kwargs_init={}, kwargs_run={}):
 		"""
@@ -414,8 +334,10 @@ class OptimalAllocationComputer:
 		"""
 		#flights = list(flights.values())
 		# TODO: automatically detect arguments going in init and arguments going in run
-		self.model = models[self.algo](slots, flights, **kwargs_init)
-		# with clock_time(message_after='model run executed in'):
+		if self.algo=='nnbound':
+			self.model.reset(slots, flights, **kwargs_init)
+		else:
+			self.model = models[self.algo](slots, flights, **kwargs_init)
 		self.model.run(**kwargs_run)
 		self.allocation = allocation_from_flights(flights, name_slot='newSlot')
 

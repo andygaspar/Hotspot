@@ -262,17 +262,17 @@ class ContMGame(gym.Env):
 		self.base_cost_tot, self.base_cost_per_c, _ = self.cost_of_allocation(self.base_allocation)
 		
 		# Compute costs with truthful margins/jumps
-		self.best_allocation = self.allocation_computer.compute_optimal_allocation(self.slots, self.flights)
+		self.best_allocation = self.allocation_computer.compute_optimal_allocation(self.slots, list(self.flights.values()))
 		self.best_cost_tot, self.best_cost_per_c, _ = self.cost_of_allocation(self.best_allocation)
 		
 		cost = 0.
 		for i, name in enumerate(self.flights.keys()):
 			s = self.best_allocation[name]
 			cost += self.flights[name].costVect[s]
-		
+
 	def compute_reward(self):
 		# Optimise the allocation using ISTOP or NNbound and compute back the allocation
-		allocation = self.allocation_computer.compute_optimal_allocation(self.slots, self.flights)
+		allocation = self.allocation_computer.compute_optimal_allocation(self.slots, list(self.flights.values()))
 		
 		# Compute cost for all companies for player : real cost
 		# real cost (not: using cost function, not delayCostVect)
