@@ -3,7 +3,6 @@ from typing import List
 import numpy as np
 
 from Hotspot.ModelStructure.Airline.airline import Airline
-#from Hotspot.UDPP.UDPPflight import udppFlight as fl
 from Hotspot.ModelStructure.Flight.flight import Flight as fl
 from Hotspot.ModelStructure.Slot import slot as sl
 import xpress as xp
