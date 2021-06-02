@@ -24,6 +24,16 @@ def allocation_from_df(df, name_slot='new slot'):
 def allocation_from_flights(flights, name_slot='newSlot'):
 	return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
 
+def priorities_from_flights(flights):
+	d = OrderedDict([(flight.name, {}) for flight in flights])
+
+	for flight in flights:
+		d[flight.name]['udppPriority'] = flight.udppPriority
+		d[flight.name]['udppPriorityNumber'] = flight.udppPriorityNumber
+		d[flight.name]['tna'] = flight.tna
+
+	return d
+
 def df_from_flights(flights, name_slot='newSlot'):
 	"""
 	Mostly for showing purposes, is not used for internal calculations anymore.
@@ -51,7 +61,6 @@ def df_from_flights(flights, name_slot='newSlot'):
 	df.sort_values("slot", inplace=True)
 	return df
 
-
 def assign_FPFS_slot(slots, flights):
 	flights_ordered = sorted(flights, key=lambda x:x.eta)
 	slots_ordered = sorted(slots, key=lambda x:x.time)
@@ -59,12 +68,52 @@ def assign_FPFS_slot(slots, flights):
 	for i, flight in enumerate(flights_ordered):
 		flight.slot = slots_ordered[i]
 
+
 class FlightHandler:
+	"""
+	In the following, "ext" corresponds to external flight objects,
+	created outside of the Hotspot scope. "int" refers to internal
+	flight objects.
+	"""
 	def __init__(self):
 		pass
 
+	def compute_slots(self, slot_times=[]):
+		slots = [Slot(i, time) for i, time in enumerate(self.slot_times)]
+
+		self.assign_slots(slots)
+
+	def assign_slots(self, slots):
+		self.slots = slots
+
+	def get_flights(self):
+		return self.flights
+
+	def update_flight_attributes_int_to_ext(self, attr_map={}):
+		"""
+		attr_map is in the int -> ext direction
+		"""
+		for flight_int in self.flights:
+			flight_ext = self.dic_objs[flight_int]
+
+			for k, v in attr_map.items():
+				setattr(flight_ext, v, getattr(flight_int, k))
+
+	def update_flight_attributes_ext_to_int(self, attr_map={}):
+		"""
+		attr_map is in the ext -> int direction
+		"""
+		for flight_int in self.flights:
+			flight_ext = self.dic_objs[flight_int]
+
+			for k, v in attr_map.items():
+				setattr(flight_int, v, getattr(flight_ext, k))
+
 	def prepare_hotspot_from_dataframe(self, df=None, slot_times=[], attr_map={},
 		set_cost_function_with={}):
+		"""
+		attr_map is in the ext -> int direction
+		"""
 
 		self.slots = [Slot(i, time) for i, time in enumerate(slot_times)]
 		self.flights = []
@@ -104,18 +153,28 @@ class FlightHandler:
 
 		return self.slots, self.flights
 
-	def prepare_hotspot_from_objects(self, flights_ext=None, slot_times=[], attr_map={},
-		set_cost_function_with={}):
+	def prepare_hotspot_from_objects(self, flights_ext=None, slot_times=[], slots=[], attr_map={},
+		set_cost_function_with={}, assign_FPFS=True):
+		"""
+		attr_map is in the ext -> int direction
+		"""
+
+		if 'slot' in attr_map.keys():
+			assign_FPFS = False
+
 		self.flights_ext = flights_ext
 		self.slot_times = slot_times
 		self.attr_map = attr_map
 		self.set_cost_function_with = set_cost_function_with
 
-		self.slots = [Slot(i, time) for i, time in enumerate(self.slot_times)]
+		if len(slots)>1:
+			self.assign_slots(slots)
+		else:
+			self.compute_slots(slot_times=slot_times)
 
 		self.flights = []
 		self.dic_objs = {}
-		for flight_ext in self.flights_ext:
+		for i, flight_ext in enumerate(self.flights_ext):
 			d = {v:getattr(flight_ext, k) for k, v in self.attr_map.items()}
 
 			flight = Flight(**d)
@@ -125,20 +184,42 @@ class FlightHandler:
 			if len(self.set_cost_function_with)>0:
 				dd = {}
 				for k, v in self.set_cost_function_with.items():
-					if type(v) is str and hasattr(flight_ext, v):
-						dd[k] = getattr(flight_ext, v)
+					if k=='cost_function':
+						if type(v) is str and hasattr(flight_ext, v):
+							dd[k] = getattr(flight_ext, v)
+						else:
+							try:
+								_ = iter(v)
+							except TypeError:
+								# not iterable
+								# cost function is the same for everyone
+								dd[k] = v
+							else:
+								# iterable
+								# cost functions are different for each flight
+								dd[k] = v[i]
 					else:
-						dd[k] = v
-
+						if type(v) is str and hasattr(flight_ext, v):
+							dd[k] = getattr(flight_ext, v)
+						else:
+							dd[k] = v
+							
 				flight.set_cost_function(**dd)
 
 			flight.compute_cost_vect(self.slots)
 			
 			self.flights.append(flight)
-
-		assign_FPFS_slot(self.slots, self.flights)
+		if assign_FPFS:
+			assign_FPFS_slot(self.slots, self.flights)
 
 		return self.slots, self.flights
+
+	def assign_priorities_to_objects(self, priorities):
+		for flight, d in priorities.items():
+			flight_ext = self.dic_objs[flight]
+
+			for k, v in d.items():
+				setattr(flight_ext, k, v)
 
 	def assign_slots_to_objects_from_allocation(self, allocation, attr_slot_ext='slot'):
 		for flight, slot in allocation.items():
@@ -147,10 +228,7 @@ class FlightHandler:
 			setattr(flight_ext, attr_slot_ext, slot)
 			
 	def assign_slots_to_objects_from_internal_flights(self, attr_slot_ext='slot', attr_slot_int='newSlot'):
-		for flight in self.flights:
-			flight_ext = self.dic_objs[flight]
-
-			setattr(flight_ext, attr_slot_ext, getattr(flight, attr_slot_int))
+		self.update_flight_attributes_int_to_ext({attr_slot_ext:attr_slot_int})
 
 	def update_slots_internal(self):
 		[flight.update_slot() for flight in self.flights]
@@ -174,27 +252,30 @@ class FlightHandler:
 
 
 class Flight(HFlight):
-	def __init__(self, hflight=None, margin=None, cost_function_paras=None,
-		jump=None, slope=None, cost_function_lambda=None, **kwargs):
+	def __init__(self, hflight=None, cost_function_lambda=None, cost_function_paras=None,
+		**kwargs):
 
 		"""
 		You can just extend ah HFlight instance by passing it in argument. Note that in this case,
 		all other arguments are ignored, except cost_function which is mandatory.
 		"""
+		kwargs_copy = kwargs.copy()
+		for k, v in kwargs_copy.items():
+			if k=='margin':
+				kwargs['margin_1'] = v
+				del kwargs[k]
+			elif k=='jump':
+				kwargs['jump_1'] = v
+				del kwargs[k]
+
 		if hflight is None:
-			# TODO: improve that
-			super().__init__(
-							slot=None,
+			kwargs2 = {k:v for k, v in kwargs.items() if not k in ['slot', 'flight_name', 'airline_name', 'eta']}
+			super().__init__(slot=kwargs.get('slot', None),
+							flight_name=kwargs.get('flight_name', None),
+							airline_name=kwargs.get('airline_name', None),
+							eta=kwargs.get('eta', None),
 							delay_cost_vect=None,
-							udpp_priority=None,
-							udpp_priority_number=None,
-							tna=None,
-							slope=slope,
-							margin_1=margin,
-							jump_1=jump,
-							margin_2=None,
-							jump_2=None,
-							**kwargs)
+							**kwargs2)
 
 		else:
 			# When you pass an hflight instance, 
@@ -328,12 +409,37 @@ class OptimalAllocationComputer:
 		if self.algo=='nnbound':
 			self.model = models[self.algo]()
 
-	def compute_optimal_allocation(self, slots, flights, kwargs_init={}, kwargs_run={}):
+	def compute_local_priorities(self, slots, flights, kwargs_init={}):
+		try:
+			assert self.algo=='udpp'
+		except AssertionError:
+			raise Exception('You need to select "udpp" as the optimiser for copmutation of priorities.')
+
+		self.model = models[self.algo](slots, flights, **kwargs_init)
+
+		self.model.compute_optimal_prioritisation()
+
+		self.priorities = priorities_from_flights(flights)
+
+		return self.priorities
+
+	def compute_optimal_allocation(self, slots, flights, use_priorities=False, kwargs_init={}, kwargs_run={}):
 		"""
 		Flights is a dict {name:Flight}
 		"""
 		#flights = list(flights.values())
 		# TODO: automatically detect arguments going in init and arguments going in run
+		if use_priorities:
+			try:
+				assert hasattr(flights[0], 'udppPriority')
+			except AssertionError:
+				raise Exception("Flights need to have a udppPriority attribute when merging priorities.")
+			try:
+				assert self.algo == 'udpp'
+			except AssertionError:
+				raise Exception("You asked to use priorities for optimal allocation, this is only possible when selecting 'uddp' as optimiser.")
+			kwargs_run['optimised'] = False
+
 		if self.algo=='nnbound':
 			self.model.reset(slots, flights, **kwargs_init)
 		else:
