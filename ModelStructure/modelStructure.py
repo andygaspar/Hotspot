@@ -128,15 +128,7 @@ class ModelStructure:
         the latter is still required, for instance for ISTOP
         """
         for flight in self.flights:
-            if flight.delayCostVect is None:
-                flight.delayCostVect = []
-                i = 0
-                for slot in self.slots:
-                    if slot.time >= flight.eta:
-                        flight.delayCostVect.append(flight.costVect[i])
-                    i += 1
-
-                flight.delayCostVect = np.array(flight.delayCostVect)
+            flight.compute_delay_cost_vect(self.slots)
 
     def set_cost_vect(self):
         for flight in self.flights:

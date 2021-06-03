@@ -12,6 +12,7 @@ from Hotspot.UDPP.udppModel import UDPPmodel
 from Hotspot.GlobalOptimum.globalOptimum import GlobalOptimum
 from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
 from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
+from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
 
 models = {'istop':Istop,
 		'nnbound':NNBoundModel,
@@ -31,6 +32,18 @@ def priorities_from_flights(flights):
 		d[flight.name]['udppPriority'] = flight.udppPriority
 		d[flight.name]['udppPriorityNumber'] = flight.udppPriorityNumber
 		d[flight.name]['tna'] = flight.tna
+
+	return d
+
+def preferences_from_flights(flights):
+	d = OrderedDict([(flight.name, {}) for flight in flights])
+
+	for flight in flights:
+		d[flight.name]['slope'] = flight.slope
+		d[flight.name]['margin1'] = flight.margin1
+		d[flight.name]['jump1'] = flight.jump1
+		d[flight.name]['margin2'] = flight.margin2
+		d[flight.name]['jump2'] = flight.jump2
 
 	return d
 
@@ -88,6 +101,13 @@ class FlightHandler:
 
 	def get_flights(self):
 		return self.flights
+
+	def update_flight_attributes_dict_to_ext(self, attr_dict):
+		for flight, d in attr_dict.items():
+			flight_ext = self.dic_objs[flight]
+
+			for k, v in d.items():
+				setattr(flight_ext, k, v)
 
 	def update_flight_attributes_int_to_ext(self, attr_map={}):
 		"""
@@ -214,21 +234,14 @@ class FlightHandler:
 
 		return self.slots, self.flights
 
-	def assign_priorities_to_objects(self, priorities):
-		for flight, d in priorities.items():
-			flight_ext = self.dic_objs[flight]
-
-			for k, v in d.items():
-				setattr(flight_ext, k, v)
-
 	def assign_slots_to_objects_from_allocation(self, allocation, attr_slot_ext='slot'):
 		for flight, slot in allocation.items():
 			flight_ext = self.dic_objs[flight]
 
 			setattr(flight_ext, attr_slot_ext, slot)
 			
-	def assign_slots_to_objects_from_internal_flights(self, attr_slot_ext='slot', attr_slot_int='newSlot'):
-		self.update_flight_attributes_int_to_ext({attr_slot_ext:attr_slot_int})
+	# def assign_slots_to_objects_from_internal_flights(self, attr_slot_ext='slot', attr_slot_int='newSlot'):
+	# 	self.update_flight_attributes_int_to_ext({attr_slot_ext:attr_slot_int})
 
 	def update_slots_internal(self):
 		[flight.update_slot() for flight in self.flights]
@@ -396,11 +409,14 @@ class Flight(HFlight):
 		"""
 		In theory, this attribute is only used by the UDPP optimiser,
 		and thus it should always be computed using the declared cost function.
+		Also computes delayCostVect afterwards.
 		"""
 		if declared:
 			self.costVect = np.array([self.cost_f_declared(slot.time) for slot in slots])
 		else:
 			self.costVect = np.array([self.cost_f_true(slot.time) for slot in slots])
+		
+		self.compute_delay_cost_vect(slots)
 
 
 class OptimalAllocationComputer:
@@ -422,6 +438,15 @@ class OptimalAllocationComputer:
 		self.priorities = priorities_from_flights(flights)
 
 		return self.priorities
+
+	def compute_preferences(self, slots, flights):
+		for flight in flights:
+			max_delay = slots[-1].time - slots[0].time
+			set_automatic_preference_vect(flight, max_delay)
+
+		self.preferences = preferences_from_flights(flights)
+		
+		return self.preferences
 
 	def compute_optimal_allocation(self, slots, flights, use_priorities=False, kwargs_init={}, kwargs_run={}):
 		"""

@@ -135,3 +135,19 @@ class Flight:
 
     def reset_slot(self):
         self.newSlot = None
+
+    def compute_delay_cost_vect(self, slots):
+        """
+        This is used when costVect is given instead of delayCostVect, but
+        the latter is still required, for instance for ISTOP
+        """
+        #for flight in self.flights:
+        if self.delayCostVect is None:
+            self.delayCostVect = []
+            i = 0
+            for slot in slots:
+                if slot.time >= self.eta:
+                    self.delayCostVect.append(self.costVect[i])
+                i += 1
+
+            self.delayCostVect = np.array(self.delayCostVect)
