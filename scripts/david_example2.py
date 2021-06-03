@@ -64,7 +64,7 @@ slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
 # finally, if the former case, one needs to specificy the eta. The field
 # is designated with the value corresponding to the key 'eta'
 flight_handler = FlightHandler()
-slots, flights = flight_handler.prepare_hotspot_from_objects(flights_ext=david_flights,
+slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 															slot_times=slot_times,
 															attr_map={'name':'flight_name', #
 																	'airlineName':'airline_name',
@@ -84,7 +84,7 @@ allocation = computer.compute_optimal_allocation(slots, flights)
 print_allocation(allocation)
 computer.print_optimisation_performance()
 # Put slots in the original flight object as attribute "attr_slot_ext"
-flight_handler.assign_slots_to_objects_from_allocation(allocation, attr_slot_ext='slot')
+flight_handler.assign_slots_to_flights_ext_from_allocation(allocation, attr_slot_ext='slot')
 print ('Slot assigned to first flight:', david_flights[0].slot)
 # One can also use this method to use internal flights object to get the slot, instead of the
 # allocation dict.
@@ -113,7 +113,7 @@ def build_random_cost_function(margin=25, jump=100.):
 
 cost_functions = [build_random_cost_function() for flight in david_flights]
 flight_handler = FlightHandler()
-slots, flights = flight_handler.prepare_hotspot_from_objects(flights_ext=david_flights,
+slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 															slot_times=slot_times,
 															attr_map={'name':'flight_name', #
 																	'airlineName':'airline_name',
@@ -194,7 +194,7 @@ cost_func_dict = {'cost_function':'cost_func',
 # ------- Network Manager agent starts here ----- # 
 # Start by registering flights in the hotspot. This includes computing FPFS allocation.
 flight_handler_NM = FlightHandler()
-slots, flights_NM = flight_handler_NM.prepare_hotspot_from_objects(flights_ext=david_flights,
+slots, flights_NM = flight_handler_NM.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 																slot_times=slot_times,
 																attr_map={'name':'flight_name',
 																		'airlineName':'airline_name',
@@ -216,7 +216,7 @@ for airline, david_flights_airline in david_flights_per_airline.items():
 	# For this, one needs to map the 'slot' attribute and to pass the list of slots (instead of the list of slot_times)
 	# FPFS computation is deactivated whenever this argument is passed.
 	flight_handler = FlightHandler()
-	slots, flights_airline = flight_handler.prepare_hotspot_from_objects(flights_ext=david_flights_airline,
+	slots, flights_airline = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights_airline,
 																slots=slots,
 																attr_map={'name':'flight_name',
 																		'airlineName':'airline_name',
@@ -274,7 +274,7 @@ cost_func_dict = {'cost_function':'cost_func',
 # ------- Network Manager agent starts here ----- # 
 # Start by registering flights in the hotspot. This includes computing FPFS allocation.
 flight_handler_NM = FlightHandler()
-slots, flights_NM = flight_handler_NM.prepare_hotspot_from_objects(flights_ext=david_flights,
+slots, flights_NM = flight_handler_NM.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 																slot_times=slot_times,
 																attr_map={'name':'flight_name',
 																		'airlineName':'airline_name',
@@ -296,7 +296,7 @@ for airline, david_flights_airline in david_flights_per_airline.items():
 	# For this, one needs to map the 'slot' attribute and to pass the list of slots (instead of the list of slot_times)
 	# FPFS computation is deactivated whenever this argument is passed.
 	flight_handler = FlightHandler()
-	slots, flights_airline = flight_handler.prepare_hotspot_from_objects(flights_ext=david_flights_airline,
+	slots, flights_airline = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights_airline,
 																slots=slots,
 																attr_map={'name':'flight_name',
 																		'airlineName':'airline_name',
@@ -339,7 +339,7 @@ print ("\n################### Fifth Example ####################")
 david_flights = create_original_flights(n_f=10)
 slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
 flight_handler = FlightHandler()
-slots, flights = flight_handler.prepare_hotspot_from_objects(flights_ext=david_flights,
+slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 															slot_times=slot_times,
 															attr_map={'name':'flight_name', #
 																	'airlineName':'airline_name',
@@ -378,7 +378,7 @@ print ("\n################### Sixth Example ####################")
 david_flights = create_original_flights(n_f=10)
 slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
 flight_handler = FlightHandler()
-slots, flights = flight_handler.prepare_hotspot_from_objects(flights_ext=david_flights,
+slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 															slot_times=slot_times,
 															attr_map={'name':'flight_name', #
 																	'airlineName':'airline_name',
