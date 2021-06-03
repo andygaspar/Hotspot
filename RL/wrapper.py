@@ -94,9 +94,9 @@ class FlightHandler:
 	def compute_slots(self, slot_times=[]):
 		slots = [Slot(i, time) for i, time in enumerate(self.slot_times)]
 
-		self.assign_slots(slots)
+		self.set_slots(slots)
 
-	def assign_slots(self, slots):
+	def set_slots(self, slots):
 		self.slots = slots
 
 	def get_flights(self):
@@ -173,7 +173,7 @@ class FlightHandler:
 
 		return self.slots, self.flights
 
-	def prepare_hotspot_from_objects(self, flights_ext=None, slot_times=[], slots=[], attr_map={},
+	def prepare_hotspot_from_flights_ext(self, flights_ext=None, slot_times=[], slots=[], attr_map={},
 		set_cost_function_with={}, assign_FPFS=True):
 		"""
 		attr_map is in the ext -> int direction
@@ -188,7 +188,7 @@ class FlightHandler:
 		self.set_cost_function_with = set_cost_function_with
 
 		if len(slots)>1:
-			self.assign_slots(slots)
+			self.set_slots(slots)
 		else:
 			self.compute_slots(slot_times=slot_times)
 
@@ -234,14 +234,11 @@ class FlightHandler:
 
 		return self.slots, self.flights
 
-	def assign_slots_to_objects_from_allocation(self, allocation, attr_slot_ext='slot'):
+	def assign_slots_to_flights_ext_from_allocation(self, allocation, attr_slot_ext='slot'):
 		for flight, slot in allocation.items():
 			flight_ext = self.dic_objs[flight]
 
 			setattr(flight_ext, attr_slot_ext, slot)
-			
-	# def assign_slots_to_objects_from_internal_flights(self, attr_slot_ext='slot', attr_slot_int='newSlot'):
-	# 	self.update_flight_attributes_int_to_ext({attr_slot_ext:attr_slot_int})
 
 	def update_slots_internal(self):
 		[flight.update_slot() for flight in self.flights]
