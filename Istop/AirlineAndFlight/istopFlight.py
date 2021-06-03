@@ -4,7 +4,7 @@ from Hotspot.ModelStructure.Flight import flight as fl
 from Hotspot.Istop.Preferences import preference
 
 def set_automatic_preference_vect(self, max_delay):
-    self.slope, self.margin1, self.jump2, self.margin2, self.jump2 = \
+    self.slope, self.margin1, self.jump1, self.margin2, self.jump2 = \
         preference.make_preference_fun(max_delay, self.delayCostVect)
 
 def not_paramtrised(self):

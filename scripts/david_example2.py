@@ -88,8 +88,7 @@ flight_handler.assign_slots_to_objects_from_allocation(allocation, attr_slot_ext
 print ('Slot assigned to first flight:', david_flights[0].slot)
 # One can also use this method to use internal flights object to get the slot, instead of the
 # allocation dict.
-flight_handler.assign_slots_to_objects_from_internal_flights(attr_slot_ext='slot',
-															attr_slot_int='newSlot')
+flight_handler.update_flight_attributes_int_to_ext({'newSlot':'slot'})
 print ('Slot assigned to last flight:', david_flights[-1].slot)
 
 # You can also get another shiny list of flights
@@ -209,7 +208,7 @@ flight_handler_NM.update_flight_attributes_int_to_ext({'slot':'slot'})
 # Note that the NM can cheat at this stage by using the udpp optimiser to compute priorities, but
 # here we assume that this is a privilege of the Flight or the Airline object in the model.
 # ------- Network Manager agents ends here ----- # 
-
+# This can be run async.
 for airline, david_flights_airline in david_flights_per_airline.items():
 	# ------ Flight agent begins here ------ #
 	# One easy way would be to pass the flight_handler above to the NM, but this breaks the agent paradigm.
@@ -235,7 +234,7 @@ for airline, david_flights_airline in david_flights_per_airline.items():
 
 	# To send back the priorities, one can send a dictionary or assign
 	# priorities back to original flight object.
-	flight_handler.assign_priorities_to_objects(priorities)
+	flight_handler.update_flight_attributes_dict_to_ext(priorities)
 	# ------- Flight agent ends here ------ #
 															
 # ------- Network Manager agent starts here again ----- # 
@@ -251,6 +250,86 @@ computer = OptAllComp(algo='udpp')
 allocation = computer.compute_optimal_allocation(slots,
 												flights,
 												kwargs_run={'optimised':True})
+print_allocation(allocation)
+
+print ("\n################### Fourth and a half Example ####################")
+
+# Same than previous but with Istop.
+
+print ("ISTOP merging")
+david_flights = create_original_flights(n_f=10)
+slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
+
+# Bundle flights for each airline
+david_flights_per_airline = {}
+for flight in david_flights:
+	david_flights_per_airline[flight.airlineName] = david_flights_per_airline.get(flight.airlineName, []) + [flight]
+
+# Shortcut to define cost function.
+cost_func_dict = {'cost_function':'cost_func',
+				'kind':'lambda',
+				'absolute':False,
+				'eta':'eta'}
+
+# ------- Network Manager agent starts here ----- # 
+# Start by registering flights in the hotspot. This includes computing FPFS allocation.
+flight_handler_NM = FlightHandler()
+slots, flights_NM = flight_handler_NM.prepare_hotspot_from_objects(flights_ext=david_flights,
+																slot_times=slot_times,
+																attr_map={'name':'flight_name',
+																		'airlineName':'airline_name',
+																		'eta':'eta',
+																		},
+																set_cost_function_with=cost_func_dict)
+# In model, FPFS allocation is sent back to flight or airline agent
+# Here we include it in the .slot attribute in flight objects.
+flight_handler_NM.update_flight_attributes_int_to_ext({'slot':'slot'})
+
+# Note that the NM can cheat at this stage by using the udpp optimiser to compute priorities, but
+# here we assume that this is a privilege of the Flight or the Airline object in the model.
+# ------- Network Manager agents ends here ----- # 
+# This can be run async.
+for airline, david_flights_airline in david_flights_per_airline.items():
+	# ------ Flight agent begins here ------ #
+	# One easy way would be to pass the flight_handler above to the NM, but this breaks the agent paradigm.
+	# So instead we create a flight handler per airline, but make sure to use the already created slots.
+	# For this, one needs to map the 'slot' attribute and to pass the list of slots (instead of the list of slot_times)
+	# FPFS computation is deactivated whenever this argument is passed.
+	flight_handler = FlightHandler()
+	slots, flights_airline = flight_handler.prepare_hotspot_from_objects(flights_ext=david_flights_airline,
+																slots=slots,
+																attr_map={'name':'flight_name',
+																		'airlineName':'airline_name',
+																		'eta':'eta',
+																		'slot':'slot'
+																		},
+																set_cost_function_with=cost_func_dict,
+																)
+
+	# Compute priorities
+	computer = OptAllComp(algo='istop')
+	#print ('flights', flights)
+	preferences = computer.compute_preferences(slots, flights_airline)
+
+	# To send back the preferences, one can send a dictionary or assign
+	# priorities back to original flight object.
+	flight_handler.update_flight_attributes_dict_to_ext(preferences)
+	# ------- Flight agent ends here ------ #
+															
+# ------- Network Manager agent starts here again ----- # 
+# One can update the hotspot with the extra attributes now present in the original flight objects
+flight_handler_NM.update_flight_attributes_ext_to_int(attr_map={'slope':'slope', 
+																'margin1':'margin1',
+																'jump1':'jump1',
+																'margin2':'margin2',
+																'jump2':'jump2',
+																})
+flights = flight_handler_NM.get_flights()
+
+# Merge udpp priorities
+computer = OptAllComp(algo='istop')
+allocation = computer.compute_optimal_allocation(slots,
+												flights)
 print_allocation(allocation)
 
 
