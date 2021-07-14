@@ -99,7 +99,7 @@ print (new_flights[0])
 print ("\n################### Second Example ####################")
 
 print("NN bound with detached functions")
-# Another example where we the cost function is not attached to the flight
+# Another example where the cost function is not attached to the flight
 david_flights = create_original_flights(n_f=10)
 slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
 def build_random_cost_function(margin=25, jump=100.):
@@ -332,6 +332,72 @@ allocation = computer.compute_optimal_allocation(slots,
 												flights)
 print_allocation(allocation)
 
+
+print ("\n################### 4.75th Example ####################")
+
+# Use case for Mercury.
+
+print ("ISTOP merging (Mercury)")
+mercury_flights = create_original_flights(n_f=10)
+slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
+
+# Bundle flights for each airline
+mercury_flights_per_airline = {}
+for flight in mercury_flights:
+	mercury_flights_per_airline[flight.airlineName] = mercury_flights_per_airline.get(flight.airlineName, []) + [flight]
+
+# ------- Network Manager agent starts here ----- # 
+flight_handler_NM = FlightHandler()
+# Only request slot creation
+slots = flight_handler_NM.compute_slots(slot_times=slot_times)
+# Slots then need to be sent to the airlines.
+# ------- Network Manager agents ends here ----- # 
+
+# The following can be run async (even with shared slots?).
+all_flights = []
+for airline, mercury_flights_airline in mercury_flights_per_airline.items():
+	# ------ Flight agent begins here ------ #
+	flight_handler = FlightHandler()
+	mercury_flights_dict = [{'flight_name':mf.name,
+							'airline_name':mf.airlineName,
+							'eta':mf.eta,
+							'cost_function':mf.cost_func # pass real cost function here
+							} for mf in mercury_flights_airline]
+	_, flights_airline = flight_handler.prepare_hotspot_from_dict(flights_ext=mercury_flights_dict,
+																		slots=slots,
+																		set_cost_function_with={'cost_function':'cost_function',
+																								'kind':'lambda',
+																								'absolute':False,
+																								'eta':'eta'}
+																		)
+
+	# Compute priorities
+	computer = OptAllComp(algo='istop')
+	preferences = computer.compute_preferences(slots, flights_airline)
+
+	# Preferences are then sent out to the NM, together with other information (like airline name etc)
+	for i, (name, pref) in enumerate(preferences.items()):
+		to_be_sent_to_NM = {'airline_name':airline,
+							'flight_name':name,
+							'eta':mercury_flights_airline[i].eta}
+		for k, v in pref.items():
+			to_be_sent_to_NM[k] = v
+
+		# ------- Flight agent ends here ------ #
+
+		# Send to NM here
+		all_flights.append(to_be_sent_to_NM)
+															
+# ------- Network Manager agent starts here again ----- # 
+# NM can now prepare the flights with the preferences sent by the airline
+# no need to specificy cost function here, preference parameters will be used instead.
+flight_handler_NM.prepare_flights_from_dict(flights_ext=all_flights) 
+
+# Merge ISTOP preferences
+computer = OptAllComp(algo='istop')
+allocation = computer.compute_optimal_allocation(slots,
+												flight_handler_NM.get_flights())
+print_allocation(allocation)
 
 print ("\n################### Fifth Example ####################")
 

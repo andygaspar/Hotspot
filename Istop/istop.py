@@ -1,12 +1,14 @@
+import sys
+
 from typing import Callable, Union, List
+import numpy as np
+import pandas as pd
+import time
 
 from Hotspot.GlobalFuns.globalFuns import HiddenPrints
-from Hotspot.Istop.AirlineAndFlight.istopFlight import wrap_flight_istop#, IstopFlight
 from Hotspot.Istop.Solvers.mip_solver import MipSolver
 from Hotspot.Istop.Solvers.xpress_solver import XpressSolver
 from Hotspot.ModelStructure import modelStructure as mS
-# from mip import *
-import sys
 from itertools import combinations
 from Hotspot.Istop.AirlineAndFlight.istopAirline import IstopAirline
 from Hotspot.ModelStructure.Flight.flight import Flight
@@ -14,13 +16,16 @@ from Hotspot.ModelStructure.Slot.slot import Slot
 from Hotspot.ModelStructure.Solution import solution
 from Hotspot.OfferChecker.offerChecker import OfferChecker
 
-import numpy as np
-import pandas as pd
 
-import time
+def wrap_flight_istop(flight):
+    flight.priority = None
+    flight.fitCostVect = flight.costVect
+    flight.flight_id = None
+    flight.standardisedVector = None
 
 
 class Istop(mS.ModelStructure):
+    requirements = ['delayCostVect', 'costVect']
 
     @staticmethod
     def index(array, elem):
@@ -44,14 +49,12 @@ class Istop(mS.ModelStructure):
 
         if not flights is None:
 
-            #istop_flights = [IstopFlight(flight) for flight in flights]
             [wrap_flight_istop(flight) for flight in flights]
 
-            #super().__init__(slot_list, istop_flights, air_ctor=IstopAirline)
             super().__init__(slot_list, flights, air_ctor=IstopAirline)
 
             # Compute delayCostVect from costVect if does not exist.
-            self.compute_delay_cost_vect()
+            #self.compute_delay_cost_vect()
 
             self.airlines: List[IstopAirline]
 
@@ -59,8 +62,8 @@ class Istop(mS.ModelStructure):
             for flight in self.flights:
                 flight.fitCostVect = flight.costVect
 
-                if flight.not_paramtrised():
-                    flight.set_automatic_preference_vect(max_delay)
+                # if flight.not_paramtrised():
+                #     flight.set_automatic_preference_vect(max_delay)
 
             for airline in self.airlines:
                 airline.set_and_standardise_fit_vect()

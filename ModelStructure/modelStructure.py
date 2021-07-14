@@ -9,12 +9,14 @@ from Hotspot.ModelStructure.Flight.flight import Flight
 import matplotlib.pyplot as plt
 
 from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.ScheduleMaker.df_to_schedule import cost_funs
 
 
 class ModelStructure:
 
-    def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None, air_ctor=Airline):
+    requirements = []
+
+    def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None,
+        air_ctor=Airline, checks=False):
 
         if not flights is None:
             self.slots = slots
@@ -23,7 +25,7 @@ class ModelStructure:
 
             self.set_flight_index()
 
-            self.set_cost_vect()
+            # self.set_cost_vect()
 
             self.airlines, self.airDict = self.make_airlines(air_ctor)
 
@@ -33,9 +35,10 @@ class ModelStructure:
 
             self.numFlights = len(self.flights)
 
-            self.initialTotalCosts = self.compute_costs(self.flights, "initial")
+            if 'costVect' in self.requirements or 'delayCostVect' in self.requirements:
+                self.initialTotalCosts = self.compute_costs(self.flights, "initial")
 
-            self.scheduleMatrix = self.set_schedule_matrix()
+                self.scheduleMatrix = self.set_schedule_matrix()
 
             self.emptySlots = []
 
@@ -44,6 +47,34 @@ class ModelStructure:
             self.report = None
 
             self.df = self.make_df()
+
+            # Check that all flights have the attributes required by the model
+            if checks:
+                self.check_requirements()
+
+    def check_requirements(self):
+        reqs_ok = True
+        for flight in self.flights:
+            req_ok = False
+            for req in self.requirements:
+                try:
+                    # If req is an iterable, then all attributes in the 
+                    # list must be owned by the flight object
+                    iterator = iter(req)
+                    req_attr_ok = True
+                    for attr in req:
+                        req_attr_ok = req_attr_ok and hasattr(flight, attr)
+                    req_ok = req_ok or req_attr_ok
+                except TypeError:
+                    req_ok = req_ok or hasattr(flight, attr)
+
+            reqs_ok = reqs_ok and req_ok
+
+        try:
+            assert reqs_ok
+        except:
+            raise Exception("Not all flights have the necessary requirements for this model.\n \
+                            Check the model requirements by inspecting model.requirements.")
 
     @staticmethod
     def compute_costs(flights, which):
@@ -118,32 +149,6 @@ class ModelStructure:
         for i in range(len(self.flights)):
             self.flights[i].index = i
 
-    # def set_flights_cost_vect(self):
-    #     for flight in self.flights:
-    #         flight.costVect = [flight.cost_fun(slot) for slot in self.slots]
-
-    def compute_delay_cost_vect(self):
-        """
-        This is used when costVect is given instead of delayCostVect, but
-        the latter is still required, for instance for ISTOP
-        """
-        for flight in self.flights:
-            flight.compute_delay_cost_vect(self.slots)
-
-    def set_cost_vect(self):
-        for flight in self.flights:
-            if flight.costVect is None:
-                i = 0
-                flight.costVect = []
-                for slot in self.slots:
-                    if slot.time < flight.eta:
-                        flight.costVect.append(0)
-                    else:
-                        flight.costVect.append(flight.delayCostVect[i])
-                        i += 1
-
-                flight.costVect = np.array(flight.costVect)
-
     def set_flights_attributes(self):
         for flight in self.flights:
             flight.set_eta_slot(self.slots)
@@ -162,7 +167,6 @@ class ModelStructure:
         return np.array(arr)
 
     def make_airlines(self, air_ctor):
-
         air_flight_dict = {}
         for flight in self.flights:
             if flight.airlineName not in air_flight_dict.keys():
@@ -189,6 +193,7 @@ class ModelStructure:
 
     def update_flights(self):
         [flight.update_slot() for flight in self.flights]
+
 
 def make_slot_and_flight(slot_time: float, slot_index: int,
                          flight_name: str = None, airline_name: str = None, eta: float = None,

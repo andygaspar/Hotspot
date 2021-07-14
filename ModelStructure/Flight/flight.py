@@ -1,17 +1,19 @@
 import numpy as np
 from typing import List, Callable
 
-from Hotspot.Istop.Preferences import preference
+#from Hotspot.Istop.Preferences import preference
 from Hotspot.ModelStructure.Slot.slot import Slot
 
 
 class Flight:
 
-    def __init__(self, slot: Slot, flight_name: str, airline_name: str,
-                 eta: float, delay_cost_vect=np.array, cost_vect: np.array = None,
-                 udpp_priority: str = None, udpp_priority_number: int = None, tna: float = None,
-                 slope: float = None, margin_1: float = None, jump_1: float = None,
-                 margin_2: float = None, jump_2: float = None):
+    def __init__(self, flight_name: str, airline_name: str,
+                 eta: float, slot: Slot=None, delay_cost_vect: np.array=None, cost_vect: np.array = None,
+                 **garbage
+                 #udpp_priority: str = None, udpp_priority_number: int = None, tna: float = None,
+                 # slope: float = None, margin_1: float = None, jump_1: float = None,
+                 # margin_2: float = None, jump_2: float = None
+                 ):
 
         self.index = None
 
@@ -45,23 +47,23 @@ class Flight:
 
         # UDPP attributes
 
-        self.udppPriority = udpp_priority
+        # self.udppPriority = udpp_priority
 
-        self.udppPriorityNumber = udpp_priority_number
+        # self.udppPriorityNumber = udpp_priority_number
 
-        self.tna = tna
+        # self.tna = tna
 
         # ISTOP attributes  *************
 
-        self.slope = slope
+        # self.slope = slope
 
-        self.margin1 = margin_1
+        # self.margin1 = margin_1
 
-        self.jump1 = jump_1
+        # self.jump1 = jump_1
 
-        self.margin2 = margin_2
+        # self.margin2 = margin_2
 
-        self.jump2 = jump_2
+        # self.jump2 = jump_2
 
     def __str__(self):
         return self.name
@@ -136,18 +138,18 @@ class Flight:
     def reset_slot(self):
         self.newSlot = None
 
-    def compute_delay_cost_vect(self, slots):
-        """
-        This is used when costVect is given instead of delayCostVect, but
-        the latter is still required, for instance for ISTOP
-        """
-        #for flight in self.flights:
-        if self.delayCostVect is None:
-            self.delayCostVect = []
-            i = 0
-            for slot in slots:
-                if slot.time >= self.eta:
-                    self.delayCostVect.append(self.costVect[i])
-                i += 1
+    # def compute_delay_cost_vect(self, slots):
+    #     """
+    #     This is used when costVect is given instead of delayCostVect, but
+    #     the latter is still required, for instance for ISTOP
+    #     """
+    #     #for flight in self.flights:
+    #     if self.delayCostVect is None:
+    #         self.delayCostVect = []
+    #         i = 0
+    #         for slot in slots:
+    #             if slot.time >= self.eta:
+    #                 self.delayCostVect.append(self.costVect[i])
+    #             i += 1
 
-            self.delayCostVect = np.array(self.delayCostVect)
+    #         self.delayCostVect = np.array(self.delayCostVect)

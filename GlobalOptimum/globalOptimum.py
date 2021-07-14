@@ -18,6 +18,7 @@ from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_v
 
 
 class GlobalOptimum(mS.ModelStructure):
+    requirements = ['delayCostVect', 'costVect']
 
     def __init__(self, slot_list: List[Slot] = None, flight_list: List[Flight] = None):
 
