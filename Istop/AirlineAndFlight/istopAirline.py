@@ -5,7 +5,6 @@ import pandas as pd
 from itertools import combinations
 
 from Hotspot.ModelStructure.Flight.flight import Flight
-from Hotspot.Istop.Preferences import preference
 from Hotspot.ModelStructure.Airline import airline as air
 import matplotlib.pyplot as plt
 
@@ -33,8 +32,8 @@ class IstopAirline(air.Airline):
     def set_and_standardise_fit_vect(self):
         self.flights: List[Flight]
 
-        for flight in self.flights:
-            flight.set_fit_vect()
+        # for flight in self.flights:
+        #     flight.set_fit_vect()
         max_cost = max([cost for flight in self.flights for cost in flight.fitCostVect])
 
         for flight in self.flights:

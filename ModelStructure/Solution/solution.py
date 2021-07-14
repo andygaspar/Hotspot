@@ -52,7 +52,7 @@ def make_df_solution(model):
     model.solution.sort_values(by="new slot", inplace=True)
 
 
-def make_solution(model):
+def make_solution(model, performance=True):
     from Hotspot.ModelStructure.modelStructure import ModelStructure
     from Hotspot.ModelStructure.Airline.airline import Airline
     from Hotspot.ModelStructure.Flight.flight import Flight
@@ -60,4 +60,5 @@ def make_solution(model):
     airline: Airline
     flight: Flight
     make_df_solution(model)
-    make_performance_df(model)
+    if performance:
+        make_performance_df(model)

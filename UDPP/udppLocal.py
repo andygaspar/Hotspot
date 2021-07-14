@@ -5,47 +5,32 @@ import time
 
 import pandas as pd
 
-from Hotspot.GlobalFuns.globalFuns import HiddenPrints
+from Hotspot.GlobalFuns.globalFuns import HiddenPrints, preferences_from_flights
 from Hotspot.ModelStructure.Airline.airline import Airline
 from Hotspot.ModelStructure.modelStructure import ModelStructure
 from Hotspot.UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
 from Hotspot.UDPP.udppMerge import udpp_merge
 from Hotspot.ModelStructure.Solution import solution
-from Hotspot.UDPP.UDPPflight.udppFlight import wrap_flight_udpp#UDPPflight
 from Hotspot.ModelStructure.Slot.slot import Slot
 from Hotspot.ModelStructure.Flight import flight as fl
 import Hotspot.ModelStructure.modelStructure as ms
 from Hotspot.UDPP.Local import local
 
-class UDPPmodel(ModelStructure):
+class UDPPLocal(ModelStructure):
+    requirements = ['costVect', 'delayCostVect']
 
-    def __init__(self, slot_list: List[Slot] = None, flights: List[fl.Flight] = None):
-
+    def __init__(self, slots: List[Slot] = None, flights: List[fl.Flight] = None):
         if not flights is None:
-            #udpp_flights = [UDPPflight(flight) for flight in flights if flight is not None]
-            [wrap_flight_udpp(flight) for flight in flights if flight is not None]
-            super().__init__(slot_list, flights, air_ctor=Airline)
+            super().__init__(slots, flights, air_ctor=Airline)
 
-    def run(self, optimised=True):
+    def run(self):
         airline: Airline
-        start = time.time()
-        for airline in self.airlines:
-            if airline.numFlights > 1:
-                if optimised:
-                    with HiddenPrints():
-                        UDPPlocalOpt(airline, self.slots)
-                else:
-                    local.udpp_local(airline, self.slots)
-            else:
-                airline.flights[0].newSlot = airline.flights[0].slot
+        # start = time.time()
+        self.compute_optimal_prioritisation()
 
-        udpp_merge(self.flights, self.slots)
+        return preferences_from_flights(self.flights, paras=['udppPriority', 'udppPriorityNumber', 'tna'])
+
         # print(time.time() - start)
-        solution.make_solution(self)
-        for flight in self.flights:
-            if flight.eta > flight.newSlot.time:
-                print("************** damage, some negative impact has occured****************",
-                      flight, flight.eta, flight.newSlot.time)
 
     def compute_optimal_prioritisation(self):
         airline: Airline

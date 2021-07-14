@@ -8,16 +8,20 @@ from Hotspot.ModelStructure.Slot.slot import Slot
 from Hotspot.ModelStructure.Flight.flight import Flight as HFlight
 from Hotspot.Istop.istop import Istop
 from Hotspot.NNBound.nnBound import NNBoundModel
-from Hotspot.UDPP.udppModel import UDPPmodel
+from Hotspot.UDPP.udppMerge import UDPPMerge
+from Hotspot.UDPP.udppLocal import UDPPLocal
+from Hotspot.UDPP.functionApprox import FunctionApprox
 from Hotspot.GlobalOptimum.globalOptimum import GlobalOptimum
-from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
+from Hotspot.ModelStructure.Costs.costFunctionDict import archetypes_cost_functions
 from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
-from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
+#from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
 
 models = {'istop':Istop,
 		'nnbound':NNBoundModel,
-		'udpp':UDPPmodel,
-		'globaloptimum':GlobalOptimum}
+		'udpp_merge':UDPPMerge,
+		'globaloptimum':GlobalOptimum,
+		'udpp_local':UDPPLocal,
+		'function_approx':FunctionApprox}
 
 def allocation_from_df(df, name_slot='new slot'):
 	return OrderedDict(df[['flight', name_slot]].set_index('flight').to_dict()[name_slot])
@@ -25,27 +29,17 @@ def allocation_from_df(df, name_slot='new slot'):
 def allocation_from_flights(flights, name_slot='newSlot'):
 	return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
 
-def priorities_from_flights(flights):
-	d = OrderedDict([(flight.name, {}) for flight in flights])
+# def priorities_from_flights(flights):
+# 	d = OrderedDict([(flight.name, {}) for flight in flights])
 
-	for flight in flights:
-		d[flight.name]['udppPriority'] = flight.udppPriority
-		d[flight.name]['udppPriorityNumber'] = flight.udppPriorityNumber
-		d[flight.name]['tna'] = flight.tna
+# 	for flight in flights:
+# 		d[flight.name]['udppPriority'] = flight.udppPriority
+# 		d[flight.name]['udppPriorityNumber'] = flight.udppPriorityNumber
+# 		d[flight.name]['tna'] = flight.tna
 
-	return d
+# 	return d
 
-def preferences_from_flights(flights):
-	d = OrderedDict([(flight.name, {}) for flight in flights])
 
-	for flight in flights:
-		d[flight.name]['slope'] = flight.slope
-		d[flight.name]['margin1'] = flight.margin1
-		d[flight.name]['jump1'] = flight.jump1
-		d[flight.name]['margin2'] = flight.margin2
-		d[flight.name]['jump2'] = flight.jump2
-
-	return d
 
 def df_from_flights(flights, name_slot='newSlot'):
 	"""
@@ -82,25 +76,86 @@ def assign_FPFS_slot(slots, flights):
 		flight.slot = slots_ordered[i]
 
 
-class FlightHandler:
+class HotspotHandler:
 	"""
 	In the following, "ext" corresponds to external flight objects,
 	created outside of the Hotspot scope. "int" refers to internal
 	flight objects.
+
+	This is the main interface between the engine and the user.
 	"""
-	def __init__(self):
-		pass
+	def __init__(self, engine=None, archetype_cost_function=None):
+		self.engine = engine
+
+		if not archetype_cost_function is None:
+			self.set_archetype_cost_function(archetype_cost_function)
+
+		if not engine is None:
+			self.set_engine(engine)
+
+	def set_engine(self, engine):
+		self.engine = engine
+
+	def get_requirements_from_engine(self):
+		return self.engine.get_requirements()
+
+	def set_archetype_cost_function(self, cf_paras):
+		"""
+		This is the cost function archetype that is used to build the 
+		true cost function internally, for instance to compute the
+		costVect and delayCostVect.
+
+		Note that all models should take costVect and delayCostVect or other
+		types of parameters, but all the cost function building should happen here.
+		"""
+		if type(cf_paras)==str:
+			try:
+				cf_paras = archetypes_cost_functions[cf_paras]()
+			except KeyError:
+				raise Exception("Unknown function archetype:", cf_paras)
+
+		self.cf_paras = cf_paras
+
+	def get_requirements_for_user(self):
+		"""
+		Useless
+		"""
+		reqs_engine = self.get_requirements_from_engine()
+		reqs = reqs_engine
+		if 'delayCostVect' in reqs or 'costVect' in reqs:
+			reqs += ['cost_lambda', ['cost_archetype', 'cost_params']]
+
+	def get_internal_flight(self, flight_name):
+		return self.flights[flight_name]
+
+	def get_assigned_slots(self):
+		return {flight.name:flight.slot for flight in self.get_flight_list()}
+
+	def get_cost_vectors(self):
+		return {flight.name:{'costVect':flight.costVect, 'delayCostVect':flight.delayCostVect} for flight in self.get_flight_list()}
 
 	def compute_slots(self, slot_times=[]):
-		slots = [Slot(i, time) for i, time in enumerate(self.slot_times)]
+		slots = [Slot(i, time) for i, time in enumerate(slot_times)]
 
 		self.set_slots(slots)
+
+		return slots
 
 	def set_slots(self, slots):
 		self.slots = slots
 
 	def get_flights(self):
 		return self.flights
+
+	def get_flight_list(self):
+		return list(self.flights.values())
+
+	def prepare_all_flights(self):
+		reqs = self.get_requirements_from_engine()
+		for flight in self.flights.values():
+			if 'delayCostVect' in reqs or 'costVect' in reqs:
+				flight.compute_cost_vectors(self.slots)
+			# TODO: add on-the-fly computation of preferences for UDPP if not given.
 
 	def update_flight_attributes_dict_to_ext(self, attr_dict):
 		for flight, d in attr_dict.items():
@@ -129,8 +184,53 @@ class FlightHandler:
 			for k, v in attr_map.items():
 				setattr(flight_int, v, getattr(flight_ext, k))
 
-	def prepare_hotspot_from_dataframe(self, df=None, slot_times=[], attr_map={},
-		set_cost_function_with={}):
+	def update_flight_attributes_int_from_dict(self, attr_list={},
+		set_cost_function_with=None, attr_map=None):
+		"""
+		attr_map is in the ext -> int direction
+		"""
+		for flight_name, attrs in attr_list.items():
+			flight_int = self.flights[flight_name]
+			for k, v in attrs.items():
+				setattr(flight_int, k, v)
+
+			self.set_cost_function(flight_int, attrs, set_cost_function_with)
+
+	def set_cost_function(self, flight, attr_list, set_cost_function_with):
+		if not set_cost_function_with is None:
+			if set_cost_function_with=='default_cf_paras':
+				dd = {'kind':'paras',
+						'cost_function':self.cf_paras}
+			else:
+				dd = {}
+				for k, v in set_cost_function_with.items():
+					if k=='cost_function':
+						if type(v) is str and v in attr_list.keys():
+							# Cost function is a lambda function passed in the attr_list
+							dd[k] = attr_list[v]
+						else:
+							# Cost function is passed as a lambda function in set_cost_function_with
+							try:
+								_ = iter(v)
+							except TypeError:
+								# not iterable
+								# cost function is the same for everyone
+								dd[k] = v
+							else:
+								# iterable
+								# cost functions are different for each flight
+								dd[k] = v[i]
+					else:
+						if type(v) is str and v in attr_list.keys():
+							dd[k] = attr_list[v]
+						else:
+							dd[k] = v
+			
+			if 'cost_function' in dd.keys():
+				flight.set_cost_function(**dd)
+
+	def prepare_hotspot_from_dataframe(self, df=None, slot_times=[], attr_map={'flight_name':'flight_name',
+		'flight_name':'airline_name', 'eta':'eta'}, set_cost_function_with={}, assign_FPFS=True):
 		"""
 		attr_map is in the ext -> int direction
 		"""
@@ -168,12 +268,14 @@ class FlightHandler:
 				flight.compute_cost_vect(self.slots)
 			
 			self.flights.append(flight)
-
-		assign_FPFS_slot(self.slots, self.flights)
+		
+		if assign_FPFS:
+			assign_FPFS_slot(self.slots, self.flights)
 
 		return self.slots, self.flights
 
-	def prepare_hotspot_from_flights_ext(self, flights_ext=None, slot_times=[], slots=[], attr_map={},
+	def prepare_hotspot_from_flights_ext(self, flights_ext=None, slot_times=[], slots=[], attr_map={'flight_name':'flight_name',
+		'flight_name':'airline_name', 'eta':'eta'},
 		set_cost_function_with={}, assign_FPFS=True):
 		"""
 		attr_map is in the ext -> int direction
@@ -234,6 +336,54 @@ class FlightHandler:
 
 		return self.slots, self.flights
 
+	def prepare_flights_from_dict(self, attr_list=[], set_cost_function_with='default_cf_paras', attr_map=None):
+		"""
+		Specificy set_cost_function_with only if you want an actual computation of CostVect,
+		for instance if you are not passing references for ISTOP/UDPP
+		"""
+		if attr_map is None:
+			attr_map = {k:k for k in attr_list.keys()}
+
+		self.flights = OrderedDict()
+		for i, attr_list_f in enumerate(attr_list):
+			d = {v:attr_list_f[k] for k, v in attr_map.items()}
+			flight = Flight(**d)
+			
+			self.set_cost_function(flight, attr_list_f, set_cost_function_with)
+
+			self.flights[flight.name] = flight
+
+	def prepare_hotspot_from_dict(self, attr_list=None, slot_times=[], slots=[], attr_map=None,
+		set_cost_function_with={}, assign_FPFS=True):
+
+		# {'flight_name':'flight_name',
+		# 'airline_name':'airline_name', 'eta':'eta'}
+
+		if attr_map is None:
+			attr_map = {k:k for k in attr_list[0].keys()}
+
+		if 'slot' in attr_map.keys():
+			assign_FPFS = False
+
+		self.attr_list = attr_list
+		self.slot_times = slot_times
+		self.attr_map = attr_map
+		self.set_cost_function_with = set_cost_function_with
+
+		if len(slots)>1:
+			self.set_slots(slots)
+		else:
+			self.compute_slots(slot_times=slot_times)
+
+		self.prepare_flights_from_dict(attr_list=attr_list,
+										set_cost_function_with=set_cost_function_with,
+										attr_map=attr_map)
+
+		if assign_FPFS:
+			assign_FPFS_slot(self.slots, self.get_flight_list())
+
+		return self.slots, self.get_flight_list()
+
 	def assign_slots_to_flights_ext_from_allocation(self, allocation, attr_slot_ext='slot'):
 		for flight, slot in allocation.items():
 			flight_ext = self.dic_objs[flight]
@@ -261,75 +411,78 @@ class FlightHandler:
 		return sorted(new_flight_list, key=lambda f: f.slot)
 
 
+class RLFlight(HFlight):
+	pass
+
 class Flight(HFlight):
-	def __init__(self, hflight=None, cost_function_lambda=None, cost_function_paras=None,
-		**kwargs):
+	# def __init__(self, hflight=None, cost_function_lambda=None, cost_function_paras=None,
+	# 	**kwargs):
 
-		"""
-		You can just extend ah HFlight instance by passing it in argument. Note that in this case,
-		all other arguments are ignored, except cost_function which is mandatory.
-		"""
-		kwargs_copy = kwargs.copy()
-		for k, v in kwargs_copy.items():
-			if k=='margin':
-				kwargs['margin_1'] = v
-				del kwargs[k]
-			elif k=='jump':
-				kwargs['jump_1'] = v
-				del kwargs[k]
+	# 	"""
+	# 	You can just extend ah HFlight instance by passing it in argument. Note that in this case,
+	# 	all other arguments are ignored, except cost_function which is mandatory.
+	# 	"""
+	# 	kwargs_copy = kwargs.copy()
+		# # for k, v in kwargs_copy.items():
+		# # 	if k=='margin':
+		# # 		kwargs['margin_1'] = v
+		# # 		del kwargs[k]
+		# # 	elif k=='jump':
+		# # 		kwargs['jump_1'] = v
+		# # 		del kwargs[k]
 
-		if hflight is None:
-			kwargs2 = {k:v for k, v in kwargs.items() if not k in ['slot', 'flight_name', 'airline_name', 'eta']}
-			super().__init__(slot=kwargs.get('slot', None),
-							flight_name=kwargs.get('flight_name', None),
-							airline_name=kwargs.get('airline_name', None),
-							eta=kwargs.get('eta', None),
-							delay_cost_vect=None,
-							**kwargs2)
+		# if hflight is None:
+		# 	kwargs2 = {k:v for k, v in kwargs.items() if not k in ['slot', 'flight_name', 'airline_name', 'eta']}
+		# 	super().__init__(slot=kwargs.get('slot', None),
+		# 					flight_name=kwargs.get('flight_name', None),
+		# 					airline_name=kwargs.get('airline_name', None),
+		# 					eta=kwargs.get('eta', None),
+		# 					delay_cost_vect=None,
+		# 					**kwargs2)
 
-		else:
-			# When you pass an hflight instance, 
-			# get all the attributes
-			self.__dict__.update(hflight.__dict__)
+		# else:
+		# 	# When you pass an hflight instance, 
+		# 	# get all the attributes
+		# 	self.__dict__.update(hflight.__dict__)
 
 		# Following is useful because of clipping
-		self.set_true_charac(margin=self.margin1,
-							slope=self.slope,
-							jump=self.jump1)
+		# self.set_true_charac(margin=self.margin1,
+		# 					slope=self.slope,
+		# 					jump=self.jump1)
 		
-		self.set_declared_charac(margin=self.margin1,
-								slope=self.slope,
-								jump=self.jump1)
+		# self.set_declared_charac(margin=self.margin1,
+		# 						slope=self.slope,
+		# 						jump=self.jump1)
 		
-		if not cost_function_paras is None:
-			self.set_cost_function_from_cf_paras(cost_function_paras)
-		else:
-			if not cost_function_lambda is None:
-				self.set_cost_function_from_lambda_cf(cost_function_lambda)
+		# if not cost_function_paras is None:
+		# 	self.set_cost_function_from_cf_paras(cost_function_paras)
+		# else:
+		# 	if not cost_function_lambda is None:
+		# 		self.set_cost_function_from_lambda_cf(cost_function_lambda)
 
-	def set_true_charac(self, margin=None, slope=None, jump=None):
-		if not margin is None:
-			self.margin1 = max(0., margin)
-		if not slope is None:
-			self.slope = max(0., slope)
-		if not slope is jump:
-			self.jump1 = max(0., jump)
+	# def set_true_charac(self, margin=None, slope=None, jump=None):
+	# 	if not margin is None:
+	# 		self.margin1 = max(0., margin)
+	# 	if not slope is None:
+	# 		self.slope = max(0., slope)
+	# 	if not slope is jump:
+	# 		self.jump1 = max(0., jump)
 
-	def set_declared_charac(self, margin=None, slope=None, jump=None):
-		if not margin is None:
-			self.margin1_declared = max(0., margin)
-		if not slope is None:
-			self.slope_declared = max(0., slope)
-		if not slope is jump:
-			self.jump1_declared = max(0., jump)
+	# def set_declared_charac(self, margin=None, slope=None, jump=None):
+	# 	if not margin is None:
+	# 		self.margin1_declared = max(0., margin)
+	# 	if not slope is None:
+	# 		self.slope_declared = max(0., slope)
+	# 	if not slope is jump:
+	# 		self.jump1_declared = max(0., jump)
 
 	def set_cost_function(self, cost_function, kind='lambda', **kwargs):
 		if kind=='lambda':
-			self.set_cost_function_from_lambda_cf(cost_function, **kwargs)
+			self.set_cost_function_from_lambda(cost_function, **kwargs)
 		elif kind=='paras':
-			self.set_cost_function_from_cf_paras(cost_function)
+			self.set_cost_function_from_paras(cost_function)
 
-	def compute_lambda_cf_from_cf_paras(self, cost_function_paras):
+	def compute_lambda_from_paras(self, cost_function_paras):
 		"""
 		cost_function_paras takes a flight and slot as input.
 		Not that final cost function argument is absolute time, 
@@ -345,31 +498,33 @@ class Flight(HFlight):
 		def f(time):
 			slot = DummySlot()
 			slot.time = time
-			return cost_function_paras(self, slot)
+			return cost_function_paras(time, **{attr:getattr(self, attr) for attr in cost_function_paras.paras})
 		
 		#self.cost_f_true = f 
 		
-		def ff(time):
-			# Declared cost function
-			declared_flight = DummyFlight()
-			declared_flight.eta = self.eta
-			declared_flight.margin1 = self.margin1_declared
-			declared_flight.slope = self.slope_declared
-			declared_flight.jump1 = self.jump1_declared
+		# def ff(time):
+		# 	# Declared cost function
+		# 	declared_flight = DummyFlight()
+		# 	declared_flight.eta = self.eta
+		# 	declared_flight.margin1 = getattr(self, 'margin1_declared', self.margin1)
+		# 	declared_flight.slope = getattr(self, 'slope_declared', self.slope)
+		# 	declared_flight.jump1 = getattr(self, 'jump1_declared', self.jump1)
 			
-			slot = DummySlot()
-			slot.time = time
-			return cost_function_paras(declared_flight, slot)
+		# 	slot = DummySlot()
+		# 	slot.time = time
+		# 	return cost_function_paras(declared_flight, slot)
 		
 		#self.cost_f_declared = ff
 
-		return f, ff
+		return f#, ff
 
-	def set_cost_function_from_cf_paras(self, cost_function_paras):
-		f, fd = self.compute_lambda_cf_from_cf_paras(cost_function_paras)
-		self.set_cost_function_from_lambda_cf(f, cost_function_declared=fd, absolute=True)
+	def set_cost_function_from_paras(self, cost_function_paras):
+		f = self.compute_lambda_from_paras(cost_function_paras)
+		self.set_cost_function_from_lambda(f,
+											#cost_function_declared=fd,
+											absolute=True)
 
-	def set_cost_function_from_lambda_cf(self, cost_function, cost_function_declared=None,
+	def set_cost_function_from_lambda(self, cost_function, #cost_function_declared=None,
 		absolute=True, eta=None):
 		"""
 		Useful to set a cost function which has the signature delay -> cost or
@@ -378,10 +533,10 @@ class Flight(HFlight):
 		"""
 		if absolute:
 			self.cost_f_true = cost_function
-			if not cost_function_declared is None:
-				self.cost_f_declared = cost_function_declared
-			else:
-				self.cost_f_declared = cost_function
+			#if not cost_function_declared is None:
+			#	self.cost_f_declared = cost_function_declared
+			#else:
+			#	self.cost_f_declared = cost_function
 		else:
 			def f(x):
 				if x-eta<0.:
@@ -391,66 +546,98 @@ class Flight(HFlight):
 
 			self.cost_f_true = f
 
-			if not cost_function_declared is None:
-				def ff(x):
-					if x-eta<0.:
-						return 0.
-					else:
-						return cost_function_declared(x-eta)
+			# if not cost_function_declared is None:
+			# 	def ff(x):
+			# 		if x-eta<0.:
+			# 			return 0.
+			# 		else:
+			# 			return cost_function_declared(x-eta)
 
-				self.cost_f_declared = ff
+			# 	self.cost_f_declared = ff
+			# else:
+			# 	self.cost_f_declared = f
+
+	def compute_cost_vectors(self, slots):
+		"""
+		Compute costVect and delayCostVect, required for all models. If one or the 
+		other is given, the other is computed from it. If none are given, costVect
+		is computed from the cost function, and delayCostVect from costVect.
+		"""
+		if self.costVect is None:
+			if self.delayCostVect is None:
+				self.compute_cost_vect_from_cost_function(slots)
 			else:
-				self.cost_f_declared = f
+				self.compute_cost_vect_from_delay_cost_vect(slots)
 
-	def compute_cost_vect(self, slots, declared=True):
+		if self.delayCostVect is None:
+			# This is computed always from costVect.
+			self.compute_delay_cost_vect(slots)
+
+	def compute_cost_vect_from_delay_cost_vect(self, slots):
+		if self.costVect is None:
+			i = 0
+			self.costVect = []
+			for slot in slots:
+				if slot.time < self.eta:
+					self.costVect.append(0)
+				else:
+					self.costVect.append(self.delayCostVect[i])
+					i += 1
+
+			self.costVect = np.array(self.costVect)
+
+	def compute_cost_vect_from_cost_function(self, slots):#, declared=True):
 		"""
-		In theory, this attribute is only used by the UDPP optimiser,
-		and thus it should always be computed using the declared cost function.
-		Also computes delayCostVect afterwards.
+		This method allows to compute the vector costVect and delayCostVect, 
+		which are required by different optimiser.
 		"""
-		if declared:
-			self.costVect = np.array([self.cost_f_declared(slot.time) for slot in slots])
-		else:
-			self.costVect = np.array([self.cost_f_true(slot.time) for slot in slots])
-		
-		self.compute_delay_cost_vect(slots)
+		self.costVect = np.array([self.cost_f_true(slot.time) for slot in slots])
+
+	def compute_delay_cost_vect(self, slots):
+		"""
+		This is used when costVect is given instead of delayCostVect, but
+		the latter is still required, for instance for ISTOP.
+		"""
+		if self.delayCostVect is None:
+			self.delayCostVect = []
+			i = 0
+			for slot in slots:
+				if slot.time >= self.eta:
+					self.delayCostVect.append(self.costVect[i])
+				i += 1
+
+			self.delayCostVect = np.array(self.delayCostVect)
 
 
-class OptimalAllocationComputer:
-	def __init__(self, algo='istop'):#, **kwargs):
+class OptimalAllocationEngine:
+	def __init__(self, algo):
 		self.algo = algo
+
+		if not algo in models.keys():
+			raise Exception('Unknown algorithm:', algo, '. Available algorithms:', list(models.keys()))
+
 		if self.algo=='nnbound':
 			self.model = models[self.algo]()
 
-	def compute_local_priorities(self, slots, flights, kwargs_init={}):
-		try:
-			assert self.algo=='udpp'
-		except AssertionError:
-			raise Exception('You need to select "udpp" as the optimiser for copmutation of priorities.')
+	def get_requirements(self):
+		"""
+		List the required attributes that should be attached to the flights passed 
+		to the engine itself.
+		"""
 
-		self.model = models[self.algo](slots, flights, **kwargs_init)
+		return models[self.algo].requirements
 
-		self.model.compute_optimal_prioritisation()
-
-		self.priorities = priorities_from_flights(flights)
-
-		return self.priorities
-
-	def compute_preferences(self, slots, flights):
-		for flight in flights:
-			max_delay = slots[-1].time - slots[0].time
-			set_automatic_preference_vect(flight, max_delay)
-
-		self.preferences = preferences_from_flights(flights)
-		
-		return self.preferences
-
-	def compute_optimal_allocation(self, slots, flights, use_priorities=False, kwargs_init={}, kwargs_run={}):
+	def compute_optimal_allocation(self, hotspot_handler=None, slots=None, flights=None,
+		use_priorities=False, kwargs_init={}, kwargs_run={}):
 		"""
 		Flights is a dict {name:Flight}
 		"""
 		#flights = list(flights.values())
 		# TODO: automatically detect arguments going in init and arguments going in run
+		if not hotspot_handler is None:
+			slots = hotspot_handler.slots
+			flights = hotspot_handler.get_flight_list()
+
 		if use_priorities:
 			try:
 				assert hasattr(flights[0], 'udppPriority')
@@ -467,6 +654,7 @@ class OptimalAllocationComputer:
 		else:
 			self.model = models[self.algo](slots, flights, **kwargs_init)
 		self.model.run(**kwargs_run)
+		
 		self.allocation = allocation_from_flights(flights, name_slot='newSlot')
 
 		return self.allocation
@@ -474,3 +662,28 @@ class OptimalAllocationComputer:
 	def print_optimisation_performance(self):
 		self.model.print_performance()
 
+
+class LocalEngine(OptimalAllocationEngine):
+	def compute_optimal_parameters(self, hotspot_handler=None, slots=None, flights=None,
+		cost_func_archetype=None, kwargs_init={}, kwargs_run={}):
+		"""
+		Merge with previous?
+		"""
+
+		if not hotspot_handler is None:
+			slots = hotspot_handler.slots
+			flights = hotspot_handler.get_flight_list()
+
+			if cost_func_archetype is None and hasattr(hotspot_handler, 'cf_paras'):
+				cost_func_archetype = hotspot_handler.cf_paras
+
+		if not cost_func_archetype is None:
+			kwargs_init['cost_func_archetype'] = cost_func_archetype
+
+		self.model = models[self.algo](slots=slots, 
+										flights=flights, 
+										**kwargs_init)
+
+		paras = self.model.run(**kwargs_run)
+
+		return paras
