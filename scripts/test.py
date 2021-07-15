@@ -20,8 +20,8 @@ num_flights = 50
 num_airlines = 5
 
 
-df = pd.read_csv("Test/df_test.csv")
-df_costs = pd.read_csv("Test/df_costs.csv")
+df = pd.read_csv("../Test/df_test.csv")
+df_costs = pd.read_csv("../Test/df_costs.csv")
 
 slot_list, fl_list = make_flight_list(df, df_costs)
 
@@ -32,15 +32,15 @@ global_model = GlobalOptimum(slot_list, fl_list)
 global_model.run()
 
 
-g_test = pd.read_csv("Test/global_solution.csv")
-g_rep = pd.read_csv("Test/global_report.csv")
+g_test = pd.read_csv("../Test/global_solution.csv")
+g_rep = pd.read_csv("../Test/global_report.csv")
 pd.testing.assert_frame_equal(g_rep, global_model.report)
 # pd.testing.assert_frame_equal(g_test, global_model.solution)
 
 nnb_model = NNBoundModel(slot_list, fl_list)
 nnb_model.run()
-nnb_test = pd.read_csv("Test/nnb_solution.csv")
-nnb_rep = pd.read_csv("Test/nnb_report.csv")
+nnb_test = pd.read_csv("../Test/nnb_solution.csv")
+nnb_rep = pd.read_csv("../Test/nnb_report.csv")
 pd.testing.assert_frame_equal(nnb_rep, nnb_model.report)
 
 udpp_model_xp = UDPPmodel(slot_list, fl_list)

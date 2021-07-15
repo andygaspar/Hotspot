@@ -10,14 +10,15 @@ from Hotspot.ModelStructure.modelStructure import ModelStructure
 from Hotspot.ModelStructure.Solution import solution
 from Hotspot.ModelStructure.Slot.slot import Slot
 from Hotspot.ModelStructure.Flight import flight as fl
+from Hotspot.UDPP.Local import local
 
 
 def sort_flights_by_time(flights):
-    time_list = [f.slot.time for f in flights]
+    time_list = [f.newSlot.time for f in flights]
     sorted_indexes = np.argsort(time_list)
     return np.array([flights[i] for i in sorted_indexes])
 
-def get_first_compatible_light(slot, sorted_flights, slots):
+def get_first_compatible_flight(slot, sorted_flights, slots):
     for flight in sorted_flights:
         if flight.eta <= slot.time:
             return flight
@@ -31,15 +32,19 @@ def udpp_merge(flights, slots):
             sorted_flights.pop(0)
 
         else:
-            flight = get_first_compatible_light(slots[i], sorted_flights, slots)
+            flight = get_first_compatible_flight(slots[i], sorted_flights, slots)
             flight.newSlot = slots[i]
             sorted_flights.remove(flight)
         i += 1
 
-def wrap_flight_udpp(flight):
-   flight.UDPPLocalSlot = None
-   flight.UDPPlocalSolution = None
-   flight.test_slots = []
+    # for f in sorted_flights:
+    #     if f.eta <= slots[i].time:
+    #         f.newSlot = slots[i]
+
+# def wrap_flight_udpp(flight):
+#    flight.UDPPLocalSlot = None
+#    flight.UDPPlocalSolution = None
+#    flight.test_slots = []
 
 
 class UDPPMerge(ModelStructure):
@@ -48,13 +53,20 @@ class UDPPMerge(ModelStructure):
 
         if not flights is None:
             #udpp_flights = [UDPPflight(flight) for flight in flights if flight is not None]
-            [wrap_flight_udpp(flight) for flight in flights if flight is not None]
+            #[wrap_flight_udpp(flight) for flight in flights if flight is not None]
             super().__init__(slot_list, flights, air_ctor=Airline)
 
     def run(self, optimised=True):
         airline: Airline
 
+        for airline in self.airlines:
+            if airline.numFlights > 1:
+                local.udpp_local(airline, self.slots)
+            else:
+                airline.flights[0].newSlot = airline.flights[0].slot
+
         udpp_merge(self.flights, self.slots)
+
         # print(time.time() - start)
         solution.make_solution(self, performance=hasattr(self, 'initialTotalCosts'))
         for flight in self.flights:

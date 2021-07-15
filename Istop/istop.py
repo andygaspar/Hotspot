@@ -53,17 +53,11 @@ class Istop(mS.ModelStructure):
 
             super().__init__(slot_list, flights, air_ctor=IstopAirline)
 
-            # Compute delayCostVect from costVect if does not exist.
-            #self.compute_delay_cost_vect()
-
             self.airlines: List[IstopAirline]
 
             max_delay = self.slots[-1].time - self.slots[0].time
             for flight in self.flights:
                 flight.fitCostVect = flight.costVect
-
-                # if flight.not_paramtrised():
-                #     flight.set_automatic_preference_vect(max_delay)
 
             for airline in self.airlines:
                 airline.set_and_standardise_fit_vect()
@@ -107,7 +101,6 @@ class Istop(mS.ModelStructure):
                 solution_vect, offers_vect = m.run(timing=True)
 
             except:
-                #raise
                 print("using MIP")
                 p = MipSolver(self, max_time)
                 solution_vect, offers_vect = p.run(timing=True)
