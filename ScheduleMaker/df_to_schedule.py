@@ -1,15 +1,10 @@
 from typing import Union, List, Callable
 
-#from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
 from Hotspot.ModelStructure.Slot.slot import Slot
 from Hotspot.ModelStructure import modelStructure
 from Hotspot.ModelStructure.Flight import flight as fl
-#from Hotspot.Istop.Preferences import preference
 import numpy as np
 import pandas as pd
-
-#cost_funs = CostFuns()
-
 
 def make_flight(line, slot_times):
     slot_index = line["slot"]
@@ -48,7 +43,6 @@ def make_flight(line, slot_times):
                                                 eta=eta,
                                                 flight_name=flight_name,
                                                 airline_name=airline_name,
-                                                #delay_cost_vect=delay_cost_vect
                                                 cost_vect=cost_vect)
 
 

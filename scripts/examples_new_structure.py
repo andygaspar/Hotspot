@@ -228,10 +228,9 @@ for airline, mercury_flights_airline in mercury_flights_per_airline.items():
 														)
 	# Prepare flights for engine. This is where the cost vectors are computed
 	hh.prepare_all_flights()
-
 	preferences = hh.get_cost_vectors()
 
-	# Preferences (cost vectors here are then sent out to the NM, together with other information (like airline name etc)
+	# Preferences (cost vectors here) are then sent out to the NM, together with other information (like airline name etc)
 	to_be_sent_to_NM = {}
 	for i, (name, pref) in enumerate(preferences.items()):
 		to_be_sent_to_NM[name] = pref

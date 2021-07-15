@@ -155,34 +155,37 @@ class HotspotHandler:
 		for flight in self.flights.values():
 			if 'delayCostVect' in reqs or 'costVect' in reqs:
 				flight.compute_cost_vectors(self.slots)
+				# print ('CostVect', flight, flight.costVect)
+				# print ('delayCostVect', flight, flight.delayCostVect)
+				# print ()
 			# TODO: add on-the-fly computation of preferences for UDPP if not given.
 
-	def update_flight_attributes_dict_to_ext(self, attr_dict):
-		for flight, d in attr_dict.items():
-			flight_ext = self.dic_objs[flight]
+	# def update_flight_attributes_dict_to_ext(self, attr_dict):
+	# 	for flight, d in attr_dict.items():
+	# 		flight_ext = self.dic_objs[flight]
 
-			for k, v in d.items():
-				setattr(flight_ext, k, v)
+	# 		for k, v in d.items():
+	# 			setattr(flight_ext, k, v)
 
-	def update_flight_attributes_int_to_ext(self, attr_map={}):
-		"""
-		attr_map is in the int -> ext direction
-		"""
-		for flight_int in self.flights:
-			flight_ext = self.dic_objs[flight_int]
+	# def update_flight_attributes_int_to_ext(self, attr_map={}):
+	# 	"""
+	# 	attr_map is in the int -> ext direction
+	# 	"""
+	# 	for flight_int in self.flights:
+	# 		flight_ext = self.dic_objs[flight_int]
 
-			for k, v in attr_map.items():
-				setattr(flight_ext, v, getattr(flight_int, k))
+	# 		for k, v in attr_map.items():
+	# 			setattr(flight_ext, v, getattr(flight_int, k))
 
-	def update_flight_attributes_ext_to_int(self, attr_map={}):
+	# def update_flight_attributes_ext_to_int(self, attr_map={}):
 		"""
 		attr_map is in the ext -> int direction
-		"""
-		for flight_int in self.flights:
-			flight_ext = self.dic_objs[flight_int]
+		# """
+		# for flight_int in self.flights:
+		# 	flight_ext = self.dic_objs[flight_int]
 
-			for k, v in attr_map.items():
-				setattr(flight_int, v, getattr(flight_ext, k))
+		# 	for k, v in attr_map.items():
+		# 		setattr(flight_int, v, getattr(flight_ext, k))
 
 	def update_flight_attributes_int_from_dict(self, attr_list={},
 		set_cost_function_with=None, attr_map=None):
@@ -229,112 +232,112 @@ class HotspotHandler:
 			if 'cost_function' in dd.keys():
 				flight.set_cost_function(**dd)
 
-	def prepare_hotspot_from_dataframe(self, df=None, slot_times=[], attr_map={'flight_name':'flight_name',
-		'flight_name':'airline_name', 'eta':'eta'}, set_cost_function_with={}, assign_FPFS=True):
-		"""
-		attr_map is in the ext -> int direction
-		"""
+	# def prepare_hotspot_from_dataframe(self, df=None, slot_times=[], attr_map={'flight_name':'flight_name',
+	# 	'flight_name':'airline_name', 'eta':'eta'}, set_cost_function_with={}, assign_FPFS=True):
+	# 	"""
+	# 	attr_map is in the ext -> int direction
+	# 	"""
 
-		self.slots = [Slot(i, time) for i, time in enumerate(slot_times)]
-		self.flights = []
-		for i, row in df.iterrows():
-			row2 = row[list(attr_map.keys())].rename(attr_map)
-			flight = Flight(**row2)
+	# 	self.slots = [Slot(i, time) for i, time in enumerate(slot_times)]
+	# 	self.flights = []
+	# 	for i, row in df.iterrows():
+	# 		row2 = row[list(attr_map.keys())].rename(attr_map)
+	# 		flight = Flight(**row2)
 
-			if len(set_cost_function_with)>0:
-				# build lambda cost function
-				if 'args' in set_cost_function_with.keys():
-					args = [row[v] for v in set_cost_function_with['args']]
-				else:
-					args = []
-				if 'kwargs' in set_cost_function_with.keys():
-					kwargs = [row[v] for v in set_cost_function_with['kwargs']]
-				else:
-					kwargs = []
-				kwargs = {v:row[v] for v in set_cost_function_with['kwargs']}
+	# 		if len(set_cost_function_with)>0:
+	# 			# build lambda cost function
+	# 			if 'args' in set_cost_function_with.keys():
+	# 				args = [row[v] for v in set_cost_function_with['args']]
+	# 			else:
+	# 				args = []
+	# 			if 'kwargs' in set_cost_function_with.keys():
+	# 				kwargs = [row[v] for v in set_cost_function_with['kwargs']]
+	# 			else:
+	# 				kwargs = []
+	# 			kwargs = {v:row[v] for v in set_cost_function_with['kwargs']}
 				
-				def f(x):
-					return set_cost_function_with['cost_function'](x, *args, **kwargs)
+	# 			def f(x):
+	# 				return set_cost_function_with['cost_function'](x, *args, **kwargs)
 
-				if 'eta' in set_cost_function_with.keys():
-					eta = row[set_cost_function_with['eta']]
-				else:
-					eta = None
+	# 			if 'eta' in set_cost_function_with.keys():
+	# 				eta = row[set_cost_function_with['eta']]
+	# 			else:
+	# 				eta = None
 
-				flight.set_cost_function(f,
-										kind='lambda',
-										absolute=set_cost_function_with['absolute'],
-										eta=eta)
-				flight.compute_cost_vect(self.slots)
+	# 			flight.set_cost_function(f,
+	# 									kind='lambda',
+	# 									absolute=set_cost_function_with['absolute'],
+	# 									eta=eta)
+	# 			flight.compute_cost_vect(self.slots)
 			
-			self.flights.append(flight)
+	# 		self.flights.append(flight)
 		
-		if assign_FPFS:
-			assign_FPFS_slot(self.slots, self.flights)
+	# 	if assign_FPFS:
+	# 		assign_FPFS_slot(self.slots, self.flights)
 
-		return self.slots, self.flights
+	# 	return self.slots, self.flights
 
-	def prepare_hotspot_from_flights_ext(self, flights_ext=None, slot_times=[], slots=[], attr_map={'flight_name':'flight_name',
-		'flight_name':'airline_name', 'eta':'eta'},
-		set_cost_function_with={}, assign_FPFS=True):
-		"""
-		attr_map is in the ext -> int direction
-		"""
+	# def prepare_hotspot_from_flights_ext(self, flights_ext=None, slot_times=[], slots=[], attr_map={'flight_name':'flight_name',
+		# 'flight_name':'airline_name', 'eta':'eta'},
+		# set_cost_function_with={}, assign_FPFS=True):
+		# """
+		# TODO: update! attr_map is in the ext -> int direction
+		# """
 
-		if 'slot' in attr_map.keys():
-			assign_FPFS = False
+		# if 'slot' in attr_map.keys():
+		# 	assign_FPFS = False
 
-		self.flights_ext = flights_ext
-		self.slot_times = slot_times
-		self.attr_map = attr_map
-		self.set_cost_function_with = set_cost_function_with
+		# self.flights_ext = flights_ext
+		# self.slot_times = slot_times
+		# self.attr_map = attr_map
+		# self.set_cost_function_with = set_cost_function_with
 
-		if len(slots)>1:
-			self.set_slots(slots)
-		else:
-			self.compute_slots(slot_times=slot_times)
+		# if len(slots)>1:
+		# 	self.set_slots(slots)
+		# else:
+		# 	self.compute_slots(slot_times=slot_times)
 
-		self.flights = []
-		self.dic_objs = {}
-		for i, flight_ext in enumerate(self.flights_ext):
-			d = {v:getattr(flight_ext, k) for k, v in self.attr_map.items()}
+		# self.flights = []
+		# self.dic_objs = {}
+		# for i, flight_ext in enumerate(self.flights_ext):
+		# 	d = {v:getattr(flight_ext, k) for k, v in self.attr_map.items()}
 
-			flight = Flight(**d)
+		# 	flight = Flight(**d)
 
-			self.dic_objs[flight] = flight_ext
+		# 	self.dic_objs[flight] = flight_ext
 			
-			if len(self.set_cost_function_with)>0:
-				dd = {}
-				for k, v in self.set_cost_function_with.items():
-					if k=='cost_function':
-						if type(v) is str and hasattr(flight_ext, v):
-							dd[k] = getattr(flight_ext, v)
-						else:
-							try:
-								_ = iter(v)
-							except TypeError:
-								# not iterable
-								# cost function is the same for everyone
-								dd[k] = v
-							else:
-								# iterable
-								# cost functions are different for each flight
-								dd[k] = v[i]
-					else:
-						if type(v) is str and hasattr(flight_ext, v):
-							dd[k] = getattr(flight_ext, v)
-						else:
-							dd[k] = v
+		# 	if len(self.set_cost_function_with)>0:
+		# 		dd = {}
+		# 		for k, v in self.set_cost_function_with.items():
+		# 			if k=='cost_function':
+		# 				if type(v) is str and hasattr(flight_ext, v):
+		# 					dd[k] = getattr(flight_ext, v)
+		# 				else:
+		# 					try:
+		# 						_ = iter(v)
+		# 					except TypeError:
+		# 						# not iterable
+		# 						# cost function is the same for everyone
+		# 						dd[k] = v
+		# 					else:
+		# 						# iterable
+		# 						# cost functions are different for each flight
+		# 						dd[k] = v[i]
+		# 			else:
+		# 				if type(v) is str and hasattr(flight_ext, v):
+		# 					dd[k] = getattr(flight_ext, v)
+		# 				else:
+		# 					dd[k] = v
 							
-				flight.set_cost_function(**dd)
+		# 		flight.set_cost_function(**dd)
 
-			flight.compute_cost_vect(self.slots)
+		# 	flight.compute_cost_vect(self.slots)
 			
-			self.flights.append(flight)
-		if assign_FPFS:
-			assign_FPFS_slot(self.slots, self.flights)
+		# 	self.flights.append(flight)
+		# if assign_FPFS:
+		# 	assign_FPFS_slot(self.slots, self.flights)
 
-		return self.slots, self.flights
+		# return self.slots, self.flights
 
 	def prepare_flights_from_dict(self, attr_list=[], set_cost_function_with='default_cf_paras', attr_map=None):
 		"""
@@ -384,11 +387,11 @@ class HotspotHandler:
 
 		return self.slots, self.get_flight_list()
 
-	def assign_slots_to_flights_ext_from_allocation(self, allocation, attr_slot_ext='slot'):
-		for flight, slot in allocation.items():
-			flight_ext = self.dic_objs[flight]
+	#def assign_slots_to_flights_ext_from_allocation(self, allocation, attr_slot_ext='slot'):
+		# for flight, slot in allocation.items():
+		# 	flight_ext = self.dic_objs[flight]
 
-			setattr(flight_ext, attr_slot_ext, slot)
+		# 	setattr(flight_ext, attr_slot_ext, slot)
 
 	def update_slots_internal(self):
 		[flight.update_slot() for flight in self.flights]
