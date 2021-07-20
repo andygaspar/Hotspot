@@ -1,8 +1,7 @@
 import numpy as np
 from typing import List, Callable
 
-#from Hotspot.Istop.Preferences import preference
-from Hotspot.ModelStructure.Slot.slot import Slot
+from ..Slot.slot import Slot
 
 
 class Flight:

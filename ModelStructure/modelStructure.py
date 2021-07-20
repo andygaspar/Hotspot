@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 from typing import Union, List, Callable
 from itertools import product
-from Hotspot.ModelStructure.Airline.airline import Airline
-from Hotspot.ModelStructure.Slot import slot as sl
-from Hotspot.ModelStructure.Flight.flight import Flight
+from .Airline.airline import Airline
+from .Slot import slot as sl
+from .Flight.flight import Flight
 
 import matplotlib.pyplot as plt
 
-from Hotspot.ModelStructure.Slot.slot import Slot
+from .Slot.slot import Slot
 
 
 class ModelStructure:
