@@ -4,8 +4,8 @@ import pandas as pd
 from typing import List, Callable
 from itertools import combinations
 
-from Hotspot.ModelStructure.Flight.flight import Flight
-from Hotspot.ModelStructure.Slot.slot import Slot
+from ..Flight.flight import Flight
+from ..Slot.slot import Slot
 
 
 class Airline:

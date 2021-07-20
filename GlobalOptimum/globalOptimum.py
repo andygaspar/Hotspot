@@ -8,13 +8,13 @@ import time
 import xpress as xp
 
 
-from Hotspot.GlobalFuns.globalFuns import HiddenPrints
-from Hotspot.ModelStructure import modelStructure as mS
-from Hotspot.ModelStructure.Airline import airline as air
-from Hotspot.ModelStructure.Flight.flight import Flight
-from Hotspot.ModelStructure.Solution import solution
-from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_void
+from ..GlobalFuns.globalFuns import HiddenPrints
+from ..ModelStructure import modelStructure as mS
+from ..ModelStructure.Airline import airline as air
+from ..ModelStructure.Flight.flight import Flight
+from ..ModelStructure.Solution import solution
+from ..ModelStructure.Slot.slot import Slot
+from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
 
 
 class GlobalOptimum(mS.ModelStructure):

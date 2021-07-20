@@ -1,11 +1,11 @@
-from Hotspot.ModelStructure.modelStructure import make_slot_and_flight
-from Hotspot.GlobalOptimum.globalOptimum import GlobalOptimum
-from Hotspot.Istop.istop import Istop
-from Hotspot.NNBound.nnBound import NNBoundModel
-from Hotspot.UDPP.udppMerge import UDPPMerge
-from Hotspot.ScheduleMaker.scheduleMaker import schedule_types, df_maker
-from Hotspot.ScheduleMaker.df_to_schedule import make_flight_list
-from Hotspot.RL.wrapper import Flight, OptimalAllocationEngine, models, LocalEngine, HotspotHandler
-from Hotspot.libs.other_tools import print_allocation
+from .ModelStructure.modelStructure import make_slot_and_flight
+from .GlobalOptimum.globalOptimum import GlobalOptimum
+from .Istop.istop import Istop
+from .NNBound.nnBound import NNBoundModel
+from .UDPP.udppMerge import UDPPMerge
+from .ScheduleMaker.scheduleMaker import schedule_types, df_maker
+from .ScheduleMaker.df_to_schedule import make_flight_list
+from .RL.wrapper import Flight, OptimalAllocationEngine, models, LocalEngine, HotspotHandler
+from .libs.other_tools import print_allocation
 
 
