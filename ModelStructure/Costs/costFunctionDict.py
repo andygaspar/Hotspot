@@ -53,6 +53,9 @@ class ArchetypeCostFunction:
     def single_computation(self, x, **paras):
         pass
 
+    def get_var_paras(self):
+        return [p for p in self.paras if not p in self.fixed_paras]
+
     def __call__(self, time, **paras):
         try:
             # vectorial mode

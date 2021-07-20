@@ -51,15 +51,15 @@ def loss_fun(Y_test, y_train):
         [(y_train[i] - Y_test[i]) ** 2 /10 if y_train[i] - Y_test[i] > 0 else (Y_test[i] - y_train[i]) ** 2 for i in
          range(Y_test.shape[0])])
 
-def obj_approx(params, x, y, approx_fun):
-    return loss_fun(y, approx_fun(x, **{k:params[i] for i, k in enumerate(approx_fun.paras)}))
+def obj_approx(params, fixed_params, x, y, approx_fun):
+    return loss_fun(y, approx_fun(x, **fixed_params, **{k:params[i] for i, k in enumerate(approx_fun.get_var_paras())}))
 
 def fit_curve(vals):
     x, y = vals[:2]
     approx_fun = vals[-1]
-    #params = vals[2:-1]
-    params = vals[2]
-    return loss_fun(y, approx_fun(x, **params))
+    fixed_params = vals[2]
+    params = vals[3]
+    return loss_fun(y, approx_fun(x, **fixed_params, **params))
 
 def compute_test_values(x, y, max_delay, approx_fun, fixed_paras={}, steps=8):
     if approx_fun.nickname=='double_jump':
@@ -70,7 +70,7 @@ def compute_test_values(x, y, max_delay, approx_fun, fixed_paras={}, steps=8):
                 for jump_1 in np.linspace(10, max_val, steps//2):
                     for margin_2 in np.linspace(margin_1, max_delay, steps//2):
                         for jump_2 in np.linspace(jump_1, max_val, steps//2):
-                            params = copy(fixed_paras)
+                            params = {} # copy(fixed_paras)
                             params['slope'] = slope
                             params['margin_1'] = margin_1
                             params['jump_1'] = jump_1
@@ -78,7 +78,7 @@ def compute_test_values(x, y, max_delay, approx_fun, fixed_paras={}, steps=8):
                             params['jump_2'] = jump_2
 
                             test_values.append(
-                                (x, y, params, approx_fun))
+                                (x, y, fixed_paras, params, approx_fun))
 
     elif approx_fun.nickname=='jump':
         test_values = []
@@ -86,13 +86,13 @@ def compute_test_values(x, y, max_delay, approx_fun, fixed_paras={}, steps=8):
         for slope in np.linspace(0, 1, steps):
             for margin in np.linspace(0, 3*max_delay//4, steps):
                 for jump in np.linspace(10, max_val, steps//2):
-                    params = copy(fixed_paras)
+                    params = {} # copy(fixed_paras)
                     params['slope'] = slope
                     params['margin'] = margin
                     params['jump'] = jump
                     
                     test_values.append(
-                        (x, y, params, approx_fun))
+                        (x, y, fixed_paras, params, approx_fun))
     else:
         raise Exception('Cost function approximator not implemented for', approx_fun.nickname)
 
@@ -104,23 +104,24 @@ def fit_cost_curve(x, y, max_delay, fixed_paras={}, steps=8, approx_fun=None):
     
     pool = Pool(num_cpu)
     guesses = pool.map(fit_curve, test_values)
-    #best_initial_guess = np.array(test_values[np.argmin(guesses)][2:-1])
+    # best_initial_guess = np.array(test_values[np.argmin(guesses)][2:-1])
     # Here I don't use the values method because I want to make sure that
     # these values are in the same order as they appear in the archetype
     # function
-    best_initial_guess = np.array([test_values[np.argmin(guesses)][2][k] for k in approx_fun.paras])
+    best_initial_guess = np.array([test_values[np.argmin(guesses)][3][k] for k in approx_fun.get_var_paras()])
 
     solution = minimize(obj_approx,
                         best_initial_guess,
-                        args=(x, y, approx_fun),
+                        args=(fixed_paras, x, y, approx_fun),
                         method='Powell',
                         options={'maxiter': 10000,
                                 'xtol': 0.5,
                                 'ftol': 0.01})
+
     return solution.x
 
 def make_preference_fun(max_delay: float, delay_cost_vect: np.array, fixed_paras={}, approx_fun=None):
-    delays = np.linspace(0, max_delay + 0.1, 50)
+    delays = np.linspace(0, max_delay + 0.1, len(delay_cost_vect))#50)
     result = fit_cost_curve(delays, delay_cost_vect, max_delay,
                             fixed_paras=fixed_paras, approx_fun=approx_fun)
     return result
@@ -149,5 +150,5 @@ class FunctionApprox(ModelStructure):
                                         flight.delayCostVect,
                                         fixed_paras=fixed_parameters,
                                         approx_fun=self.cost_func_archetype)
-            all_paras[flight.name] = {k:paras[i] for i, k in enumerate(self.cost_func_archetype.paras) if not k in self.cost_func_archetype.fixed_paras}
+            all_paras[flight.name] = {k:paras[i] for i, k in enumerate(self.cost_func_archetype.get_var_paras())}
         return all_paras

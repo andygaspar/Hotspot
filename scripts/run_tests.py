@@ -69,7 +69,7 @@ for test_number in tests_to_run:
 		print ()
 		print ()
 
-		print ("########### {} merging (Mercury) (costVect) ############".format(algo))
+		print ("########### {} TRUE COST VECTORS (Mercury) ############".format(algo))
 		mercury_flights = load_test(test_number)
 		slot_times = list(range(0, 2*len(mercury_flights), 2))
 
@@ -102,7 +102,8 @@ for test_number in tests_to_run:
 			if algo=='udpp_merge':
 				algo_local = 'udpp_local'
 			else:
-				algo_local = 'function_approx'
+				algo_local ='get_cost_vectors'
+
 			engine_local = LocalEngine(algo=algo_local)
 
 			hh = HotspotHandler(engine=engine_local)
@@ -123,25 +124,21 @@ for test_number in tests_to_run:
 																)
 
 			hh.prepare_all_flights()
-			if algo_local=='udpp_local':
-				preferences = engine_local.compute_optimal_parameters(hotspot_handler=hh)
-			else:
-				preferences = hh.get_cost_vectors()
-			#print ('preferences:', preferences)
+			preferences = engine_local.compute_optimal_parameters(hotspot_handler=hh)
 			to_be_sent_to_NM = {}
 			for i, (name, pref) in enumerate(preferences.items()):
 				to_be_sent_to_NM[name] = pref
 				# ------- Flight agent ends here ------ #
 			all_messages.append(to_be_sent_to_NM)
-									
+			
 		# ------- Network Manager agent starts here again ----- # 
 		for message in all_messages:
 			hh_NM.update_flight_attributes_int_from_dict(attr_list=message) 
 
 		hh_NM.prepare_all_flights()
 
-		# Merge UDPP preferences
 		allocation = engine.compute_optimal_allocation(hotspot_handler=hh_NM)
+		
 		print_allocation(allocation)
 		print (engine.model.report)
 		print (engine.model.solution)
@@ -149,34 +146,22 @@ for test_number in tests_to_run:
 		if algo=='udpp_merge':
 			df_sol = pd.read_csv('../test_data/df_solution_udpp_merge_{}.csv'.format(test_number),
 								index_col=0,
-								# dtype={'slot':np.int64,
-								# 		'flight':object,
-								# 		'airline':object,
-								# 		'time':np.int64,
-								# 		'eta':np.int64,
-								# 		'new slot':np.int64,
-								# 		'new arrival':np.int64,
-								# 		'eta slot':object,
-								# 		}
 										)
 			ar_sol_base = df_sol.to_numpy()
 			ar_sol =engine.model.solution.to_numpy()
-			#print (df_sol)
 			np.array_equal(ar_sol, ar_sol_base)
 			print ('Test {} passed!'.format(test_number))
-			#pd.testing.assert_frame_equal(engine.model.solution, df_sol)
-		# 	engine.model.solution.to_csv('../test_data/df_solution_udpp_merge_1.csv')
+
 
 ### These tests use approximation for costVect and delayCostVect, so they may fail ####
 
-
 for test_number in tests_to_run:
 	print (pd.read_csv('../test_data/df_test_{}.csv'.format(test_number)))
-	for algo in ['udpp_merge']:#, 'istop', 'nnbound', 'globaloptimum']:
+	for algo in ['istop', 'udpp_merge_istop', 'nnbound', 'globaloptimum']:
 		print ()
 		print ()
 
-		print ("########### {} merging (Mercury) (Approx) ############".format(algo))
+		print ("########### {} APPROX (Mercury) ############".format(algo))
 		mercury_flights = load_test(test_number)
 		slot_times = list(range(0, 2*len(mercury_flights), 2))
 
@@ -187,8 +172,6 @@ for test_number in tests_to_run:
 		# ------- Network Manager agent starts here ----- # 
 		engine = Engine(algo=algo)
 		archetype_cost_function = 'jump'
-		if algo == 'udpp_merge':
-			archetype_cost_function = None
 		hh_NM = HotspotHandler(engine=engine,
 								archetype_cost_function=archetype_cost_function
 								)
@@ -214,6 +197,8 @@ for test_number in tests_to_run:
 			message_from_NM = to_be_sent_to_airlines[airline]
 			if algo=='udpp_merge':
 				algo_local = 'udpp_local'
+			elif algo=='udpp_merge_istop':
+				algo_local = 'udpp_local_function_approx'
 			else:
 				algo_local = 'function_approx'
 			engine_local = LocalEngine(algo=algo_local)
@@ -239,7 +224,6 @@ for test_number in tests_to_run:
 
 			hh.prepare_all_flights()
 			preferences = engine_local.compute_optimal_parameters(hotspot_handler=hh)
-			#print (airline, 'preferences:', preferences)
 			to_be_sent_to_NM = {}
 			for i, (name, pref) in enumerate(preferences.items()):
 				to_be_sent_to_NM[name] = pref
@@ -257,7 +241,6 @@ for test_number in tests_to_run:
 														) 
 		hh_NM.prepare_all_flights()
 
-		# Merge UDPP preferences
 		allocation = engine.compute_optimal_allocation(hotspot_handler=hh_NM)
 		print_allocation(allocation)
 		print (engine.model.report)

@@ -3,6 +3,7 @@ import inspect
 
 import numpy as np
 import pandas as pd
+import inspect
 
 from Hotspot.ModelStructure.Slot.slot import Slot
 from Hotspot.ModelStructure.Flight.flight import Flight as HFlight
@@ -14,6 +15,7 @@ from Hotspot.UDPP.functionApprox import FunctionApprox
 from Hotspot.GlobalOptimum.globalOptimum import GlobalOptimum
 from Hotspot.ModelStructure.Costs.costFunctionDict import archetypes_cost_functions
 from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
+from Hotspot.combined_models import UDPPMergeIstop, UDPPFullIstop, UDPPLocalFunctionApprox
 #from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
 
 models = {'istop':Istop,
@@ -21,7 +23,10 @@ models = {'istop':Istop,
 		'udpp_merge':UDPPMerge,
 		'globaloptimum':GlobalOptimum,
 		'udpp_local':UDPPLocal,
-		'function_approx':FunctionApprox}
+		'function_approx':FunctionApprox,
+		'udpp_local_function_approx':UDPPLocalFunctionApprox,
+		'udpp_merge_istop':UDPPMergeIstop,
+		'udpp_full_istop':UDPPFullIstop}
 
 def allocation_from_df(df, name_slot='new slot'):
 	return OrderedDict(df[['flight', name_slot]].set_index('flight').to_dict()[name_slot])
@@ -152,6 +157,7 @@ class HotspotHandler:
 
 	def prepare_all_flights(self):
 		reqs = self.get_requirements_from_engine()
+		#print ('Reqs:', reqs)
 		for flight in self.flights.values():
 			if 'delayCostVect' in reqs or 'costVect' in reqs:
 				flight.compute_cost_vectors(self.slots)
@@ -668,21 +674,20 @@ class OptimalAllocationEngine:
 
 class LocalEngine(OptimalAllocationEngine):
 	def compute_optimal_parameters(self, hotspot_handler=None, slots=None, flights=None,
-		cost_func_archetype=None, kwargs_init={}, kwargs_run={}):
+		kwargs_init={}, kwargs_run={}):
 		"""
 		Merge with previous?
 		"""
-
 		if not hotspot_handler is None:
 			slots = hotspot_handler.slots
 			flights = hotspot_handler.get_flight_list()
+			if (not 'cost_func_archetype' in kwargs_init.keys()) \
+				and (hasattr(hotspot_handler, 'cf_paras')) \
+				and ('cost_func_archetype' in inspect.signature(models[self.algo].__init__).parameters.keys()):
+				kwargs_init['cost_func_archetype'] = hotspot_handler.cf_paras
 
-			if cost_func_archetype is None and hasattr(hotspot_handler, 'cf_paras'):
-				cost_func_archetype = hotspot_handler.cf_paras
-
-		if not cost_func_archetype is None:
-			kwargs_init['cost_func_archetype'] = cost_func_archetype
-
+		# if (not cost_func_archetype is None):
+		# 	kwargs_init['cost_func_archetype'] = cost_func_archetype
 		self.model = models[self.algo](slots=slots, 
 										flights=flights, 
 										**kwargs_init)
@@ -690,3 +695,22 @@ class LocalEngine(OptimalAllocationEngine):
 		paras = self.model.run(**kwargs_run)
 
 		return paras
+
+class GetCostVectors:
+	"""
+	Dummy model for getting cost vectors of all flights in the
+	same format than the other local models.
+	"""
+
+	requirements = ['costVect', 'delayCostVect']
+
+	def __init__(self, slots, flights):
+		self.slots = slots
+		self.flights = flights
+
+	def run(self):
+		paras = OrderedDict((flight.name, {'costVect':flight.costVect,
+											'delayCostVect':flight.delayCostVect}) for flight in self.flights)
+		return paras
+
+models['get_cost_vectors'] = GetCostVectors

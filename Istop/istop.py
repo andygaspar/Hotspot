@@ -43,7 +43,7 @@ class Istop(mS.ModelStructure):
             j += 1
         return indexes
 
-    def __init__(self, slot_list: List[Slot]=None, flights: List[Flight]=None, triples=False):
+    def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, triples=False):
         self.offers = None
         self.triples = triples
 
@@ -51,7 +51,7 @@ class Istop(mS.ModelStructure):
 
             [wrap_flight_istop(flight) for flight in flights]
 
-            super().__init__(slot_list, flights, air_ctor=IstopAirline)
+            super().__init__(slots, flights, air_ctor=IstopAirline)
 
             self.airlines: List[IstopAirline]
 
@@ -99,8 +99,8 @@ class Istop(mS.ModelStructure):
             try:
                 m = XpressSolver(self, max_time)
                 solution_vect, offers_vect = m.run(timing=True)
-
             except:
+                raise 
                 print("using MIP")
                 p = MipSolver(self, max_time)
                 solution_vect, offers_vect = p.run(timing=True)
