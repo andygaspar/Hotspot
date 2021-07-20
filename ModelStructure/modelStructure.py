@@ -53,22 +53,30 @@ class ModelStructure:
                 self.check_requirements()
 
     def check_requirements(self):
+
         reqs_ok = True
         for flight in self.flights:
             req_ok = False
             for req in self.requirements:
-                try:
-                    # If req is an iterable, then all attributes in the 
-                    # list must be owned by the flight object
-                    iterator = iter(req)
-                    req_attr_ok = True
-                    for attr in req:
-                        req_attr_ok = req_attr_ok and hasattr(flight, attr)
-                    req_ok = req_ok or req_attr_ok
-                except TypeError:
-                    req_ok = req_ok or hasattr(flight, attr)
+                #print (req)
+                # try:
+                #     # If req is an iterable, then all attributes in the 
+                #     # list must be owned by the flight object
+                #     iterator = iter(req)
+                #     assert type(req)!=str
+                #     req_attr_ok = True
+                #     for attr in req:
+                #         req_attr_ok = req_attr_ok or hasattr(flight, attr)
+                #         if not req_attr_ok:
+                #             print ('Missing attribute:', attr)
+                #     req_ok = req_ok or req_attr_ok
+                # except (TypeError, AssertionError) as e:
+                #     req_ok = req_ok or hasattr(flight, req)
+                req_attr_ok = hasattr(flight, req)
+                if not req_attr_ok:
+                    print ('Missing attribute:', req)
 
-            reqs_ok = reqs_ok and req_ok
+                reqs_ok = reqs_ok and req_attr_ok
 
         try:
             assert reqs_ok

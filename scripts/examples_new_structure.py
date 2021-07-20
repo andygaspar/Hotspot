@@ -40,13 +40,153 @@ n_f = 10
 
 print ('Available models:', models.keys())
 
-for algo in ['udpp_merge', 'istop', 'nnbound', 'globaloptimum']:
+# # Most of the code in the same for all algorithms.
+# algo = 'udpp_merge_istop'
+# print ()
+# print ("########### {} (Mercury) ############".format(algo))
+# print ()
+# # Use case for Mercury, strong agent paradigm
+# mercury_flights = create_original_flights(n_f=10)
+# slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
+
+# # Bundle flights for each airline
+# mercury_flights_per_airline = {}
+# for flight in mercury_flights:
+# 	mercury_flights_per_airline[flight.airlineName] = mercury_flights_per_airline.get(flight.airlineName, []) + [flight]
+
+# # ------- Network Manager agent starts here ----- # 
+# engine = Engine(algo=algo)
+
+# # Cost function approximation to use
+# # Not used for UDPP
+# archetype_cost_function = 'jump'
+
+# # Create Hotspot handler
+# if algo == 'udpp_merge':
+# 	archetype_cost_function = None
+
+# hh_NM = HotspotHandler(engine=engine,
+# 						archetype_cost_function=archetype_cost_function
+# 						)
+
+# # Create flights in hotspot handler and compute FPFS
+# # This is composed of information only accessible to the NM.
+# mercury_flights_dict = [{'flight_name':mf.name,
+# 							'airline_name':mf.airlineName,
+# 							'eta':mf.eta,
+# 							} for mf in mercury_flights]
+
+# hh_NM.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
+# 								slot_times=slot_times) 
+
+# # For each airline, get slot for each of their flight and send that to the airlines,
+# # together with the archetype_cost_function
+# all_allocated_slots = hh_NM.get_assigned_slots()
+# to_be_sent_to_airlines = {}
+# for airline, flights_in_airline in mercury_flights_per_airline.items():
+# 	message_to_airline = {}
+# 	for flight in flights_in_airline:
+# 		message_to_airline[flight] = {'slot':all_allocated_slots[flight.name]}
+# 	message_to_airline['archetype_cost_function'] = archetype_cost_function
+# 	message_to_airline['slots'] = list(all_allocated_slots.values())
+# 	to_be_sent_to_airlines[airline] = message_to_airline
+# # ------- Network Manager agents ends here ----- # 
+
+# # The following can be run async (even with shared slots? not sure...).
+# all_messages = []
+# for airline, mercury_flights_airline in mercury_flights_per_airline.items():
+# 	# ------ Flight agent begins here ------ #
+# 	# Receive the message from NM
+# 	message_from_NM = to_be_sent_to_airlines[airline]
+
+# 	# Prepare the engine function_approx that will compute the parameters 
+# 	# to be given to the ISTOP engine
+# 	if algo=='udpp_merge':
+# 		algo_local = 'udpp_local'
+# 	elif algo=='udpp_merge_istop':
+# 		algo_local = 'udpp_local_function_approx'
+# 	else:
+# 		algo_local = 'function_approx'
+
+# 	engine_local = LocalEngine(algo=algo_local)
+
+# 	hh = HotspotHandler(engine=engine_local,
+# 						archetype_cost_function=message_from_NM['archetype_cost_function']
+# 						)
+
+# 	mercury_flights_dict = [{'flight_name':mf.name,
+# 							'airline_name':mf.airlineName,
+# 							'eta':mf.eta,
+# 							'cost_function':mf.cost_func, # pass real cost function here
+# 							'slot':message_from_NM[mf]['slot']
+# 							} for mf in mercury_flights_airline]
+
+# 	# Here we pass directly the real cost function, because we want to ask for an approximation
+# 	# computed by the udpp_local engine.
+# 	_, flights_airline = hh.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
+# 														slots=message_from_NM['slots'],
+# 														set_cost_function_with={'cost_function':'cost_function',
+# 																				'kind':'lambda',
+# 																				'absolute':False,
+# 																				'eta':'eta'},
+# 														)
+# 	# Prepare flights for engine
+# 	hh.prepare_all_flights()
+
+# 	# Compute preferences (parameters approximating the cost function)
+# 	preferences = engine_local.compute_optimal_parameters(hotspot_handler=hh,
+# 															)
+# 	#print ('PREFERENCES:', preferences)
+
+# 	# Preferences are then sent out to the NM, together with other information (like airline name etc)
+# 	to_be_sent_to_NM = {}
+# 	for i, (name, pref) in enumerate(preferences.items()):
+# 		to_be_sent_to_NM[name] = pref
+
+# 		# ------- Flight agent ends here ------ #
+
+# 	# Send to NM here
+# 	all_messages.append(to_be_sent_to_NM)
+
+# #raise Exception()
+
+# #print ('all_messages', all_messages)									
+# # ------- Network Manager agent starts here again ----- # 
+# # NM can now prepare the flights with the preferences sent by the airline
+# # no need to specificy cost function here, preference parameters will be used instead,
+# # with the archetype function already set above.
+
+# if algo=='udpp_merge':
+# 	set_cost_function_with = None
+# else:
+# 	set_cost_function_with = 'default_cf_paras'
+
+# for message in all_messages:
+# 	#print ('MESSAGE', message)
+# 	hh_NM.update_flight_attributes_int_from_dict(attr_list=message,
+# 												set_cost_function_with=set_cost_function_with
+# 												) 
+
+# # Prepare the flights (compute cost vectors)
+# hh_NM.prepare_all_flights()
+
+# # Merge UDPP preferences
+# allocation = engine.compute_optimal_allocation(hotspot_handler=hh_NM)
+# print_allocation(allocation)
+
+# print ()
+# print ()
+# print ()
+
+# Single test.
+
+for algo in ['udpp_merge', 'istop', 'udpp_merge_istop', 'nnbound', 'globaloptimum']:
 	print ()
 	print ()
 	print ()
 
 	# Most of the code in the same for all algorithms.
-	print ("########### {} merging (Mercury) ############".format(algo))
+	print ("########### {} (Mercury) ############".format(algo))
 	# Use case for Mercury, strong agent paradigm
 	mercury_flights = create_original_flights(n_f=10)
 	slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
@@ -105,6 +245,8 @@ for algo in ['udpp_merge', 'istop', 'nnbound', 'globaloptimum']:
 		# to be given to the ISTOP engine
 		if algo=='udpp_merge':
 			algo_local = 'udpp_local'
+		elif algo=='udpp_merge_istop':
+			algo_local = 'udpp_local_function_approx'
 		else:
 			algo_local = 'function_approx'
 		engine_local = LocalEngine(algo=algo_local)

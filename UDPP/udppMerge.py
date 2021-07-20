@@ -49,12 +49,12 @@ def udpp_merge(flights, slots):
 
 class UDPPMerge(ModelStructure):
     requirements = ['udppPriority', 'udppPriorityNumber', 'tna']
-    def __init__(self, slot_list: List[Slot] = None, flights: List[fl.Flight] = None):
+    def __init__(self, slots: List[Slot] = None, flights: List[fl.Flight] = None):
 
         if not flights is None:
             #udpp_flights = [UDPPflight(flight) for flight in flights if flight is not None]
             #[wrap_flight_udpp(flight) for flight in flights if flight is not None]
-            super().__init__(slot_list, flights, air_ctor=Airline)
+            super().__init__(slots, flights, air_ctor=Airline)
 
     def run(self, optimised=True):
         airline: Airline
