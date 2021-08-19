@@ -5,16 +5,16 @@ import numpy as np
 import pandas as pd
 import time
 
-from Hotspot.GlobalFuns.globalFuns import HiddenPrints
-from Hotspot.Istop.Solvers.mip_solver import MipSolver
-from Hotspot.Istop.Solvers.xpress_solver import XpressSolver
-from Hotspot.ModelStructure import modelStructure as mS
+from ..GlobalFuns.globalFuns import HiddenPrints
+from .Solvers.mip_solver import MipSolver
+from .Solvers.xpress_solver import XpressSolver
+from ..ModelStructure import modelStructure as mS
 from itertools import combinations
-from Hotspot.Istop.AirlineAndFlight.istopAirline import IstopAirline
-from Hotspot.ModelStructure.Flight.flight import Flight
-from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.ModelStructure.Solution import solution
-from Hotspot.OfferChecker.offerChecker import OfferChecker
+from .AirlineAndFlight.istopAirline import IstopAirline
+from ..ModelStructure.Flight.flight import Flight
+from ..ModelStructure.Slot.slot import Slot
+from ..ModelStructure.Solution import solution
+from ..OfferChecker.offerChecker import OfferChecker
 
 
 def wrap_flight_istop(flight):

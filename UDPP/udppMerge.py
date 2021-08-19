@@ -5,12 +5,12 @@ import time
 import pandas as pd
 import numpy as np
 
-from Hotspot.ModelStructure.Airline.airline import Airline
-from Hotspot.ModelStructure.modelStructure import ModelStructure
-from Hotspot.ModelStructure.Solution import solution
-from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.ModelStructure.Flight import flight as fl
-from Hotspot.UDPP.Local import local
+from ..ModelStructure.Airline.airline import Airline
+from ..ModelStructure.modelStructure import ModelStructure
+from ..ModelStructure.Solution import solution
+from ..ModelStructure.Slot.slot import Slot
+from ..ModelStructure.Flight import flight as fl
+from ..UDPP.Local import local
 
 
 def sort_flights_by_time(flights):

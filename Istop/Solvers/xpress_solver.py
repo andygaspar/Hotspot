@@ -6,7 +6,7 @@ import xpress as xp
 xp.controls.outputlog = 0
 import numpy as np
 
-from Hotspot.ModelStructure.Flight.flight import Flight
+from ...ModelStructure.Flight.flight import Flight
 
 
 class XpressSolver:

@@ -2,9 +2,9 @@
 from typing import List
 import numpy as np
 
-from Hotspot.ModelStructure.Airline.airline import Airline
-from Hotspot.ModelStructure.Flight.flight import Flight as fl
-from Hotspot.ModelStructure.Slot import slot as sl
+from ...ModelStructure.Airline.airline import Airline
+from ...ModelStructure.Flight.flight import Flight as fl
+from ...ModelStructure.Slot import slot as sl
 import xpress as xp
 xp.controls.outputlog = 0
 
@@ -90,6 +90,8 @@ def UDPPlocalOpt(airline: Airline, slots: List[sl.Slot]):
 
     for flight in airline.flights[1:]:
         # flight assignment
+        print ('CLICK', airline.AUslots)
+        print ('CLICK', flight, flight.etaSlot)
         m.addConstraint(
             xp.Sum(y[flight.localNum, j] for j in range(flight.etaSlot.index, flight.slot.index)) + \
             xp.Sum(x[flight.localNum, k] for k in
