@@ -20,9 +20,8 @@ from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
 class GlobalOptimum(mS.ModelStructure):
     requirements = ['delayCostVect', 'costVect']
 
-    def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None):
-
-        super().__init__(slots, flights)
+    def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None, delta_t=0.):
+        super().__init__(slots=slots, flights=flights, delta_t=delta_t)
         with print_to_void():
             self.m = xp.problem()
         self.x = None
@@ -76,7 +75,7 @@ class GlobalOptimum(mS.ModelStructure):
 
         self.assign_flights(self.x)
         with print_to_void():
-                solution.make_solution(self)
+            solution.make_solution(self)
 
         for flight in self.flights:
             if flight.eta > flight.newSlot.time:
@@ -87,10 +86,13 @@ class GlobalOptimum(mS.ModelStructure):
             self.update_flights()
 
     def assign_flights(self, sol):
-        with print_to_void():
+        #with print_to_void():
             for flight in self.flights:
+                #print ('POUIC flight', flight)
                 for slot in self.slots:
+                    #print ('POUIC slot', slot, self.m.getSolution(sol[flight.index, slot.index]))
                     if self.m.getSolution(sol[flight.index, slot.index]) > 0.5:
+                        #print ('POUIC match', flight)
                         flight.newSlot = slot
 
     def reset(self, slots, flights):
