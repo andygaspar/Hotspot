@@ -1,10 +1,10 @@
 from typing import Union, Callable, List
 from copy import copy
 
-from Hotspot.ModelStructure.Airline.airline import Airline
-from Hotspot.ModelStructure.modelStructure import ModelStructure
-from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.ModelStructure.Flight import flight as fl
+from ..ModelStructure.Airline.airline import Airline
+from ..ModelStructure.modelStructure import ModelStructure
+from ..ModelStructure.Slot.slot import Slot
+from ..ModelStructure.Flight import flight as fl
 
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit, minimize

@@ -5,17 +5,17 @@ import numpy as np
 import pandas as pd
 import inspect
 
-from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.ModelStructure.Flight.flight import Flight as HFlight
-from Hotspot.Istop.istop import Istop
-from Hotspot.NNBound.nnBound import NNBoundModel
-from Hotspot.UDPP.udppMerge import UDPPMerge
-from Hotspot.UDPP.udppLocal import UDPPLocal
-from Hotspot.UDPP.functionApprox import FunctionApprox
-from Hotspot.GlobalOptimum.globalOptimum import GlobalOptimum
-from Hotspot.ModelStructure.Costs.costFunctionDict import archetypes_cost_functions
-from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
-from Hotspot.combined_models import UDPPMergeIstop, UDPPFullIstop, UDPPLocalFunctionApprox
+from ..ModelStructure.Slot.slot import Slot
+from ..ModelStructure.Flight.flight import Flight as HFlight
+from ..Istop.istop import Istop
+from ..NNBound.nnBound import NNBoundModel
+from ..UDPP.udppMerge import UDPPMerge
+from ..UDPP.udppLocal import UDPPLocal
+from ..UDPP.functionApprox import FunctionApprox
+from ..GlobalOptimum.globalOptimum import GlobalOptimum
+from ..ModelStructure.Costs.costFunctionDict import archetypes_cost_functions
+from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
+from ..combined_models import UDPPMergeIstop, UDPPFullIstop, UDPPLocalFunctionApprox
 #from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
 
 models = {'istop':Istop,
@@ -134,7 +134,7 @@ class HotspotHandler:
 		return self.flights[flight_name]
 
 	def get_assigned_slots(self):
-		return {flight.name:flight.slot for flight in self.get_flight_list()}
+		return OrderedDict(sorted([(flight.name, flight.slot) for flight in self.get_flight_list()], key=lambda x:x[1].time))
 
 	def get_cost_vectors(self):
 		return {flight.name:{'costVect':flight.costVect, 'delayCostVect':flight.delayCostVect} for flight in self.get_flight_list()}
@@ -199,6 +199,7 @@ class HotspotHandler:
 		attr_map is in the ext -> int direction
 		"""
 		for flight_name, attrs in attr_list.items():
+			print ('OFOIN', flight_name, attrs)
 			flight_int = self.flights[flight_name]
 			for k, v in attrs.items():
 				setattr(flight_int, k, v)
@@ -379,7 +380,7 @@ class HotspotHandler:
 		self.attr_map = attr_map
 		self.set_cost_function_with = set_cost_function_with
 
-		if len(slots)>1:
+		if len(slots)>0:
 			self.set_slots(slots)
 		else:
 			self.compute_slots(slot_times=slot_times)

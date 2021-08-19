@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from itertools import combinations
 
-from Hotspot.ModelStructure.Flight.flight import Flight
-from Hotspot.ModelStructure.Airline import airline as air
+from ...ModelStructure.Flight.flight import Flight
+from ...ModelStructure.Airline import airline as air
 import matplotlib.pyplot as plt
 
 

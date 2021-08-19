@@ -5,16 +5,16 @@ import time
 
 import pandas as pd
 
-from Hotspot.GlobalFuns.globalFuns import HiddenPrints, preferences_from_flights
-from Hotspot.ModelStructure.Airline.airline import Airline
-from Hotspot.ModelStructure.modelStructure import ModelStructure
-from Hotspot.UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
-from Hotspot.UDPP.udppMerge import udpp_merge
-from Hotspot.ModelStructure.Solution import solution
-from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.ModelStructure.Flight import flight as fl
-import Hotspot.ModelStructure.modelStructure as ms
-from Hotspot.UDPP.Local import local
+from ..GlobalFuns.globalFuns import HiddenPrints, preferences_from_flights
+from ..ModelStructure.Airline.airline import Airline
+from ..ModelStructure.modelStructure import ModelStructure
+from ..UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
+from ..UDPP.udppMerge import udpp_merge
+from ..ModelStructure.Solution import solution
+from ..ModelStructure.Slot.slot import Slot
+from ..ModelStructure.Flight import flight as fl
+from ..ModelStructure import modelStructure as ms
+from ..UDPP.Local import local
 
 class UDPPLocal(ModelStructure):
     requirements = ['costVect', 'delayCostVect']
@@ -36,8 +36,8 @@ class UDPPLocal(ModelStructure):
         airline: Airline
         for airline in self.airlines:
             if airline.numFlights > 1:
-                with HiddenPrints():
-                    UDPPlocalOpt(airline, self.slots)
+                #with HiddenPrints():
+                UDPPlocalOpt(airline, self.slots)
             else:
                 airline.flights[0].udppPriority = "N"
                 airline.flights[0].udppPriorityNumber = 0

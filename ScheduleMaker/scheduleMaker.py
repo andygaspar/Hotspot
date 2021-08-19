@@ -8,8 +8,8 @@ import string
 from scipy import stats
 import pandas as pd
 
-from Hotspot.ModelStructure.Slot.slot import Slot
-from Hotspot.ModelStructure.Flight.flight import Flight
+from ..ModelStructure.Slot.slot import Slot
+from ..ModelStructure.Flight.flight import Flight
 
 
 def avoid_zero(flight_list, num_flights):

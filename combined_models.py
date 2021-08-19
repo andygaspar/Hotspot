@@ -10,14 +10,14 @@ import inspect
 
 from typing import Callable, Union, List
 
-from Hotspot.ModelStructure.Flight.flight import Flight
-from Hotspot.ModelStructure.Slot.slot import Slot
+from .ModelStructure.Flight.flight import Flight
+from .ModelStructure.Slot.slot import Slot
 
-from Hotspot.ModelStructure import modelStructure as mS
-from Hotspot.UDPP.udppMerge import UDPPMerge
-from Hotspot.UDPP.udppLocal import UDPPLocal
-from Hotspot.UDPP.functionApprox import FunctionApprox
-from Hotspot.Istop.istop import Istop
+from .ModelStructure import modelStructure as mS
+from .UDPP.udppMerge import UDPPMerge
+from .UDPP.udppLocal import UDPPLocal
+from .UDPP.functionApprox import FunctionApprox
+from .Istop.istop import Istop
 
 
 def combine_model(models):

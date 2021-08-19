@@ -65,10 +65,10 @@ class Flight:
         # self.jump2 = jump_2
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
     def __repr__(self):
-        return self.name
+        return str(self.name)
 
     def __hash__(self):
         return hash(self.name)
@@ -99,10 +99,13 @@ class Flight:
         self.notCompatibleSlots = not_compatible_slots
 
     def set_eta_slot(self, slots):
+        #print ('LAVA', self.name, slots)
         i = 0
-        while slots[i].time < self.eta:
+        while slots[i].time < self.eta and i<len(slots)-1:
             i += 1
-        self.etaSlot = slots[i]
+            #print ('ODEINOINFE', self.name, i)
+        #print ('FINAL:', self.name, i)
+        self.etaSlot = slots[i-1]
 
     def get_attributes(self):
         d = {'slot':self.slot,

@@ -1,8 +1,8 @@
 import copy
 from typing import List
 
-from Hotspot.ModelStructure.Airline.airline import Airline
-from Hotspot.ModelStructure.Slot.slot import Slot
+from ...ModelStructure.Airline.airline import Airline
+from ...ModelStructure.Slot.slot import Slot
 
 
 def get_slot_from_time(slot_list: List[Slot], time: float):

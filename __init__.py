@@ -5,7 +5,7 @@ from .NNBound.nnBound import NNBoundModel
 from .UDPP.udppMerge import UDPPMerge
 from .ScheduleMaker.scheduleMaker import schedule_types, df_maker
 from .ScheduleMaker.df_to_schedule import make_flight_list
-from .RL.wrapper import Flight, OptimalAllocationEngine, models, LocalEngine, HotspotHandler
+from .RL.wrapper import Flight, OptimalAllocationEngine as Engine, models, LocalEngine, HotspotHandler
 from .libs.other_tools import print_allocation
 
 
