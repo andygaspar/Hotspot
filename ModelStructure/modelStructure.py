@@ -1,14 +1,15 @@
 import numpy as np
 import pandas as pd
+import inspect
 from typing import Union, List, Callable
 from itertools import product
-from Hotspot.ModelStructure.Airline.airline import Airline
-from Hotspot.ModelStructure.Slot import slot as sl
-from Hotspot.ModelStructure.Flight.flight import Flight
+from .Airline.airline import Airline
+from .Slot import slot as sl
+from .Flight.flight import Flight
 
 import matplotlib.pyplot as plt
 
-from Hotspot.ModelStructure.Slot.slot import Slot
+from .Slot.slot import Slot
 
 
 class ModelStructure:
@@ -152,6 +153,12 @@ class ModelStructure:
             new_flight_list.append(new_flight)
 
         return sorted(new_flight_list, key=lambda f: f.slot)
+
+    @staticmethod
+    def get_kwargs_init(cls):
+        all_vars = [k for k in inspect.signature(cls.__init__).parameters.keys() if not k in ['self', 'slots', 'flights']]
+
+        return all_vars
 
     def set_flight_index(self):
         for i in range(len(self.flights)):

@@ -10,7 +10,7 @@ from typing import Callable
 import pandas as pd
 
 from Hotspot import models, print_allocation
-from Hotspot import FlightHandler, OptimalAllocationComputer as OptAllComp
+from Hotspot import HotspotHandler, OptimalAllocationEngine as Engine, LocalEngine
 
 np.random.seed(0)
 
@@ -47,7 +47,6 @@ print ("\n################### First Example ####################")
 david_flights = create_original_flights(n_f=10)
 slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
 
-
 # Build slots and flights for model. 
 # david_flights is unmodified by this operation.
 # paras is dic to get the attributes needed inside the flights
@@ -63,8 +62,8 @@ slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
 # takes the delay as argument or the absolute time of the slot.
 # finally, if the former case, one needs to specificy the eta. The field
 # is designated with the value corresponding to the key 'eta'
-flight_handler = FlightHandler()
-slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
+hotspot_handler = HotspotHandler()
+slots, flights = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 															slot_times=slot_times,
 															attr_map={'name':'flight_name', #
 																	'airlineName':'airline_name',
@@ -76,23 +75,28 @@ slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=dav
 																					'eta':'eta'})
 
 print("NN bound")
+
 # Initialise model
-computer = OptAllComp(algo='nnbound')
+computer = Engine(algo='nnbound')
+
 # Run model
-allocation = computer.compute_optimal_allocation(slots, flights)
+allocation = computer.compute_optimal_allocation(hotspot_handler=hotspot_handler)
+
 # Allocation is an ordered dict linking flight -> slot
 print_allocation(allocation)
 computer.print_optimisation_performance()
+
 # Put slots in the original flight object as attribute "attr_slot_ext"
-flight_handler.assign_slots_to_flights_ext_from_allocation(allocation, attr_slot_ext='slot')
+hotspot_handler.assign_slots_to_flights_ext_from_allocation(allocation, attr_slot_ext='slot')
 print ('Slot assigned to first flight:', david_flights[0].slot)
+
 # One can also use this method to use internal flights object to get the slot, instead of the
 # allocation dict.
-flight_handler.update_flight_attributes_int_to_ext({'newSlot':'slot'})
+hotspot_handler.update_flight_attributes_int_to_ext({'newSlot':'slot'})
 print ('Slot assigned to last flight:', david_flights[-1].slot)
 
 # You can also get another shiny list of flights
-new_flights = flight_handler.get_new_flight_list()
+new_flights = hotspot_handler.get_new_flight_list()
 print (new_flights[0])
 
 
@@ -112,8 +116,8 @@ def build_random_cost_function(margin=25, jump=100.):
 	return f
 
 cost_functions = [build_random_cost_function() for flight in david_flights]
-flight_handler = FlightHandler()
-slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
+hotspot_handler = HotspotHandler()
+slots, flights = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 															slot_times=slot_times,
 															attr_map={'name':'flight_name', #
 																	'airlineName':'airline_name',
@@ -124,9 +128,9 @@ slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=dav
 																					'absolute':False,
 																					'eta':'eta'})
 # Initialise model
-computer = OptAllComp(algo='nnbound')
+computer = Engine(algo='nnbound')
 # Run model
-allocation = computer.compute_optimal_allocation(slots, flights)
+allocation = computer.compute_optimal_allocation(hotspot_handler=hotspot_handler)
 # Allocation is an ordered dict linking flight -> slot
 print_allocation(allocation)
 
@@ -152,8 +156,8 @@ def custom_cost_function(delay, margin=None, jump=None):
 	else:
 		return jump
 
-flight_handler = FlightHandler()
-slots, flights = flight_handler.prepare_hotspot_from_dataframe(df=df,
+hotspot_handler = HotspotHandler()
+slots, flights = hotspot_handler.prepare_hotspot_from_dataframe(df=df,
 															slot_times=slot_times,
 															attr_map={'flight':'flight_name',
 																	'airline':'airline_name',
@@ -167,8 +171,8 @@ slots, flights = flight_handler.prepare_hotspot_from_dataframe(df=df,
 																					'eta':'eta',
 																					'kwargs':['margin', 'jump']
 																					})
-computer = OptAllComp(algo='nnbound')
-allocation = computer.compute_optimal_allocation(slots, flights)
+computer = Engine(algo='nnbound')
+allocation = computer.compute_optimal_allocation(hotspot_handler=hotspot_handler)
 computer.print_optimisation_performance()
 
 print ("\n################### Fourth Example ####################")
@@ -193,8 +197,9 @@ cost_func_dict = {'cost_function':'cost_func',
 
 # ------- Network Manager agent starts here ----- # 
 # Start by registering flights in the hotspot. This includes computing FPFS allocation.
-flight_handler_NM = FlightHandler()
-slots, flights_NM = flight_handler_NM.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
+engine = Engine(algo='udpp_merge')
+hotspot_handler_NM = HotspotHandler(engine=engine)
+slots, flights_NM = hotspot_handler_NM.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 																slot_times=slot_times,
 																attr_map={'name':'flight_name',
 																		'airlineName':'airline_name',
@@ -203,7 +208,7 @@ slots, flights_NM = flight_handler_NM.prepare_hotspot_from_flights_ext(flights_e
 																set_cost_function_with=cost_func_dict)
 # In model, FPFS allocation is sent back to flight or airline agent
 # Here we include it in the .slot attribute in flight objects.
-flight_handler_NM.update_flight_attributes_int_to_ext({'slot':'slot'})
+hotspot_handler_NM.update_flight_attributes_int_to_ext({'slot':'slot'})
 
 # Note that the NM can cheat at this stage by using the udpp optimiser to compute priorities, but
 # here we assume that this is a privilege of the Flight or the Airline object in the model.
@@ -211,12 +216,12 @@ flight_handler_NM.update_flight_attributes_int_to_ext({'slot':'slot'})
 # This can be run async.
 for airline, david_flights_airline in david_flights_per_airline.items():
 	# ------ Flight agent begins here ------ #
-	# One easy way would be to pass the flight_handler above to the NM, but this breaks the agent paradigm.
+	# One easy way would be to pass the hotspot_handler above to the NM, but this breaks the agent paradigm.
 	# So instead we create a flight handler per airline, but make sure to use the already created slots.
 	# For this, one needs to map the 'slot' attribute and to pass the list of slots (instead of the list of slot_times)
 	# FPFS computation is deactivated whenever this argument is passed.
-	flight_handler = FlightHandler()
-	slots, flights_airline = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights_airline,
+	hotspot_handler = HotspotHandler()
+	slots, flights_airline = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights_airline,
 																slots=slots,
 																attr_map={'name':'flight_name',
 																		'airlineName':'airline_name',
@@ -228,27 +233,28 @@ for airline, david_flights_airline in david_flights_per_airline.items():
 
 
 	# Compute priorities
-	computer = OptAllComp(algo='udpp')
+	engine_local = LocalEngine(algo='udpp_local')
 	#print ('flights', flights)
-	priorities = computer.compute_local_priorities(slots, flights_airline)
+	priorities = engine_local.compute_optimal_parameters(hotspot_handler=hotspot_handler)
 
 	# To send back the priorities, one can send a dictionary or assign
 	# priorities back to original flight object.
-	flight_handler.update_flight_attributes_dict_to_ext(priorities)
+	hotspot_handler.update_flight_attributes_dict_to_ext(priorities)
 	# ------- Flight agent ends here ------ #
 															
 # ------- Network Manager agent starts here again ----- # 
 # One can update the hotspot with the extra attributes now present in the original flight objects
-flight_handler_NM.update_flight_attributes_ext_to_int(attr_map={'udppPriority':'udpp_priority', 
-															'udppPriorityNumber':'udpp_priority_number',
+hotspot_handler_NM.update_flight_attributes_ext_to_int(attr_map={#'udppPriority':'udpp_priority', 
+															'udppPriority':'udppPriority', 	
+															'udppPriorityNumber':'udppPriorityNumber',
 															'tna':'tna'
 															})
-flights = flight_handler_NM.get_flights()
+#flights = hotspot_handler_NM.get_flights()
+
+hotspot_handler_NM.prepare_all_flights()
 
 # Merge udpp priorities
-computer = OptAllComp(algo='udpp')
-allocation = computer.compute_optimal_allocation(slots,
-												flights,
+allocation = engine.compute_optimal_allocation(hotspot_handler=hotspot_handler_NM,
 												kwargs_run={'optimised':True})
 print_allocation(allocation)
 
@@ -273,8 +279,9 @@ cost_func_dict = {'cost_function':'cost_func',
 
 # ------- Network Manager agent starts here ----- # 
 # Start by registering flights in the hotspot. This includes computing FPFS allocation.
-flight_handler_NM = FlightHandler()
-slots, flights_NM = flight_handler_NM.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
+engine = Engine(algo='istop')
+hotspot_handler_NM = HotspotHandler(engine=engine)
+slots, flights_NM = hotspot_handler_NM.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 																slot_times=slot_times,
 																attr_map={'name':'flight_name',
 																		'airlineName':'airline_name',
@@ -283,7 +290,7 @@ slots, flights_NM = flight_handler_NM.prepare_hotspot_from_flights_ext(flights_e
 																set_cost_function_with=cost_func_dict)
 # In model, FPFS allocation is sent back to flight or airline agent
 # Here we include it in the .slot attribute in flight objects.
-flight_handler_NM.update_flight_attributes_int_to_ext({'slot':'slot'})
+hotspot_handler_NM.update_flight_attributes_int_to_ext({'slot':'slot'})
 
 # Note that the NM can cheat at this stage by using the udpp optimiser to compute priorities, but
 # here we assume that this is a privilege of the Flight or the Airline object in the model.
@@ -291,12 +298,12 @@ flight_handler_NM.update_flight_attributes_int_to_ext({'slot':'slot'})
 # This can be run async.
 for airline, david_flights_airline in david_flights_per_airline.items():
 	# ------ Flight agent begins here ------ #
-	# One easy way would be to pass the flight_handler above to the NM, but this breaks the agent paradigm.
+	# One easy way would be to pass the hotspot_handler above to the NM, but this breaks the agent paradigm.
 	# So instead we create a flight handler per airline, but make sure to use the already created slots.
 	# For this, one needs to map the 'slot' attribute and to pass the list of slots (instead of the list of slot_times)
 	# FPFS computation is deactivated whenever this argument is passed.
-	flight_handler = FlightHandler()
-	slots, flights_airline = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights_airline,
+	hotspot_handler = HotspotHandler()
+	slots, flights_airline = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights_airline,
 																slots=slots,
 																attr_map={'name':'flight_name',
 																		'airlineName':'airline_name',
@@ -306,30 +313,29 @@ for airline, david_flights_airline in david_flights_per_airline.items():
 																set_cost_function_with=cost_func_dict,
 																)
 
-	# Compute priorities
-	computer = OptAllComp(algo='istop')
-	#print ('flights', flights)
-	preferences = computer.compute_preferences(slots, flights_airline)
 
-	# To send back the preferences, one can send a dictionary or assign
+	# Compute priorities
+	engine_local = LocalEngine(algo='udpp_local_function_approx')
+	#print ('flights', flights)
+	priorities = engine_local.compute_optimal_parameters(hotspot_handler=hotspot_handler)
+
+	# To send back the priorities, one can send a dictionary or assign
 	# priorities back to original flight object.
-	flight_handler.update_flight_attributes_dict_to_ext(preferences)
+	hotspot_handler.update_flight_attributes_dict_to_ext(priorities)
 	# ------- Flight agent ends here ------ #
 															
 # ------- Network Manager agent starts here again ----- # 
 # One can update the hotspot with the extra attributes now present in the original flight objects
-flight_handler_NM.update_flight_attributes_ext_to_int(attr_map={'slope':'slope', 
+hotspot_handler_NM.update_flight_attributes_ext_to_int(attr_map={'slope':'slope', 
 																'margin1':'margin1',
 																'jump1':'jump1',
 																'margin2':'margin2',
 																'jump2':'jump2',
 																})
-flights = flight_handler_NM.get_flights()
+flights = hotspot_handler_NM.get_flights()
 
 # Merge udpp priorities
-computer = OptAllComp(algo='istop')
-allocation = computer.compute_optimal_allocation(slots,
-												flights)
+allocation = engine.compute_optimal_allocation(hotspot_handler=hotspot_handler_NM)
 print_allocation(allocation)
 
 
@@ -347,9 +353,9 @@ for flight in mercury_flights:
 	mercury_flights_per_airline[flight.airlineName] = mercury_flights_per_airline.get(flight.airlineName, []) + [flight]
 
 # ------- Network Manager agent starts here ----- # 
-flight_handler_NM = FlightHandler()
+hotspot_handler_NM = HotspotHandler()
 # Only request slot creation
-slots = flight_handler_NM.compute_slots(slot_times=slot_times)
+slots = hotspot_handler_NM.compute_slots(slot_times=slot_times)
 # Slots then need to be sent to the airlines.
 # ------- Network Manager agents ends here ----- # 
 
@@ -357,13 +363,13 @@ slots = flight_handler_NM.compute_slots(slot_times=slot_times)
 all_flights = []
 for airline, mercury_flights_airline in mercury_flights_per_airline.items():
 	# ------ Flight agent begins here ------ #
-	flight_handler = FlightHandler()
+	hotspot_handler = HotspotHandler()
 	mercury_flights_dict = [{'flight_name':mf.name,
 							'airline_name':mf.airlineName,
 							'eta':mf.eta,
 							'cost_function':mf.cost_func # pass real cost function here
 							} for mf in mercury_flights_airline]
-	_, flights_airline = flight_handler.prepare_hotspot_from_dict(flights_ext=mercury_flights_dict,
+	_, flights_airline = hotspot_handler.prepare_hotspot_from_dict(flights_ext=mercury_flights_dict,
 																		slots=slots,
 																		set_cost_function_with={'cost_function':'cost_function',
 																								'kind':'lambda',
@@ -372,7 +378,7 @@ for airline, mercury_flights_airline in mercury_flights_per_airline.items():
 																		)
 
 	# Compute priorities
-	computer = OptAllComp(algo='istop')
+	computer = Engine(algo='istop')
 	preferences = computer.compute_preferences(slots, flights_airline)
 
 	# Preferences are then sent out to the NM, together with other information (like airline name etc)
@@ -391,12 +397,12 @@ for airline, mercury_flights_airline in mercury_flights_per_airline.items():
 # ------- Network Manager agent starts here again ----- # 
 # NM can now prepare the flights with the preferences sent by the airline
 # no need to specificy cost function here, preference parameters will be used instead.
-flight_handler_NM.prepare_flights_from_dict(flights_ext=all_flights) 
+hotspot_handler_NM.prepare_flights_from_dict(flights_ext=all_flights) 
 
 # Merge ISTOP preferences
-computer = OptAllComp(algo='istop')
+computer = Engine(algo='istop')
 allocation = computer.compute_optimal_allocation(slots,
-												flight_handler_NM.get_flights())
+												hotspot_handler_NM.get_flights())
 print_allocation(allocation)
 
 print ("\n################### Fifth Example ####################")
@@ -404,8 +410,8 @@ print ("\n################### Fifth Example ####################")
 # Another example where we use udpp first, and then the global optimiser
 david_flights = create_original_flights(n_f=10)
 slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
-flight_handler = FlightHandler()
-slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
+hotspot_handler = HotspotHandler()
+slots, flights = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 															slot_times=slot_times,
 															attr_map={'name':'flight_name', #
 																	'airlineName':'airline_name',
@@ -419,7 +425,7 @@ slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=dav
 
 print("\nUDPP+GlobalOptimum")
 # Initialise model
-computer = OptAllComp(algo='udpp')
+computer = Engine(algo='udpp')
 # Run model
 allocation = computer.compute_optimal_allocation(slots, flights, kwargs_run={'optimised':True})
 print ('Allocation out of UDPP:')
@@ -427,10 +433,10 @@ print_allocation(allocation)
 computer.print_optimisation_performance()
 
 # Update the internal flight objects with the new slots
-flight_handler.update_slots_internal()
+hotspot_handler.update_slots_internal()
 
 # And run globaloptimum, starting from the UDPP output.
-computer = OptAllComp(algo='globaloptimum')
+computer = Engine(algo='globaloptimum')
 # Run model
 allocation = computer.compute_optimal_allocation(slots, flights)
 print ('Allocation out of Global Optimiser:')
@@ -443,8 +449,8 @@ print ("\n################### Sixth Example ####################")
 # with Istop
 david_flights = create_original_flights(n_f=10)
 slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
-flight_handler = FlightHandler()
-slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
+hotspot_handler = HotspotHandler()
+slots, flights = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=david_flights,
 															slot_times=slot_times,
 															attr_map={'name':'flight_name', #
 																	'airlineName':'airline_name',
@@ -456,7 +462,7 @@ slots, flights = flight_handler.prepare_hotspot_from_flights_ext(flights_ext=dav
 																					'eta':'eta'})
 print("\nIstop")
 # Initialise model
-computer = OptAllComp(algo='istop')
+computer = Engine(algo='istop')
 # Run model
 allocation = computer.compute_optimal_allocation(slots, flights, kwargs_init={'triples':False})
 #print ('Allocation out of UDPP:')
@@ -464,5 +470,5 @@ print_allocation(allocation)
 computer.print_optimisation_performance()
 
 # Update the internal flight objects with the new slots
-flight_handler.update_slots_internal()
+hotspot_handler.update_slots_internal()
 

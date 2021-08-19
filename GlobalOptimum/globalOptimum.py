@@ -20,9 +20,9 @@ from Hotspot.libs.uow_tool_belt.general_tools import write_on_file as print_to_v
 class GlobalOptimum(mS.ModelStructure):
     requirements = ['delayCostVect', 'costVect']
 
-    def __init__(self, slot_list: List[Slot] = None, flight_list: List[Flight] = None):
+    def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None):
 
-        super().__init__(slot_list, flight_list)
+        super().__init__(slots, flights)
         with print_to_void():
             self.m = xp.problem()
         self.x = None
@@ -93,8 +93,8 @@ class GlobalOptimum(mS.ModelStructure):
                     if self.m.getSolution(sol[flight.index, slot.index]) > 0.5:
                         flight.newSlot = slot
 
-    def reset(self, slot_list, flight_list):
-        super().__init__(slot_list, flight_list)
+    def reset(self, slots, flights):
+        super().__init__(slots, flights)
 
         with HiddenPrints():
             self.m.reset()

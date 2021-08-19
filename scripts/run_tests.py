@@ -12,9 +12,7 @@ import pandas as pd
 import pickle
 import random
 
-from Hotspot import models, print_allocation
-from Hotspot import HotspotHandler, LocalEngine, OptimalAllocationEngine as Engine
-#from Hotspot.ModelStructure.Costs.costFunctionDict import CostFuns
+from Hotspot import *
 
 from create_test_data import dict_funcs
 
@@ -39,8 +37,6 @@ def load_test(test_number):
 							eta=row['eta'],
 							cost_coefficient=row['cost_coefficient'],
 							function=simple_function)
-		# print ('AKKO', flight.name, row['cost_coefficient'])
-		# print ('feon', flight.name, flight.cost_func(7.))
 		flights.append(flight)
 
 	return flights
@@ -62,7 +58,6 @@ class ModelFlight:
 tests_to_run = [1]
 
 ## These tests use costVect and delayCostVect, so they should always be passed ###
-
 for test_number in tests_to_run:
 	print (pd.read_csv('../test_data/df_test_{}.csv'.format(test_number)))
 	for algo in ['udpp_merge', 'istop', 'nnbound', 'globaloptimum']:
@@ -98,11 +93,10 @@ for test_number in tests_to_run:
 		
 		all_messages = []
 		for airline, mercury_flights_airline in mercury_flights_per_airline.items():
+			# ------ Flight agent starts here ------- #
 			message_from_NM = to_be_sent_to_airlines[airline]
-			if algo=='udpp_merge':
-				algo_local = 'udpp_local'
-			else:
-				algo_local ='get_cost_vectors'
+			
+			algo_local = models_correspondence_cost_vect[algo]
 
 			engine_local = LocalEngine(algo=algo_local)
 
@@ -128,7 +122,9 @@ for test_number in tests_to_run:
 			to_be_sent_to_NM = {}
 			for i, (name, pref) in enumerate(preferences.items()):
 				to_be_sent_to_NM[name] = pref
+				
 				# ------- Flight agent ends here ------ #
+			
 			all_messages.append(to_be_sent_to_NM)
 			
 		# ------- Network Manager agent starts here again ----- # 
@@ -154,7 +150,6 @@ for test_number in tests_to_run:
 
 
 ### These tests use approximation for costVect and delayCostVect, so they may fail ####
-
 for test_number in tests_to_run:
 	print (pd.read_csv('../test_data/df_test_{}.csv'.format(test_number)))
 	for algo in ['istop', 'udpp_merge_istop', 'nnbound', 'globaloptimum']:
@@ -171,9 +166,9 @@ for test_number in tests_to_run:
 
 		# ------- Network Manager agent starts here ----- # 
 		engine = Engine(algo=algo)
-		archetype_cost_function = 'jump'
+		cost_func_archetype = 'jump'
 		hh_NM = HotspotHandler(engine=engine,
-								archetype_cost_function=archetype_cost_function
+								cost_func_archetype=cost_func_archetype
 								)
 		mercury_flights_dict = [{'flight_name':mf.name,
 									'airline_name':mf.airlineName,
@@ -187,24 +182,22 @@ for test_number in tests_to_run:
 			message_to_airline = {}
 			for flight in flights_in_airline:
 				message_to_airline[flight] = {'slot':all_allocated_slots[flight.name]}
-			message_to_airline['archetype_cost_function'] = archetype_cost_function
+			message_to_airline['cost_func_archetype'] = cost_func_archetype
 			message_to_airline['slots'] = list(all_allocated_slots.values())
 			to_be_sent_to_airlines[airline] = message_to_airline
 		# ------- Network Manager agents ends here ----- # 
 		
 		all_messages = []
 		for airline, mercury_flights_airline in mercury_flights_per_airline.items():
+			# ------ Flight agent starts here ------ #
 			message_from_NM = to_be_sent_to_airlines[airline]
-			if algo=='udpp_merge':
-				algo_local = 'udpp_local'
-			elif algo=='udpp_merge_istop':
-				algo_local = 'udpp_local_function_approx'
-			else:
-				algo_local = 'function_approx'
+
+			algo_local = models_correspondence_approx[algo]
+
 			engine_local = LocalEngine(algo=algo_local)
 
 			hh = HotspotHandler(engine=engine_local,
-								archetype_cost_function=message_from_NM['archetype_cost_function']
+								cost_func_archetype=message_from_NM['cost_func_archetype']
 								)
 
 			mercury_flights_dict = [{'flight_name':mf.name,
