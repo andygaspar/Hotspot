@@ -19,9 +19,9 @@ from ..UDPP.Local import local
 class UDPPLocal(ModelStructure):
     requirements = ['costVect', 'delayCostVect']
 
-    def __init__(self, slots: List[Slot] = None, flights: List[fl.Flight] = None):
+    def __init__(self, slots: List[Slot] = None, flights: List[fl.Flight] = None, delta_t=0.):
         if not flights is None:
-            super().__init__(slots, flights, air_ctor=Airline)
+            super().__init__(slots, flights, air_ctor=Airline, delta_t=delta_t)
 
     def run(self):
         airline: Airline

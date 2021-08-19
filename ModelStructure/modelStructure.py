@@ -17,7 +17,7 @@ class ModelStructure:
     requirements = []
 
     def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None,
-        air_ctor=Airline, checks=False):
+        air_ctor=Airline, delta_t=0., checks=False):
 
         if not flights is None:
             self.slots = slots
@@ -32,7 +32,7 @@ class ModelStructure:
 
             self.numAirlines = len(self.airlines)
 
-            self.set_flights_attributes()
+            self.set_flights_attributes(delta_t=delta_t)
 
             self.numFlights = len(self.flights)
 
@@ -59,20 +59,6 @@ class ModelStructure:
         for flight in self.flights:
             req_ok = False
             for req in self.requirements:
-                #print (req)
-                # try:
-                #     # If req is an iterable, then all attributes in the 
-                #     # list must be owned by the flight object
-                #     iterator = iter(req)
-                #     assert type(req)!=str
-                #     req_attr_ok = True
-                #     for attr in req:
-                #         req_attr_ok = req_attr_ok or hasattr(flight, attr)
-                #         if not req_attr_ok:
-                #             print ('Missing attribute:', attr)
-                #     req_ok = req_ok or req_attr_ok
-                # except (TypeError, AssertionError) as e:
-                #     req_ok = req_ok or hasattr(flight, req)
                 req_attr_ok = hasattr(flight, req)
                 if not req_attr_ok:
                     print ('Missing attribute:', req)
@@ -164,10 +150,10 @@ class ModelStructure:
         for i in range(len(self.flights)):
             self.flights[i].index = i
 
-    def set_flights_attributes(self):
+    def set_flights_attributes(self, delta_t=0.):
         for flight in self.flights:
             flight.set_eta_slot(self.slots)
-            flight.set_compatible_slots(self.slots)
+            flight.set_compatible_slots(self.slots, delta_t=delta_t)
             flight.set_not_compatible_slots(self.slots)
 
     def set_delay_vect(self):

@@ -9,16 +9,16 @@ import inspect
 
 from typing import Callable, Union, List
 
-from ..ModelStructure.Flight.flight import Flight
-from ..ModelStructure.Slot.slot import Slot
+from .ModelStructure.Flight.flight import Flight
+from .ModelStructure.Slot.slot import Slot
 
-from ..ModelStructure import modelStructure as mS
-from ..UDPP.udppMerge import UDPPMerge
-from ..UDPP.udppLocal import UDPPLocal
-from ..UDPP.functionApprox import FunctionApprox
-from ..Istop.istop import Istop
-from ..GlobalOptimum.globalOptimum import GlobalOptimum
-from ..NNBound.nnBound import NNBoundModel
+from .ModelStructure import modelStructure as mS
+from .UDPP.udppMerge import UDPPMerge
+from .UDPP.udppLocal import UDPPLocal
+from .UDPP.functionApprox import FunctionApprox
+from .Istop.istop import Istop
+from .GlobalOptimum.globalOptimum import GlobalOptimum
+from .NNBound.nnBound import NNBoundModel
 
 
 def init_and_run(Model, slots, flights, kwargs_init, kwargs_run):
@@ -75,7 +75,6 @@ def combine_model(Models, assign_slots_after_models=False, sequential_requiremen
 			merge_results = {f.name:{} for f in self.flights}
 
 			for i, Model in enumerate(Models):
-				print ('DOING model', Model)
 				# Cost vectors will be recomputed if they are required during the
 				# next step AND a cost archetype function is given in input.
 				# This is typically the case for FuncApprox + Istop, NN bound etc.

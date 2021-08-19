@@ -152,8 +152,12 @@ class HotspotHandler:
 	def get_internal_flight(self, flight_name):
 		return self.flights[flight_name]
 
-	def get_assigned_slots(self):
+	def get_allocation(self):
 		return OrderedDict(sorted([(flight.name, flight.slot) for flight in self.get_flight_list()], key=lambda x:x[1].time))
+
+	# def get_allocation(self, name_slot='slot'):
+	# 	#return OrderedDict(sorted([(getattr(flight, slot_name), flight.name) for flight in self.get_flight_list()], key=lambda x:x[0].time))
+	# 	return allocation_from_flights(self.flights.values(), name_slot=name_slot)
 
 	def get_cost_vectors(self):
 		return {flight.name:{'costVect':flight.costVect, 'delayCostVect':flight.delayCostVect} for flight in self.get_flight_list()}

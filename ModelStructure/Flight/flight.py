@@ -7,12 +7,8 @@ from ..Slot.slot import Slot
 class Flight:
 
     def __init__(self, flight_name: str, airline_name: str,
-                 eta: float, slot: Slot=None, delay_cost_vect: np.array=None, cost_vect: np.array = None,
-                 **garbage
-                 #udpp_priority: str = None, udpp_priority_number: int = None, tna: float = None,
-                 # slope: float = None, margin_1: float = None, jump_1: float = None,
-                 # margin_2: float = None, jump_2: float = None
-                 ):
+                 eta: float, slot: Slot=None, delay_cost_vect: np.array=None,
+                 cost_vect: np.array = None, **garbage):
 
         self.index = None
 
@@ -44,26 +40,6 @@ class Flight:
 
         self.newSlot = None
 
-        # UDPP attributes
-
-        # self.udppPriority = udpp_priority
-
-        # self.udppPriorityNumber = udpp_priority_number
-
-        # self.tna = tna
-
-        # ISTOP attributes  *************
-
-        # self.slope = slope
-
-        # self.margin1 = margin_1
-
-        # self.jump1 = jump_1
-
-        # self.margin2 = margin_2
-
-        # self.jump2 = jump_2
-
     def __str__(self):
         return str(self.name)
 
@@ -84,27 +60,25 @@ class Flight:
     def delay(self, slot: Slot):
         return slot.time - self.eta
 
-    def set_compatible_slots(self, slots: List[Slot]):
-        compatible_slots = []
-        for slot in slots:
-            if slot.time >= self.eta:
-                compatible_slots.append(slot)
+    def set_compatible_slots(self, slots: List[Slot], delta_t=0.):
+        compatible_slots = [slot for slot in slots if slot.time >= self.eta-delta_t]
+        # for slot in slots:
+        #     if slot.time >= self.eta:
+        #         compatible_slots.append(slot)
         self.compatibleSlots = compatible_slots
 
-    def set_not_compatible_slots(self, slots):
-        not_compatible_slots = []
-        for slot in slots:
-            if slot not in self.compatibleSlots:
-                not_compatible_slots.append(slot)
+    def set_not_compatible_slots(self, slots: List[Slot]):
+        #not_compatible_slots = []
+        not_compatible_slots = [slot for slot in slots if slot not in self.compatibleSlots]
+        # for slot in slots:
+        #     if slot not in self.compatibleSlots:
+        #         not_compatible_slots.append(slot)
         self.notCompatibleSlots = not_compatible_slots
 
     def set_eta_slot(self, slots):
-        #print ('LAVA', self.name, slots)
         i = 0
         while slots[i].time < self.eta and i<len(slots)-1:
             i += 1
-            #print ('ODEINOINFE', self.name, i)
-        #print ('FINAL:', self.name, i)
         self.etaSlot = slots[i-1]
 
     def get_attributes(self):
@@ -139,19 +113,3 @@ class Flight:
 
     def reset_slot(self):
         self.newSlot = None
-
-    # def compute_delay_cost_vect(self, slots):
-    #     """
-    #     This is used when costVect is given instead of delayCostVect, but
-    #     the latter is still required, for instance for ISTOP
-    #     """
-    #     #for flight in self.flights:
-    #     if self.delayCostVect is None:
-    #         self.delayCostVect = []
-    #         i = 0
-    #         for slot in slots:
-    #             if slot.time >= self.eta:
-    #                 self.delayCostVect.append(self.costVect[i])
-    #             i += 1
-
-    #         self.delayCostVect = np.array(self.delayCostVect)
