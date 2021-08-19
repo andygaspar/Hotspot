@@ -29,7 +29,7 @@ def example_delta_t(algo='globaloptimum', delta_t=0.):
 	#etas = [0.5, 2.1, 3.5, 5., 5.5]
 	#etas = [0., 2.1, 3., 5., 6.] can't put floats apparently
 	#etas = [0, 4, 5, 8, 10]
-	etas = [0, 1, 3, 4]
+	etas = [0, 1, 3, 5]
 	cc = [1., 0.01, 10., 0.01]
 	#cc = [1., 1., 1., 1.]
 	external_flights = [ExternalFlight('F'+str(i), 'A0', cap_drop*i, eta, cost_coefficient=cc[i]) for i, eta in enumerate(etas)]
@@ -51,7 +51,7 @@ def example_delta_t(algo='globaloptimum', delta_t=0.):
 	print ('FPFS allocation:')
 	print_allocation (hotspot_handler.get_allocation())
 	allocation = engine.compute_optimal_allocation(hotspot_handler=hotspot_handler,
-													kwargs_init={'delta_t':cap_drop})
+													kwargs_init={'delta_t':delta_t})
 
 	# Allocation is an ordered dict linking flight -> slot
 	print ('Optimal allocation:')
@@ -59,7 +59,7 @@ def example_delta_t(algo='globaloptimum', delta_t=0.):
 	engine.print_optimisation_performance()
 
 if __name__=='__main__':
-	for algo in ['globaloptimum']:
+	for algo in ['globaloptimum', 'nnbound', 'udpp']:
 		example_delta_t(algo=algo, delta_t=0.)
 		example_delta_t(algo=algo, delta_t=2.)
 

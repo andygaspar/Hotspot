@@ -37,16 +37,16 @@ class GlobalOptimum(mS.ModelStructure):
 
         flight: Flight
         airline: air.Airline
-        with print_to_void():
-            for flight in self.flights:
-                self.m.addConstraint(
-                    xp.Sum(self.x[flight.index, slot.index] for slot in flight.compatibleSlots) == 1
-                )
+        for flight in self.flights:
+            self.m.addConstraint(
+                xp.Sum(self.x[flight.index, slot.index] for slot in flight.compatibleSlots) == 1
+            )
 
-            for slot in self.slots:
-                self.m.addConstraint(
-                    xp.Sum(self.x[flight.index, slot.index] for flight in self.flights) <= 1
-                )
+        for slot in self.slots:
+            print ('BOUM', slot, type(slot))
+            self.m.addConstraint(
+                xp.Sum(self.x[flight.index, slot.index] for flight in self.flights) <= 1
+            )
 
     def set_objective(self):
         flight: Flight
@@ -58,9 +58,9 @@ class GlobalOptimum(mS.ModelStructure):
 
     def run(self, timing=False, update_flights=False):
         start = time.time()
-        with print_to_void():
-            self.set_variables()
-            self.set_constraints()
+        #with print_to_void():
+        self.set_variables()
+        self.set_constraints()
         end = time.time() - start
         if timing:
             print("Variables and constraints setting time ", end)

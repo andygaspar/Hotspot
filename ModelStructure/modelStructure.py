@@ -152,7 +152,7 @@ class ModelStructure:
 
     def set_flights_attributes(self, delta_t=0.):
         for flight in self.flights:
-            flight.set_eta_slot(self.slots)
+            flight.set_eta_slot(self.slots, delta_t=delta_t)
             flight.set_compatible_slots(self.slots, delta_t=delta_t)
             flight.set_not_compatible_slots(self.slots)
 

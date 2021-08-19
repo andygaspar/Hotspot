@@ -53,18 +53,6 @@ def allocation_from_df(df, name_slot='new slot'):
 def allocation_from_flights(flights, name_slot='newSlot'):
 	return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
 
-# def priorities_from_flights(flights):
-# 	d = OrderedDict([(flight.name, {}) for flight in flights])
-
-# 	for flight in flights:
-# 		d[flight.name]['udppPriority'] = flight.udppPriority
-# 		d[flight.name]['udppPriorityNumber'] = flight.udppPriorityNumber
-# 		d[flight.name]['tna'] = flight.tna
-
-# 	return d
-
-
-
 def df_from_flights(flights, name_slot='newSlot'):
 	"""
 	Mostly for showing purposes, is not used for internal calculations anymore.
