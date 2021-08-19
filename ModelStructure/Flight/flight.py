@@ -108,20 +108,20 @@ class Flight:
         self.etaSlot = slots[i-1]
 
     def get_attributes(self):
-        d = {'slot':self.slot,
-            'flight_name':self.name,
-            'airline_name':self.airlineName,
-            'eta':self.eta,
-            'delay_cost_vect':self.delayCostVect,
-            'cost_vect':self.costVect,
-            'udpp_priority':self.udppPriority,
-            'udpp_priority_number':self.udppPriorityNumber,
-            'tna':self.tna,
-            'slope':self.slope,
-            'margin_1':self.margin1,
-            'jump_1':self.jump1,
-            'margin_2':self.margin2,
-            'jump_2':self.jump2}
+        d = {'slot':getattr(self, 'slot', None),
+            'flight_name':getattr(self, 'name', None),
+            'airline_name':getattr(self, 'airlineName', None),
+            'eta':getattr(self, 'eta', None),
+            'delay_cost_vect':getattr(self, 'delayCostVect', None),
+            'cost_vect':getattr(self, 'costVect', None),
+            'udpp_priority':getattr(self, 'udppPriority', None),
+            'udpp_priority_number':getattr(self, 'udppPriorityNumber', None),
+            'tna':getattr(self, 'tna', None),
+            'slope':getattr(self, 'slope', None),
+            'margin_1':getattr(self, 'margin1', None),
+            'jump_1':getattr(self, 'jump1', None),
+            'margin_2':getattr(self, 'margin2', None),
+            'jump_2':getattr(self, 'jump2', None)}
 
         return d
 

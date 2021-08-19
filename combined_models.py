@@ -1,150 +1,132 @@
 """
-This is a meta model using Istopand UDPP under the hood. There are two flavours:
-- For the first one, the input to the model is UDPP priorities + cost vectors.
-The model then run UDPP with the preferences, and ISTOP with the cost vectors
-- for the second one, the input is only cost vectors. In this case, the model
-computes preferenecs internally based on the cost vectors, apply them, 
-and then apply ISTOP with the cost vectors.
+Combined models are collections of models which are executed one after the 
+other. Usual comined models corresponds to a local model + global one, for
+instance UDPPLocal and UDPPMerge, in order to allow for a easy end-to-end 
+computation, also using the same api than other models. Some operations 
+sometimes need to be performed between models, like recomputing cost vectors.
 """
 import inspect
 
 from typing import Callable, Union, List
 
-from .ModelStructure.Flight.flight import Flight
-from .ModelStructure.Slot.slot import Slot
+from ..ModelStructure.Flight.flight import Flight
+from ..ModelStructure.Slot.slot import Slot
 
-from .ModelStructure import modelStructure as mS
-from .UDPP.udppMerge import UDPPMerge
-from .UDPP.udppLocal import UDPPLocal
-from .UDPP.functionApprox import FunctionApprox
-from .Istop.istop import Istop
+from ..ModelStructure import modelStructure as mS
+from ..UDPP.udppMerge import UDPPMerge
+from ..UDPP.udppLocal import UDPPLocal
+from ..UDPP.functionApprox import FunctionApprox
+from ..Istop.istop import Istop
+from ..GlobalOptimum.globalOptimum import GlobalOptimum
+from ..NNBound.nnBound import NNBoundModel
 
 
-def combine_model(models):
-	#TODO
-	pass
+def init_and_run(Model, slots, flights, kwargs_init, kwargs_run):
+	# Get all kwargs for init and init
+	all_vars = inspect.signature(Model.__init__).parameters
+	kwargs_init_res = {k:kwargs_init.get(k, v.default) for k, v in all_vars.items() if not k in ['self', 'slots', 'flights']}
+	model = Model(slots, flights, **kwargs_init_res)
 
-class UDPPMergeIstop(mS.ModelStructure):
+	# Get all kwargs for run and run
+	all_vars = inspect.signature(Model.run).parameters
+	kwargs_run_res = {k:kwargs_run.get(k, v.default) for k, v in all_vars.items() if not k in ['self', 'slots', 'flights']}
+	results = model.run(**kwargs_run_res)
+
+	return model, results
+
+def combine_model(Models, assign_slots_after_models=False, sequential_requirements=True):
 	"""
-	Version in which you pass the priorities from the UDPP Local
-	for the UDPP merge and the cost vectors for ISTOP. To be used with the 
-	FuncApprox (or direclty the true costs) and UDPPLocal optimiser.
+	Creates a model that combines sequentially the models in Models.
 	"""
-	requirements = UDPPMerge.requirements + Istop.requirements
 
-	def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, checks=True,
-		**kwargs_init):
-		self.slots = slots
-		self.flights = flights
-		self.kwargs_init = kwargs_init
+	class CombinedModel(mS.ModelStructure):
+		if not sequential_requirements:
+			requirements = list(set([req for Model in Models for req in Model.requirements]))
+		else:
+			requirements = Models[0].requirements
 
-		# Check that all flights have the attributes required by the model
-		if checks:
-			self.check_requirements()
+		@staticmethod
+		def get_kwargs_init(dummy):
+			"""
+			Gets all kwargs from models' init functions to avoid inspection issues
+			with kwargs_init.
+			"""
+			all_vars = list(set([k for Model in Models for k in inspect.signature(Model.__init__).parameters.keys() if not k in ['self', 'slots', 'flights']]))
 
-	def run(self, **kwargs_all):
-		# Merge priorities from UDPP local first
-		# Split kwargs
-		all_vars = inspect.signature(UDPPMerge.__init__).parameters
-		kwargs_init = {k:self.kwargs_init.get(k, v.default) for k, v in all_vars.items() if not k in ['self', 'slots', 'flights']}
-		udpp_merge_model = UDPPMerge(self.slots, self.flights, **kwargs_init)
+			return all_vars
 
-		all_vars = inspect.signature(UDPPMerge.run).parameters
-		kwargs = {k:kwargs_all.get(k, v.default) for k, v in all_vars.items() if not k in ['self', 'slots', 'flights']}
-		udpp_merge_model.run(**kwargs)
+		@staticmethod
+		def get_kwargs_run(dummy):
+			all_vars = list(set([k for Model in Models for k in inspect.signature(Model.run).parameters.keys() if not k in ['self', 'slots', 'flights']]))
 
-		# Allocate new slot to old ones.
-		for flight in self.flights:
-			flight.slot = flight.newSlot
-			flight.newSlot = None
+			return all_vars
+			
+		def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, checks=True,
+			**kwargs_init):
+			self.slots = slots
+			self.flights = flights
+			self.kwargs_init = kwargs_init
+			
+			# Check that all flights have the attributes required by the model(s)
+			if checks:
+				self.check_requirements()
 
-		# Use Istop on new state
-		all_vars = inspect.signature(Istop.__init__).parameters
-		kwargs_init = {k:self.kwargs_init.get(k, v.default) for k, v in all_vars.items()  if not k in ['self', 'slots', 'flights']}
-		istop_model = Istop(self.slots, self.flights, **kwargs_init)
+		def run(self, **kwargs_run):
+			merge_results = {f.name:{} for f in self.flights}
 
-		all_vars = inspect.signature(Istop.run).parameters
-		kwargs = {k:kwargs_all.get(k, v.default) for k, v in all_vars.items() if not k in ['self', 'slots', 'flights']}
-		istop_model.run(**kwargs)
+			for i, Model in enumerate(Models):
+				print ('DOING model', Model)
+				# Cost vectors will be recomputed if they are required during the
+				# next step AND a cost archetype function is given in input.
+				# This is typically the case for FuncApprox + Istop, NN bound etc.
+				if i>0 and ('delayCostVect' in Model.requirements or 'costVect' in Model.requirements):
+					for flight in self.flights:
+						if 'cost_func_archetype' in self.kwargs_init.keys() and self.kwargs_init['cost_func_archetype'] is not None:
+							flight.set_cost_function(kind='paras',
+													cost_function=self.kwargs_init['cost_func_archetype'])
+						flight.compute_cost_vectors(self.slots)
 
-		self.solution = istop_model.solution
-		self.report = istop_model.report
+				model, results = init_and_run(Model, self.slots, self.flights, self.kwargs_init, kwargs_run)
+				
+				# One can reassign slots between models. This is useful for isntance
+				# if using to global models one after the other, like UDPP merge and Istop.
+				if type(assign_slots_after_models) in [tuple, list]:
+					assign = assign_slots_after_models[i]
+				else:
+					assign = assign_slots_after_models
 
+				if assign:
+					for flight in self.flights:
+						flight.slot = flight.newSlot
+						flight.newSlot = None
 
-class UDPPFullIstop(mS.ModelStructure):
-	"""
-	Version in which you pass the cost vectors only. To be used with the 
-	FuncApprox local optimiser for instance.
-	"""
-	requirements = Istop.requirements
+				for f in self.flights:
+					if results is not None:
+						for k, v in results[f.name].items():
+							merge_results[f.name][k] = v
+		
+			# Assign final solution and report
+			self.solution = model.solution
+			self.report = model.report
 
-	def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, **kwargs_init):
-		self.slots = slots
-		self.flights = flights
-		self.kwargs_init = kwargs_init
+			return merge_results
 
-	def run(self, **kwargs_all):
-		# TODO: finish that.
-		# Compute local UDPP from cost Vect
-		# Split kwargs
-		all_vars = inspect.signature(UDPPLocal.__init__).parameters
-		kwargs_init = {k:self.kwargs_init.get(k, v) for k, v in all_vars.items()}
-		udpp_merge_model = UDPPLocal(self.slots, self.flights, **kwargs_init)
+	return CombinedModel
 
-		all_vars = inspect.signature(UDPPLocal.run).parameters
-		kwargs = {k:kwargs_all.get(k, v) for k, v in all_vars.items()}
-		udpp_merge_model.run(**kwargs)
+# UDPP from scratch
+UDPPTotal = combine_model([UDPPLocal, UDPPMerge])
 
-		# Allocate new slot to old ones.
-		for flight in self.flights:
-			flight.slot = flight.newSlot
-			flight.newSlot = None
+# Istop from scratch with approximation (otherwise use only istop)
+IstopTotalApprox = combine_model([FunctionApprox, Istop])
 
-		# Use Istop on new state
-		all_vars = inspect.signature(Istop.__init__).parameters
-		kwargs_init = {k:self.kwargs_init.get(k, v) for k, v in all_vars.items()}
-		istop_model = Istop(self.slots, self.flights, **kwargs_init)
+# NNbound from scratch with approximation
+NNBoundTotalApprox = combine_model([FunctionApprox, NNBoundModel])
 
-		all_vars = inspect.signature(Istop.run).parameters
-		kwargs = {k:kwargs_all.get(k, v) for k, v in all_vars.items()}
-		istop_model.run(**kwargs)
+# GlobalOptimum from scratch with approximation
+GlobalOptimumTotalApprox = combine_model([FunctionApprox, GlobalOptimum])
 
+# UDPP merge first, Istop second
+UDPPMergeIstop = combine_model([UDPPMerge, Istop], assign_slots_after_models=[True, False], sequential_requirements=False)
 
-class UDPPLocalFunctionApprox(mS.ModelStructure):
-	requirements = list(set(UDPPLocal.requirements + FunctionApprox.requirements))
-
-	def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, checks=True, 
-		cost_func_archetype=None, **kwargs_init):
-		self.slots = slots
-		self.flights = flights
-		self.kwargs_init = kwargs_init
-		self.kwargs_init['cost_func_archetype'] = cost_func_archetype
-
-		# Check that all flights have the attributes required by the model
-		if checks:
-			self.check_requirements()
-
-	def run(self, **kwargs_all):
-		# Compute UDPPLocal priorities
-		all_vars = inspect.signature(UDPPLocal.__init__).parameters
-		kwargs_init = {k:self.kwargs_init.get(k, v.default) for k, v in all_vars.items() if not k in ['self', 'slots', 'flights']}
-		#print ('kwargs_init', kwargs_init)
-		udpp_local_model = UDPPLocal(self.slots, self.flights, **kwargs_init)
-
-		all_vars = inspect.signature(UDPPLocal.run).parameters
-		kwargs = {k:kwargs_all.get(k, v.default) for k, v in all_vars.items() if not k in ['self', 'slots', 'flights']}
-		prefs_udpp_local = udpp_local_model.run(**kwargs)
-
-		# Compute function approximation parameters
-		all_vars = inspect.signature(FunctionApprox.__init__).parameters
-		kwargs_init = {k:self.kwargs_init.get(k, v.default) for k, v in all_vars.items()  if not k in ['self', 'slots', 'flights']}
-		function_approx_model = FunctionApprox(self.slots, self.flights, **kwargs_init)
-
-		all_vars = inspect.signature(FunctionApprox.run).parameters
-		kwargs = {k:kwargs_all.get(k, v.default) for k, v in all_vars.items() if not k in ['self', 'slots', 'flights']}
-		prefs_function_approx = function_approx_model.run(**kwargs)
-
-		merge_dict = {f.name:{**prefs_udpp_local[f.name], **prefs_function_approx[f.name]} for f in self.flights}
-		return merge_dict
-
-
+# Computes preferences AND function approximation (for UDPPMergeIstop for instance)
+UDPPLocalFunctionApprox = combine_model([UDPPLocal, FunctionApprox], sequential_requirements=False)
