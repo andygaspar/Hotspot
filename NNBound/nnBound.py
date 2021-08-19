@@ -20,10 +20,10 @@ import time
 class NNBoundModel(mS.ModelStructure):
     requirements = ['delayCostVect', 'costVect']
 
-    def __init__(self, slot_list: List[Slot] = None, flight_list: List[Flight] = None,
+    def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None,
         xp_problem=None):
 
-        super().__init__(slot_list, flight_list)
+        super().__init__(slots, flights)
         if xp_problem is None:
             with print_to_void():
                 self.m = xp.problem()
@@ -96,9 +96,9 @@ class NNBoundModel(mS.ModelStructure):
                 if self.m.getSolution(sol[flight.index, slot.index]) > 0.5:
                     flight.newSlot = slot
 
-    def reset(self, slot_list: List[Slot] = None, flight_list: List[Flight] = None):
+    def reset(self, slots: List[Slot] = None, flights: List[Flight] = None):
 
-        super().__init__(slot_list, flight_list)
+        super().__init__(slots, flights)
 
         with HiddenPrints():
             self.m.reset()
