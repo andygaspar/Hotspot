@@ -20,45 +20,36 @@ def sort_flights_by_time(flights):
 
 def get_first_compatible_flight(slot, sorted_flights, slots):
     for flight in sorted_flights:
-        if flight.eta <= slot.time:
+        #if slot.time >= flight.eta - delta_t :
+        if slot in flight.compatibleSlots:
             return flight
 
 def udpp_merge(flights, slots):
     sorted_flights = list(sort_flights_by_time(flights))
     i = 0
     while len(sorted_flights) > 0:
-        if sorted_flights[0].eta <= slots[i].time:
+        #if slots[i].time >= sorted_flights[0].eta - delta_t :
+        if slots[i] in sorted_flights[0].compatibleSlots:#sorted_flights[0]#slots[i].time >= sorted_flights[0].eta - delta_t :
             sorted_flights[0].newSlot = slots[i]
             sorted_flights.pop(0)
 
         else:
-            flight = get_first_compatible_flight(slots[i], sorted_flights, slots)
+            flight = get_first_compatible_flight(slots[i], sorted_flights, slots, delta_t=delta_t)
             flight.newSlot = slots[i]
             sorted_flights.remove(flight)
         i += 1
 
-    # for f in sorted_flights:
-    #     if f.eta <= slots[i].time:
-    #         f.newSlot = slots[i]
-
-# def wrap_flight_udpp(flight):
-#    flight.UDPPLocalSlot = None
-#    flight.UDPPlocalSolution = None
-#    flight.test_slots = []
-
 
 class UDPPMerge(ModelStructure):
     requirements = ['udppPriority', 'udppPriorityNumber', 'tna']
-    def __init__(self, slots: List[Slot] = None, flights: List[fl.Flight] = None):
-
+    def __init__(self, slots: List[Slot] = None, flights: List[fl.Flight] = None, delta_t=0.):
+        #self.delta_t = delta_t
         if not flights is None:
-            #udpp_flights = [UDPPflight(flight) for flight in flights if flight is not None]
-            #[wrap_flight_udpp(flight) for flight in flights if flight is not None]
-            super().__init__(slots, flights, air_ctor=Airline)
+            super().__init__(slots, flights, delta_t=delta_t, air_ctor=Airline)
 
     def run(self, optimised=True):
         airline: Airline
-
+        # TODO: this is probably to remove, done with combined models now.
         for airline in self.airlines:
             if airline.numFlights > 1:
                 local.udpp_local(airline, self.slots)

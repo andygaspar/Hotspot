@@ -21,9 +21,9 @@ class NNBoundModel(mS.ModelStructure):
     requirements = ['delayCostVect', 'costVect']
 
     def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None,
-        xp_problem=None):
+        xp_problem=None, delta_t=0.):
 
-        super().__init__(slots, flights)
+        super().__init__(slots, flights, delta_t=delta_t)
         if xp_problem is None:
             with print_to_void():
                 self.m = xp.problem()
