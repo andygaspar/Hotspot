@@ -271,7 +271,7 @@ def example_agent_paradigm_vect(algo='udpp_merge'):
 								} for mf in mercury_flights]
 	hh_NM.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
 									slot_times=slot_times) 
-	all_allocated_slots = hh_NM.get_assigned_slots()
+	all_allocated_slots = hh_NM.get_allocation()
 	to_be_sent_to_airlines = {}
 	for airline, flights_in_airline in mercury_flights_per_airline.items():
 		message_to_airline = {}
@@ -365,7 +365,7 @@ def example_agent_paradigm_approx(algo='istop'):
 								} for mf in mercury_flights]
 	hh_NM.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
 									slot_times=slot_times) 
-	all_allocated_slots = hh_NM.get_assigned_slots()
+	all_allocated_slots = hh_NM.get_allocation()
 	to_be_sent_to_airlines = {}
 	for airline, flights_in_airline in mercury_flights_per_airline.items():
 		message_to_airline = {}
@@ -430,6 +430,97 @@ def example_agent_paradigm_approx(algo='istop'):
 	# print (engine.model.report)
 	# print (engine.model.solution)
 
+def example_agent_paradigm_approx_alternate(algo='istop'):
+	"""
+	Idem but with alternative rule for allocation
+	"""
+
+	print ()
+	print ("########### Agent-based {} with approximated functions and alternate allocation rule ############".format(algo))
+	mercury_flights = create_original_flights(n_f=10)
+	slot_times = list(range(0, 2*n_f, 2))  # or an np array or list or whatever
+
+	mercury_flights_per_airline = {}
+	for flight in mercury_flights:
+		mercury_flights_per_airline[flight.airlineName] = mercury_flights_per_airline.get(flight.airlineName, []) + [flight]
+
+	# ------- Network Manager agent starts here ----- # 
+	engine = Engine(algo=algo)
+	cost_func_archetype = 'jump'
+	hh_NM = HotspotHandler(engine=engine,
+							cost_func_archetype=cost_func_archetype,
+							alternative_slot_allocation_rule=True)
+	mercury_flights_dict = [{'flight_name':mf.name,
+								'airline_name':mf.airlineName,
+								'eta':mf.eta,
+								} for mf in mercury_flights]
+	hh_NM.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
+									slot_times=slot_times) 
+	all_allocated_slots = hh_NM.get_allocation()
+	to_be_sent_to_airlines = {}
+	for airline, flights_in_airline in mercury_flights_per_airline.items():
+		message_to_airline = {}
+		for flight in flights_in_airline:
+			message_to_airline[flight] = {'slot':all_allocated_slots[flight.name]}
+		message_to_airline['cost_func_archetype'] = cost_func_archetype
+		message_to_airline['slots'] = list(all_allocated_slots.values())
+		to_be_sent_to_airlines[airline] = message_to_airline
+	# ------- Network Manager agents ends here ----- # 
+	
+	all_messages = []
+	for airline, mercury_flights_airline in mercury_flights_per_airline.items():
+		# ------ Flight agent starts here ------ #
+		message_from_NM = to_be_sent_to_airlines[airline]
+
+		algo_local = models_correspondence_approx[algo]
+
+		engine_local = LocalEngine(algo=algo_local)
+
+		hh = HotspotHandler(engine=engine_local,
+							cost_func_archetype=message_from_NM['cost_func_archetype'],
+							alternative_slot_allocation_rule=True)
+
+		mercury_flights_dict = [{'flight_name':mf.name,
+								'airline_name':mf.airlineName,
+								'eta':mf.eta,
+								'cost_function':mf.cost_func, # pass real cost function here
+								'slot':message_from_NM[mf]['slot']
+								} for mf in mercury_flights_airline]
+
+		_, flights_airline = hh.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
+															slots=message_from_NM['slots'],
+															set_cost_function_with={'cost_function':'cost_function',
+																					'kind':'lambda',
+																					'absolute':False,
+																					'eta':'eta'},
+															)
+
+		hh.prepare_all_flights()
+		preferences = engine_local.compute_optimal_parameters(hotspot_handler=hh)
+		to_be_sent_to_NM = {}
+		for i, (name, pref) in enumerate(preferences.items()):
+			to_be_sent_to_NM[name] = pref
+			# ------- Flight agent ends here ------ #
+		all_messages.append(to_be_sent_to_NM)
+								
+	# ------- Network Manager agent starts here again ----- # 
+	if algo=='udpp_merge':
+		set_cost_function_with = None
+	else:
+		set_cost_function_with = 'default_cf_paras'
+	for message in all_messages:
+		hh_NM.update_flight_attributes_int_from_dict(attr_list=message,
+													set_cost_function_with=set_cost_function_with
+													) 
+	hh_NM.prepare_all_flights()
+
+	allocation = engine.compute_optimal_allocation(hotspot_handler=hh_NM,
+													kwargs_init={} # due to a weird bug, this line is required
+													)
+	print_allocation(allocation)
+	# print (engine.model.report)
+	# print (engine.model.solution)
+
 if __name__=='__main__':
 	for algo in ['udpp', 'istop', 'nnbound', 'globaloptimum']:
 		examples_direct_cost_vector(algo=algo)
@@ -443,3 +534,7 @@ if __name__=='__main__':
 
 	for algo in ['istop', 'nnbound', 'globaloptimum']:
 		example_agent_paradigm_approx(algo=algo)
+
+	for algo in ['istop', 'nnbound', 'globaloptimum']:
+		example_agent_paradigm_approx_alternate(algo=algo)
+		
