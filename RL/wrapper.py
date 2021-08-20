@@ -51,7 +51,8 @@ def allocation_from_df(df, name_slot='new slot'):
 	return OrderedDict(df[['flight', name_slot]].set_index('flight').to_dict()[name_slot])
 
 def allocation_from_flights(flights, name_slot='newSlot'):
-	return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
+	#return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
+	return OrderedDict(sorted([(flight.name, getattr(flight, name_slot)) for flight in flights], key=lambda x:x[1].time))
 
 def df_from_flights(flights, name_slot='newSlot'):
 	"""
@@ -96,7 +97,7 @@ class HotspotHandler:
 
 	This is the main interface between the engine and the user.
 	"""
-	def __init__(self, engine=None, cost_func_archetype=None):
+	def __init__(self, engine=None, cost_func_archetype=None, alternative_slot_allocation_rule=False):
 		self.engine = engine
 
 		if not cost_func_archetype is None:
@@ -104,6 +105,8 @@ class HotspotHandler:
 
 		if not engine is None:
 			self.set_engine(engine)
+
+		self.alternative_slot_allocation_rule = alternative_slot_allocation_rule
 
 	def set_engine(self, engine):
 		self.engine = engine
@@ -140,12 +143,8 @@ class HotspotHandler:
 	def get_internal_flight(self, flight_name):
 		return self.flights[flight_name]
 
-	def get_allocation(self):
-		return OrderedDict(sorted([(flight.name, flight.slot) for flight in self.get_flight_list()], key=lambda x:x[1].time))
-
-	# def get_allocation(self, name_slot='slot'):
-	# 	#return OrderedDict(sorted([(getattr(flight, slot_name), flight.name) for flight in self.get_flight_list()], key=lambda x:x[0].time))
-	# 	return allocation_from_flights(self.flights.values(), name_slot=name_slot)
+	def get_allocation(self, name_slot='slot'):
+		return allocation_from_flights(self.get_flight_list(), name_slot=name_slot)
 
 	def get_cost_vectors(self):
 		return {flight.name:{'costVect':flight.costVect, 'delayCostVect':flight.delayCostVect} for flight in self.get_flight_list()}
@@ -666,6 +665,13 @@ class Engine:
 				and ('cost_func_archetype' in Model.get_kwargs_init(Model)):
 				kwargs_init['cost_func_archetype'] = hotspot_handler.cf_paras
 
+			if (not 'delta_t' in kwargs_init.keys()) and hotspot_handler.alternative_slot_allocation_rule:
+				# In this case, slots should be allocated to if t1 < eta < t2,
+				# where t1 and t2 are the slot boundary.
+				# We compute the delta_t based on the minimum difference between slots
+				delta_t = min([hotspot_handler.slots[i+1].time - hotspot_handler.slots[i].time for i in range(len(hotspot_handler.slots)-1)])
+				kwargs_init['delta_t'] = delta_t
+
 		if use_priorities:
 			try:
 				assert hasattr(flights[0], 'udppPriority')
@@ -686,8 +692,7 @@ class Engine:
 		self.allocation = allocation_from_flights(flights, name_slot='newSlot')
 
 		del kwargs_init
-		#print ('YOYO', id(kwargs_init))
-
+		
 		return self.allocation
 
 	def print_optimisation_performance(self):
