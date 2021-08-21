@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import sys
 sys.path.insert(1, '../..')
 
@@ -103,7 +106,7 @@ def example_automatic(algo='globaloptimum'):
 	engine.print_optimisation_performance()
 
 if __name__=='__main__':
-	for algo in ['globaloptimum', 'nnbound', 'udpp', 'istop']:
+	for algo in ['globaloptimum', 'nnbound', 'udpp']:
 		example_delta_t(algo=algo, delta_t=0.)
 		example_delta_t(algo=algo, delta_t=2.)
 		example_automatic(algo=algo)
