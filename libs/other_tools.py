@@ -2,9 +2,9 @@ from collections import OrderedDict
 from pathlib import Path
 
 def print_allocation(allocation):
-	al_sorted = OrderedDict(sorted(allocation.items(), key=lambda t: t[1]))
+	#al_sorted = OrderedDict(sorted(allocation.items(), key=lambda t: t[1]))
 	s = ''
-	for flight, slot in al_sorted.items():
+	for flight, slot in allocation.items():
 		
 		s += str(slot) + ' -> ' + str(flight) + ' ; '
 		

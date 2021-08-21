@@ -36,8 +36,8 @@ class UDPPLocal(ModelStructure):
         airline: Airline
         for airline in self.airlines:
             if airline.numFlights > 1:
-                #with HiddenPrints():
-                UDPPlocalOpt(airline, self.slots)
+                with HiddenPrints():
+                    UDPPlocalOpt(airline, self.slots)
             else:
                 airline.flights[0].udppPriority = "N"
                 airline.flights[0].udppPriorityNumber = 0

@@ -81,13 +81,27 @@ def df_from_flights(flights, name_slot='newSlot'):
 	df.sort_values("slot", inplace=True)
 	return df
 
-def assign_FPFS_slot(slots, flights):
+def assign_FPFS_slot(slots, flights, delta_t=0.):
+	# TODO: TO BE MODIFIED: flight should be assigned to the first slot with x.time>x.eta-delta_t
+	# USe compatibleSlots in flight?
 	flights_ordered = sorted(flights.values(), key=lambda x:x.eta)
-	slots_ordered = sorted(slots, key=lambda x:x.time)
+	# slots_ordered = sorted(slots, key=lambda x:x.time)
 
-	for i, flight in enumerate(flights_ordered):
-		flight.slot = slots_ordered[i]
+	# for i, flight in enumerate(flights_ordered):
+	# 	flight.slot = slots_ordered[i]
 
+	assigned = []
+
+	for flight in flights_ordered:
+		compatible_slots = [slot for slot in slots if slot.time >= flight.eta-delta_t]
+		for slot in compatible_slots:
+			if not slot in assigned:
+				flight.slot = slot
+				assigned.append(slot)
+				break
+
+def compute_delta_t_from_slots(slots):
+	return min([slots[i+1].time - slots[i].time for i in range(len(slots)-1)])
 
 class HotspotHandler:
 	"""
@@ -171,10 +185,6 @@ class HotspotHandler:
 		for flight in self.flights.values():
 			if 'delayCostVect' in reqs or 'costVect' in reqs:
 				flight.compute_cost_vectors(self.slots)
-		
-		# if 'udppPriority' in reqs or 'udppPriorityNumber' in reqs or 'tna' in reqs:
-		# 	engine_local = LocalEngine(algo='udpp_local')
-		# 	engine_local.compute_optimal_parameters(hotspot_handler=self)
 
 	def update_flight_attributes_dict_to_ext(self, attr_dict):
 		for flight, d in attr_dict.items():
@@ -374,7 +384,7 @@ class HotspotHandler:
 			self.flights[flight.name] = flight
 
 	def prepare_hotspot_from_dict(self, attr_list=None, slot_times=[], slots=[], attr_map=None,
-		set_cost_function_with={}, assign_FPFS=True):
+		set_cost_function_with={}, assign_FPFS=True, delta_t=None):
 
 		# {'flight_name':'flight_name',
 		# 'airline_name':'airline_name', 'eta':'eta'}
@@ -399,8 +409,22 @@ class HotspotHandler:
 										set_cost_function_with=set_cost_function_with,
 										attr_map=attr_map)
 
+		# Check that the first flight has an ETA corresponding to 
+		# the first slot, otherwise change its ETA internally.
+		first_flight = self.get_flight_list()[np.argmin([flight.eta for flight in self.get_flight_list()])]		 
+		if first_flight.eta > self.slots[0].time:
+			first_flight.eta = self.slots[0].time
+
 		if assign_FPFS:
-			assign_FPFS_slot(self.slots, self.flights)
+			if delta_t is None:
+				if self.alternative_slot_allocation_rule and len(self.slots)>1:
+					delta_t = compute_delta_t_from_slots(self.slots)
+				else:
+					delta_t = 0.
+			assign_FPFS_slot(self.slots, self.flights, delta_t=delta_t)
+
+			# for flight in self.get_flight_list():
+			# 	print ('FPFS:', flight.name, flight.slot)
 
 		return self.slots, self.get_flight_list()
 
@@ -430,6 +454,9 @@ class HotspotHandler:
 
 		return sorted(new_flight_list, key=lambda f: f.slot)
 
+	def print_summary(self):
+		print ('Slots:', self.slots)
+		print ('Flights/ETA:', [(flight.name, flight.eta) for flight in self.get_flight_list()])
 
 class RLFlight(HFlight):
 	pass
@@ -665,11 +692,13 @@ class Engine:
 				and ('cost_func_archetype' in Model.get_kwargs_init(Model)):
 				kwargs_init['cost_func_archetype'] = hotspot_handler.cf_paras
 
-			if (not 'delta_t' in kwargs_init.keys()) and hotspot_handler.alternative_slot_allocation_rule:
+			if (not 'delta_t' in kwargs_init.keys()) \
+				and hotspot_handler.alternative_slot_allocation_rule \
+				and len(hotspot_handler.slots)>1:
 				# In this case, slots should be allocated to if t1 < eta < t2,
 				# where t1 and t2 are the slot boundary.
 				# We compute the delta_t based on the minimum difference between slots
-				delta_t = min([hotspot_handler.slots[i+1].time - hotspot_handler.slots[i].time for i in range(len(hotspot_handler.slots)-1)])
+				delta_t = compute_delta_t_from_slots(hotspot_handler.slots)
 				kwargs_init['delta_t'] = delta_t
 
 		if use_priorities:
@@ -705,17 +734,31 @@ class LocalEngine(Engine):
 		"""
 		Merge with previous?
 		"""
+		Model = models[self.algo]
+
 		if not hotspot_handler is None:
 			slots = hotspot_handler.slots
 			flights = hotspot_handler.get_flight_list()
+			#and ('cost_func_archetype' in inspect.signature(models[self.algo].__init__).parameters.keys()):
+			
 			if (not 'cost_func_archetype' in kwargs_init.keys()) \
 				and (hasattr(hotspot_handler, 'cf_paras')) \
-				and ('cost_func_archetype' in inspect.signature(models[self.algo].__init__).parameters.keys()):
+				and ('cost_func_archetype' in Model.get_kwargs_init(Model)):
 				kwargs_init['cost_func_archetype'] = hotspot_handler.cf_paras
 
-		self.model = models[self.algo](slots=slots, 
-										flights=flights, 
-										**kwargs_init)
+			if (not 'delta_t' in kwargs_init.keys()) \
+				and hotspot_handler.alternative_slot_allocation_rule \
+				and len(hotspot_handler.slots)>1 \
+				and ('delta_t' in Model.get_kwargs_init(Model)):
+				# In this case, slots should be allocated to if t1 < eta < t2,
+				# where t1 and t2 are the slot boundary.
+				# We compute the delta_t based on the minimum difference between slots
+				delta_t = compute_delta_t_from_slots(hotspot_handler.slots)
+				kwargs_init['delta_t'] = delta_t
+
+		self.model = Model(slots=slots, 
+							flights=flights, 
+							**kwargs_init)
 
 		paras = self.model.run(**kwargs_run)
 

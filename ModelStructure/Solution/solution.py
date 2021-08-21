@@ -39,7 +39,8 @@ def make_performance_df(model):
 
 
 def make_df_solution(model):
-    from Hotspot.ModelStructure.modelStructure import ModelStructure
+    #from ..ModelStructure.modelStructure import ModelStructure
+    from ..modelStructure import ModelStructure
     model: ModelStructure
 
     model.solution = model.df.copy(deep=True)
@@ -53,9 +54,9 @@ def make_df_solution(model):
 
 
 def make_solution(model, performance=True):
-    from Hotspot.ModelStructure.modelStructure import ModelStructure
-    from Hotspot.ModelStructure.Airline.airline import Airline
-    from Hotspot.ModelStructure.Flight.flight import Flight
+    from ..modelStructure import ModelStructure
+    from ..Airline.airline import Airline
+    from ..Flight.flight import Flight
     model: ModelStructure
     airline: Airline
     flight: Flight

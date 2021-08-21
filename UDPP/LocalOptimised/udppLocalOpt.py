@@ -93,7 +93,7 @@ def UDPPlocalOpt(airline: Airline, slots: List[sl.Slot]):
     for flight in airline.flights[1:]:
         # flight assignment
         #print ('CLICK', airline.AUslots)
-        print ('CLICK flight, flight.etaSlot', flight, flight.etaSlot)
+        #print ('CLICK flight, flight.etaSlot', flight, flight.etaSlot)
         # TODO: This is where the condition should be changed to allow early flights.
         # TODO: flight.localNum can probably be replaced by flight.index everywhere. 
         m.addConstraint(
