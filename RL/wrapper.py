@@ -90,18 +90,21 @@ def assign_FPFS_slot(slots, flights, delta_t=0.):
 	# for i, flight in enumerate(flights_ordered):
 	# 	flight.slot = slots_ordered[i]
 
+	# Note: using index for comparison, because otherwise method __eq__
+	# of slots is used, which compares time only (and several slots may have
+	# the same time).
 	assigned = []
-
 	for flight in flights_ordered:
 		compatible_slots = [slot for slot in slots if slot.time >= flight.eta-delta_t]
 		for slot in compatible_slots:
-			if not slot in assigned:
+			if not slot.index in assigned:
 				flight.slot = slot
-				assigned.append(slot)
+				assigned.append(slot.index)
 				break
 
 def compute_delta_t_from_slots(slots):
-	return min([slots[i+1].time - slots[i].time for i in range(len(slots)-1)])
+	a = np.array([slots[i+1].time - slots[i].time for i in range(len(slots)-1)])
+	return min(a[a>0.])
 
 class HotspotHandler:
 	"""
@@ -179,12 +182,29 @@ class HotspotHandler:
 	def get_flight_list(self):
 		return list(self.flights.values())
 
+	def pre_prepare_hotspot(self, delta_t=None):
+		# Check that the first flight has an ETA corresponding to 
+		# the first slot, otherwise change its ETA internally.
+		first_flight = self.get_flight_list()[np.argmin([flight.eta for flight in self.get_flight_list()])]		 
+		if first_flight.eta > self.slots[0].time:
+			first_flight.eta = self.slots[0].time
+
+		if delta_t is None:
+			if self.alternative_slot_allocation_rule and len(self.slots)>1:
+				self.delta_t = compute_delta_t_from_slots(self.slots)
+			else:
+				self.delta_t = 0.
+		else:
+			self.delta_t = delta_t
+
+		# print ('POIN, delta_t', self.delta_t)
+
 	def prepare_all_flights(self):
 		reqs = self.get_requirements_from_engine()
 		#print ('Reqs:', reqs)
 		for flight in self.flights.values():
 			if 'delayCostVect' in reqs or 'costVect' in reqs:
-				flight.compute_cost_vectors(self.slots)
+				flight.compute_cost_vectors(self.slots, delta_t=self.delta_t)
 
 	def update_flight_attributes_dict_to_ext(self, attr_dict):
 		for flight, d in attr_dict.items():
@@ -259,7 +279,7 @@ class HotspotHandler:
 				flight.set_cost_function(**dd)
 
 	def prepare_hotspot_from_dataframe(self, df=None, slot_times=[], attr_map={'flight_name':'flight_name',
-		'flight_name':'airline_name', 'eta':'eta'}, set_cost_function_with={}, assign_FPFS=True):
+		'flight_name':'airline_name', 'eta':'eta'}, set_cost_function_with={}, assign_FPFS=True, delta_t=None):
 		"""
 		attr_map is in the ext -> int direction
 		"""
@@ -297,15 +317,17 @@ class HotspotHandler:
 				flight.compute_cost_vectors(self.slots)
 			
 			self.flights[flight.name] = flight
+
+		self.pre_prepare_hotspot(delta_t=delta_t)
 		
 		if assign_FPFS:
-			assign_FPFS_slot(self.slots, self.flights)
-
+			assign_FPFS_slot(self.slots, self.flights, delta_t=self.delta_t)
+		
 		return self.slots, self.flights
 
 	def prepare_hotspot_from_flights_ext(self, flights_ext=None, slot_times=[], slots=[], attr_map={'flight_name':'flight_name',
 		'flight_name':'airline_name', 'eta':'eta'},
-		set_cost_function_with={}, assign_FPFS=True):
+		set_cost_function_with={}, assign_FPFS=True, delta_t=None):
 		"""
 		attr_map is in the ext -> int direction
 		"""
@@ -357,12 +379,14 @@ class HotspotHandler:
 							
 				flight.set_cost_function(**dd)
 
-			flight.compute_cost_vectors(self.slots)
+			# flight.compute_cost_vectors(self.slots)
 			
 			self.flights[flight.name] = flight
 
+		self.pre_prepare_hotspot(delta_t=delta_t)
+		
 		if assign_FPFS:
-			assign_FPFS_slot(self.slots, self.flights)
+			assign_FPFS_slot(self.slots, self.flights, delta_t=self.delta_t)
 
 		return self.slots, self.flights
 
@@ -409,22 +433,10 @@ class HotspotHandler:
 										set_cost_function_with=set_cost_function_with,
 										attr_map=attr_map)
 
-		# Check that the first flight has an ETA corresponding to 
-		# the first slot, otherwise change its ETA internally.
-		first_flight = self.get_flight_list()[np.argmin([flight.eta for flight in self.get_flight_list()])]		 
-		if first_flight.eta > self.slots[0].time:
-			first_flight.eta = self.slots[0].time
-
+		self.pre_prepare_hotspot(delta_t=delta_t)
+		
 		if assign_FPFS:
-			if delta_t is None:
-				if self.alternative_slot_allocation_rule and len(self.slots)>1:
-					delta_t = compute_delta_t_from_slots(self.slots)
-				else:
-					delta_t = 0.
-			assign_FPFS_slot(self.slots, self.flights, delta_t=delta_t)
-
-			# for flight in self.get_flight_list():
-			# 	print ('FPFS:', flight.name, flight.slot)
+			assign_FPFS_slot(self.slots, self.flights, delta_t=self.delta_t)
 
 		return self.slots, self.get_flight_list()
 
@@ -605,7 +617,7 @@ class Flight(HFlight):
 			# else:
 			# 	self.cost_f_declared = f
 
-	def compute_cost_vectors(self, slots):
+	def compute_cost_vectors(self, slots, delta_t=0.):
 		"""
 		Compute costVect and delayCostVect, required for all models. If one or the 
 		other is given, the other is computed from it. If none are given, costVect
@@ -615,18 +627,18 @@ class Flight(HFlight):
 			if self.delayCostVect is None:
 				self.compute_cost_vect_from_cost_function(slots)
 			else:
-				self.compute_cost_vect_from_delay_cost_vect(slots)
+				self.compute_cost_vect_from_delay_cost_vect(slots, delta_t=0.)
 
 		if self.delayCostVect is None:
 			# This is computed always from costVect.
-			self.compute_delay_cost_vect(slots)
+			self.compute_delay_cost_vect(slots, delta_t=delta_t)
 
-	def compute_cost_vect_from_delay_cost_vect(self, slots):
+	def compute_cost_vect_from_delay_cost_vect(self, slots, delta_t=0.):
 		if self.costVect is None:
 			i = 0
 			self.costVect = []
 			for slot in slots:
-				if slot.time < self.eta:
+				if slot.time < self.eta-delta_t:
 					self.costVect.append(0)
 				else:
 					self.costVect.append(self.delayCostVect[i])
@@ -641,7 +653,7 @@ class Flight(HFlight):
 		"""
 		self.costVect = np.array([self.cost_f_true(slot.time) for slot in slots])
 
-	def compute_delay_cost_vect(self, slots):
+	def compute_delay_cost_vect(self, slots, delta_t=0.):
 		"""
 		This is used when costVect is given instead of delayCostVect, but
 		the latter is still required, for instance for ISTOP.
@@ -650,7 +662,7 @@ class Flight(HFlight):
 			self.delayCostVect = []
 			i = 0
 			for slot in slots:
-				if slot.time >= self.eta:
+				if slot.time >= self.eta-delta_t:
 					self.delayCostVect.append(self.costVect[i])
 				i += 1
 
@@ -746,6 +758,13 @@ class LocalEngine(Engine):
 				and ('cost_func_archetype' in Model.get_kwargs_init(Model)):
 				kwargs_init['cost_func_archetype'] = hotspot_handler.cf_paras
 
+			# print ('COINCOIN',
+			# 		Model,
+			# 		not 'delta_t' in kwargs_init.keys(),
+			# 		 hotspot_handler.alternative_slot_allocation_rule,
+			# 		 len(hotspot_handler.slots)>1,
+			# 		 ('delta_t' in Model.get_kwargs_init(Model)))
+
 			if (not 'delta_t' in kwargs_init.keys()) \
 				and hotspot_handler.alternative_slot_allocation_rule \
 				and len(hotspot_handler.slots)>1 \
@@ -772,6 +791,12 @@ class GetCostVectors:
 	"""
 
 	requirements = ['costVect', 'delayCostVect']
+
+	@staticmethod
+	def get_kwargs_init(cls):
+		all_vars = [k for k in inspect.signature(cls.__init__).parameters.keys() if not k in ['self', 'slots', 'flights']]
+
+		return all_vars
 
 	def __init__(self, slots, flights):
 		self.slots = slots
