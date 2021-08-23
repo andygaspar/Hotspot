@@ -70,7 +70,7 @@ class Flight:
 
     def set_eta_slot(self, slots, delta_t=0.):
         i = 0
-        #print ('ALLOALLO flight name, eta, delta_t, slots', self.name, self.eta, delta_t, slots)
+        #print ('ALLOALLO flight name, eta, delta_t, slots:', self.name, self.eta, delta_t, slots)
         while slots[i].time < self.eta-delta_t:# and i<len(slots)-1:
             #print ('KWABUNGA', slots[i].time)
             i += 1
