@@ -62,22 +62,17 @@ class Flight:
 
     def set_compatible_slots(self, slots: List[Slot], delta_t=0.):
         compatible_slots = [slot for slot in slots if slot.time >= self.eta-delta_t]
-        # for slot in slots:
-        #     if slot.time >= self.eta:
-        #         compatible_slots.append(slot)
         self.compatibleSlots = compatible_slots
 
     def set_not_compatible_slots(self, slots: List[Slot]):
-        #not_compatible_slots = []
         not_compatible_slots = [slot for slot in slots if slot not in self.compatibleSlots]
-        # for slot in slots:
-        #     if slot not in self.compatibleSlots:
-        #         not_compatible_slots.append(slot)
         self.notCompatibleSlots = not_compatible_slots
 
     def set_eta_slot(self, slots, delta_t=0.):
         i = 0
+        #print ('ALLOALLO flight name, eta, delta_t, slots:', self.name, self.eta, delta_t, slots)
         while slots[i].time < self.eta-delta_t:# and i<len(slots)-1:
+            #print ('KWABUNGA', slots[i].time)
             i += 1
         self.etaSlot = slots[i]#[i-1]
 

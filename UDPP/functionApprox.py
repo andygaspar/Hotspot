@@ -70,7 +70,7 @@ def compute_test_values(x, y, max_delay, approx_fun, fixed_paras={}, steps=8):
                 for jump_1 in np.linspace(10, max_val, steps//2):
                     for margin_2 in np.linspace(margin_1, max_delay, steps//2):
                         for jump_2 in np.linspace(jump_1, max_val, steps//2):
-                            params = {} # copy(fixed_paras)
+                            params = {}
                             params['slope'] = slope
                             params['margin_1'] = margin_1
                             params['jump_1'] = jump_1
@@ -86,7 +86,7 @@ def compute_test_values(x, y, max_delay, approx_fun, fixed_paras={}, steps=8):
         for slope in np.linspace(0, 1, steps):
             for margin in np.linspace(0, 3*max_delay//4, steps):
                 for jump in np.linspace(10, max_val, steps//2):
-                    params = {} # copy(fixed_paras)
+                    params = {}
                     params['slope'] = slope
                     params['margin'] = margin
                     params['jump'] = jump
@@ -134,12 +134,12 @@ class FunctionApprox(ModelStructure):
     requirements = ['delayCostVect']
 
     def __init__(self, slots: List[Slot]=None, flights: List[fl.Flight]=None,
-        cost_func_archetype=None):
+        cost_func_archetype=None, delta_t=0.):
 
         self.cost_func_archetype = cost_func_archetype
         
         if not flights is None:
-            super().__init__(slots, flights, air_ctor=Airline)
+            super().__init__(slots, flights, delta_t=delta_t, air_ctor=Airline)
 
     def run(self):
         all_paras = {}
