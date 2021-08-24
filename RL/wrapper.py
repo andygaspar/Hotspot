@@ -82,14 +82,8 @@ def df_from_flights(flights, name_slot='newSlot'):
 	return df
 
 def assign_FPFS_slot(slots, flights, delta_t=0.):
-	# TODO: TO BE MODIFIED: flight should be assigned to the first slot with x.time>x.eta-delta_t
-	# USe compatibleSlots in flight?
 	flights_ordered = sorted(flights.values(), key=lambda x:x.eta)
-	# slots_ordered = sorted(slots, key=lambda x:x.time)
-
-	# for i, flight in enumerate(flights_ordered):
-	# 	flight.slot = slots_ordered[i]
-
+	
 	# Note: using index for comparison, because otherwise method __eq__
 	# of slots is used, which compares time only (and several slots may have
 	# the same time).

@@ -92,22 +92,11 @@ def UDPPlocalOpt(airline: Airline, slots: List[sl.Slot]):
 
     for flight in airline.flights[1:]:
         # flight assignment
-        #print ('CLICK', airline.AUslots)
-        #print ('CLICK flight, flight.etaSlot', flight, flight.etaSlot)
-        # TODO: This is where the condition should be changed to allow early flights.
-        # TODO: flight.localNum can probably be replaced by flight.index everywhere. 
         m.addConstraint(
             xp.Sum(y[flight.localNum, j] for j in range(flight.etaSlot.index, flight.slot.index)) + \
             xp.Sum(x[flight.localNum, k] for k in
                   range(eta_limit_slot(flight, airline.AUslots), airline.numFlights)) == 1
         )
-        # print ('AROUF', list(range(eta_limit_slot(flight, airline.AUslots), airline.numFlights)) )
-        # print ('AROUF', [k for k, slot in enumerate(slots) if slot in flight.compatibleSlots])
-        # m.addConstraint(
-        #     #xp.Sum(y[flight.localNum, j] for j, slot in enumerate(slots) if slot in flight.compatibleSlots and j<flight.slot.index) + \
-        #     xp.Sum(y[flight.localNum, j] for j in range(flight.etaSlot.index, flight.slot.index)) + \
-        #     xp.Sum(x[flight.localNum, k] for k, slot in enumerate(slots) if slot in flight.compatibleSlots) == 1
-        # )
 
     # not earlier than its first flight
     m.addConstraint(
@@ -137,11 +126,6 @@ def UDPPlocalOpt(airline: Airline, slots: List[sl.Slot]):
                 flight.udppPriority = "N"
                 flight.udppPriorityNumber = k
                 n_flights.append(flight)
-                # print(flight.slot, flight.newSlot)
-
-        # print ('YOYO', flight.udppPriority,
-        #                 getattr(flight, 'udppPriorityNumber', None),
-        #                 getattr(flight, 'tna', None))
 
     n_flights.sort(key=lambda f: f.udppPriorityNumber)
     for i in range(len(n_flights)):
