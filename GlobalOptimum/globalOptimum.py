@@ -20,8 +20,8 @@ from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
 class GlobalOptimum(mS.ModelStructure):
     requirements = ['delayCostVect', 'costVect']
 
-    def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None, delta_t=0.):
-        super().__init__(slots=slots, flights=flights, delta_t=delta_t)
+    def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None, alternative_allocation_rule=0.):
+        super().__init__(slots=slots, flights=flights, alternative_allocation_rule=alternative_allocation_rule)
         with print_to_void():
             self.m = xp.problem()
         self.x = None

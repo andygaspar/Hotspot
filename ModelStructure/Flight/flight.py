@@ -1,8 +1,22 @@
 import numpy as np
 from typing import List, Callable
 
+from ...libs.uow_tool_belt.general_tools import get_first_matching_element
+
 from ..Slot.slot import Slot
 
+def compatible_slots(slots, eta, alternative_rule=False):
+    """
+    This assumes that slots are ordered by time.
+    """
+    if not alternative_rule:
+        pouic = Slot(index=-1, time=None)
+        first_slot_index = next((slot for slot in slots[::-1] if slot.time<eta), pouic).index +1
+    else:
+        #first_slot_index = max(get_first_matching_element(slots, condition=lambda x:x.time>eta).index-1, 0)    
+        pouic = Slot(index=len(slots), time=None)
+        first_slot_index = max(get_first_matching_element(slots, condition=lambda x:x.time>eta, default=pouic).index-1, 0)    
+    return [slot for i, slot in enumerate(slots) if i>=first_slot_index]
 
 class Flight:
 
@@ -60,21 +74,20 @@ class Flight:
     def delay(self, slot: Slot):
         return slot.time - self.eta
 
-    def set_compatible_slots(self, slots: List[Slot], delta_t=0.):
-        compatible_slots = [slot for slot in slots if slot.time >= self.eta-delta_t]
-        self.compatibleSlots = compatible_slots
+    def set_compatible_slots(self, slots: List[Slot], alternative_allocation_rule=False):
+        self.compatibleSlots = compatible_slots(slots, self.eta, alternative_rule=alternative_allocation_rule)
 
     def set_not_compatible_slots(self, slots: List[Slot]):
         not_compatible_slots = [slot for slot in slots if slot not in self.compatibleSlots]
         self.notCompatibleSlots = not_compatible_slots
 
-    def set_eta_slot(self, slots, delta_t=0.):
-        i = 0
-        #print ('ALLOALLO flight name, eta, delta_t, slots:', self.name, self.eta, delta_t, slots)
-        while slots[i].time < self.eta-delta_t:# and i<len(slots)-1:
-            #print ('KWABUNGA', slots[i].time)
-            i += 1
-        self.etaSlot = slots[i]#[i-1]
+    def set_eta_slot(self, slots):
+        # i = 0
+        # #print ('ALLOALLO flight name, eta, delta_t, slots:', self.name, self.eta, delta_t, slots)
+        # while slots[i].time < self.eta-delta_t:# and i<len(slots)-1:
+        #     #print ('KWABUNGA', slots[i].time)
+        #     i += 1
+        self.etaSlot = self.compatibleSlots[0]#slots[i]#[i-1]
 
     def get_attributes(self):
         d = {'slot':getattr(self, 'slot', None),

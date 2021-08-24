@@ -134,12 +134,15 @@ class FunctionApprox(ModelStructure):
     requirements = ['delayCostVect']
 
     def __init__(self, slots: List[Slot]=None, flights: List[fl.Flight]=None,
-        cost_func_archetype=None, delta_t=0.):
+        cost_func_archetype=None, alternative_allocation_rule=False):
 
         self.cost_func_archetype = cost_func_archetype
         
         if not flights is None:
-            super().__init__(slots, flights, delta_t=delta_t, air_ctor=Airline)
+            super().__init__(slots,
+                            flights,
+                            alternative_allocation_rule=alternative_allocation_rule,
+                            air_ctor=Airline)
 
     def run(self):
         all_paras = {}

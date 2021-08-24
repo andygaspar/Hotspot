@@ -5,7 +5,7 @@ from typing import Union, List, Callable
 from itertools import product
 from .Airline.airline import Airline
 from .Slot import slot as sl
-from .Flight.flight import Flight
+from .Flight.flight import Flight, compatible_slots
 
 import matplotlib.pyplot as plt
 
@@ -17,7 +17,7 @@ class ModelStructure:
     requirements = []
 
     def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None,
-        air_ctor=Airline, delta_t=0., checks=False):
+        air_ctor=Airline, alternative_allocation_rule=False, checks=False):
 
         if not flights is None:
             self.slots = slots
@@ -32,7 +32,7 @@ class ModelStructure:
 
             self.numAirlines = len(self.airlines)
 
-            self.set_flights_attributes(delta_t=delta_t)
+            self.set_flights_attributes(alternative_allocation_rule=alternative_allocation_rule)
 
             self.numFlights = len(self.flights)
 
@@ -150,10 +150,10 @@ class ModelStructure:
         for i in range(len(self.flights)):
             self.flights[i].index = i
 
-    def set_flights_attributes(self, delta_t=0.):
+    def set_flights_attributes(self, alternative_allocation_rule=False):
         for flight in self.flights:
-            flight.set_eta_slot(self.slots, delta_t=delta_t)
-            flight.set_compatible_slots(self.slots, delta_t=delta_t)
+            flight.set_compatible_slots(self.slots, alternative_allocation_rule=alternative_allocation_rule)
+            flight.set_eta_slot(self.slots)#, alternative_allocation_rule=alternative_allocation_rule)
             flight.set_not_compatible_slots(self.slots)
 
     def set_delay_vect(self):
