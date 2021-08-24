@@ -14,6 +14,7 @@ from ..UDPP.udppLocal import UDPPLocal
 from ..UDPP.functionApprox import FunctionApprox
 from ..GlobalOptimum.globalOptimum import GlobalOptimum
 from ..ModelStructure.Costs.costFunctionDict import archetypes_cost_functions
+from ..ModelStructure.Flight.flight import compatible_slots
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
 from ..combined_models import UDPPMergeIstop, UDPPLocalFunctionApprox, UDPPTotal#, UDPPFullIstop
 from ..combined_models import IstopTotalApprox, NNBoundTotalApprox, GlobalOptimumTotalApprox
@@ -81,24 +82,29 @@ def df_from_flights(flights, name_slot='newSlot'):
 	df.sort_values("slot", inplace=True)
 	return df
 
-def assign_FPFS_slot(slots, flights, delta_t=0.):
+def assign_FPFS_slot(slots, flights, alternative_allocation_rule=False):
 	flights_ordered = sorted(flights.values(), key=lambda x:x.eta)
 	
 	# Note: using index for comparison, because otherwise method __eq__
 	# of slots is used, which compares time only (and several slots may have
 	# the same time).
 	assigned = []
+	#print ('alternative_allocation_rule=', alternative_allocation_rule)
 	for flight in flights_ordered:
-		compatible_slots = [slot for slot in slots if slot.time >= flight.eta-delta_t]
-		for slot in compatible_slots:
+		cs = compatible_slots(slots, flight.eta, alternative_rule=alternative_allocation_rule)
+		#print ('YAHOU', flight, flight.eta, cs)
+		for slot in cs:
+			#print ('Trying slot', slot)
 			if not slot.index in assigned:
 				flight.slot = slot
+				#print ('Assigning slot', slot, 'to flight', flight)
 				assigned.append(slot.index)
+				#print ('Assigned slots:', assigned)
 				break
 
-def compute_delta_t_from_slots(slots):
-	a = np.array([slots[i+1].time - slots[i].time for i in range(len(slots)-1)])
-	return min(a[a>0.])
+# def compute_delta_t_from_slots(slots):
+# 	a = np.array([slots[i+1].time - slots[i].time for i in range(len(slots)-1)])
+# 	return min(a[a>0.])
 
 class HotspotHandler:
 	"""
@@ -108,7 +114,7 @@ class HotspotHandler:
 
 	This is the main interface between the engine and the user.
 	"""
-	def __init__(self, engine=None, cost_func_archetype=None, alternative_slot_allocation_rule=False):
+	def __init__(self, engine=None, cost_func_archetype=None, alternative_allocation_rule=False):
 		self.engine = engine
 
 		if not cost_func_archetype is None:
@@ -117,7 +123,7 @@ class HotspotHandler:
 		if not engine is None:
 			self.set_engine(engine)
 
-		self.alternative_slot_allocation_rule = alternative_slot_allocation_rule
+		self.alternative_allocation_rule = alternative_allocation_rule
 
 	def set_engine(self, engine):
 		self.engine = engine
@@ -176,20 +182,25 @@ class HotspotHandler:
 	def get_flight_list(self):
 		return list(self.flights.values())
 
-	def pre_prepare_hotspot(self, delta_t=None):
+	def pre_prepare_hotspot(self):
 		# Check that the first flight has an ETA corresponding to 
 		# the first slot, otherwise change its ETA internally.
 		first_flight = self.get_flight_list()[np.argmin([flight.eta for flight in self.get_flight_list()])]		 
 		if first_flight.eta > self.slots[0].time:
 			first_flight.eta = self.slots[0].time
 
-		if delta_t is None:
-			if self.alternative_slot_allocation_rule and len(self.slots)>1:
-				self.delta_t = compute_delta_t_from_slots(self.slots)
-			else:
-				self.delta_t = 0.
-		else:
-			self.delta_t = delta_t
+		for flight in self.get_flight_list():
+			flight.set_compatible_slots(self.slots,
+										alternative_allocation_rule=self.alternative_allocation_rule)
+            
+
+		# if delta_t is None:
+		# 	if self.alternative_slot_allocation_rule and len(self.slots)>1:
+		# 		self.delta_t = compute_delta_t_from_slots(self.slots)
+		# 	else:
+		# 		self.delta_t = 0.
+		# else:
+		# 	self.delta_t = delta_t
 
 		# print ('POIN, delta_t', self.delta_t)
 
@@ -198,7 +209,7 @@ class HotspotHandler:
 		#print ('Reqs:', reqs)
 		for flight in self.flights.values():
 			if 'delayCostVect' in reqs or 'costVect' in reqs:
-				flight.compute_cost_vectors(self.slots, delta_t=self.delta_t)
+				flight.compute_cost_vectors(self.slots)
 
 	def update_flight_attributes_dict_to_ext(self, attr_dict):
 		for flight, d in attr_dict.items():
@@ -273,7 +284,7 @@ class HotspotHandler:
 				flight.set_cost_function(**dd)
 
 	def prepare_hotspot_from_dataframe(self, df=None, slot_times=[], attr_map={'flight_name':'flight_name',
-		'flight_name':'airline_name', 'eta':'eta'}, set_cost_function_with={}, assign_FPFS=True, delta_t=None):
+		'flight_name':'airline_name', 'eta':'eta'}, set_cost_function_with={}, assign_FPFS=True):
 		"""
 		attr_map is in the ext -> int direction
 		"""
@@ -308,20 +319,22 @@ class HotspotHandler:
 										kind='lambda',
 										absolute=set_cost_function_with['absolute'],
 										eta=eta)
-				flight.compute_cost_vectors(self.slots)
+				#flight.compute_cost_vectors(self.slots)
 			
 			self.flights[flight.name] = flight
 
-		self.pre_prepare_hotspot(delta_t=delta_t)
+		self.pre_prepare_hotspot()
 		
 		if assign_FPFS:
-			assign_FPFS_slot(self.slots, self.flights, delta_t=self.delta_t)
+			assign_FPFS_slot(self.slots,
+							self.flights,
+							alternative_allocation_rule=self.alternative_allocation_rule)
 		
 		return self.slots, self.flights
 
 	def prepare_hotspot_from_flights_ext(self, flights_ext=None, slot_times=[], slots=[], attr_map={'flight_name':'flight_name',
 		'flight_name':'airline_name', 'eta':'eta'},
-		set_cost_function_with={}, assign_FPFS=True, delta_t=None):
+		set_cost_function_with={}, assign_FPFS=True):
 		"""
 		attr_map is in the ext -> int direction
 		"""
@@ -377,10 +390,12 @@ class HotspotHandler:
 			
 			self.flights[flight.name] = flight
 
-		self.pre_prepare_hotspot(delta_t=delta_t)
+		self.pre_prepare_hotspot()
 		
 		if assign_FPFS:
-			assign_FPFS_slot(self.slots, self.flights, delta_t=self.delta_t)
+			assign_FPFS_slot(self.slots,
+							self.flights,
+							alternative_allocation_rule=self.alternative_allocation_rule)
 
 		return self.slots, self.flights
 
@@ -402,7 +417,7 @@ class HotspotHandler:
 			self.flights[flight.name] = flight
 
 	def prepare_hotspot_from_dict(self, attr_list=None, slot_times=[], slots=[], attr_map=None,
-		set_cost_function_with={}, assign_FPFS=True, delta_t=None):
+		set_cost_function_with={}, assign_FPFS=True):
 
 		# {'flight_name':'flight_name',
 		# 'airline_name':'airline_name', 'eta':'eta'}
@@ -427,10 +442,12 @@ class HotspotHandler:
 										set_cost_function_with=set_cost_function_with,
 										attr_map=attr_map)
 
-		self.pre_prepare_hotspot(delta_t=delta_t)
+		self.pre_prepare_hotspot()
 		
 		if assign_FPFS:
-			assign_FPFS_slot(self.slots, self.flights, delta_t=self.delta_t)
+			assign_FPFS_slot(self.slots,
+							self.flights,
+							alternative_allocation_rule=self.alternative_allocation_rule)
 
 		return self.slots, self.get_flight_list()
 
@@ -611,7 +628,7 @@ class Flight(HFlight):
 			# else:
 			# 	self.cost_f_declared = f
 
-	def compute_cost_vectors(self, slots, delta_t=0.):
+	def compute_cost_vectors(self, slots):
 		"""
 		Compute costVect and delayCostVect, required for all models. If one or the 
 		other is given, the other is computed from it. If none are given, costVect
@@ -621,18 +638,18 @@ class Flight(HFlight):
 			if self.delayCostVect is None:
 				self.compute_cost_vect_from_cost_function(slots)
 			else:
-				self.compute_cost_vect_from_delay_cost_vect(slots, delta_t=0.)
+				self.compute_cost_vect_from_delay_cost_vect(slots)
 
 		if self.delayCostVect is None:
 			# This is computed always from costVect.
-			self.compute_delay_cost_vect(slots, delta_t=delta_t)
+			self.compute_delay_cost_vect(slots)
 
-	def compute_cost_vect_from_delay_cost_vect(self, slots, delta_t=0.):
+	def compute_cost_vect_from_delay_cost_vect(self, slots):
 		if self.costVect is None:
 			i = 0
 			self.costVect = []
 			for slot in slots:
-				if slot.time < self.eta-delta_t:
+				if not slot in self.compatibleSlots:
 					self.costVect.append(0)
 				else:
 					self.costVect.append(self.delayCostVect[i])
@@ -647,7 +664,7 @@ class Flight(HFlight):
 		"""
 		self.costVect = np.array([self.cost_f_true(slot.time) for slot in slots])
 
-	def compute_delay_cost_vect(self, slots, delta_t=0.):
+	def compute_delay_cost_vect(self, slots):
 		"""
 		This is used when costVect is given instead of delayCostVect, but
 		the latter is still required, for instance for ISTOP.
@@ -656,7 +673,8 @@ class Flight(HFlight):
 			self.delayCostVect = []
 			i = 0
 			for slot in slots:
-				if slot.time >= self.eta-delta_t:
+				#if slot.time >= self.eta-delta_t:
+				if slot in self.compatibleSlots:
 					self.delayCostVect.append(self.costVect[i])
 				i += 1
 
@@ -698,14 +716,17 @@ class Engine:
 				and ('cost_func_archetype' in Model.get_kwargs_init(Model)):
 				kwargs_init['cost_func_archetype'] = hotspot_handler.cf_paras
 
-			if (not 'delta_t' in kwargs_init.keys()) \
-				and hotspot_handler.alternative_slot_allocation_rule \
-				and len(hotspot_handler.slots)>1:
-				# In this case, slots should be allocated to if t1 < eta < t2,
-				# where t1 and t2 are the slot boundary.
-				# We compute the delta_t based on the minimum difference between slots
-				delta_t = compute_delta_t_from_slots(hotspot_handler.slots)
-				kwargs_init['delta_t'] = delta_t
+			if not 'alternative_allocation_rule' in kwargs_init.keys():
+				kwargs_init['alternative_allocation_rule'] = hotspot_handler.alternative_allocation_rule
+
+			# if (not 'delta_t' in kwargs_init.keys()) \
+			# 	and hotspot_handler.alternative_slot_allocation_rule \
+			# 	and len(hotspot_handler.slots)>1:
+			# 	# In this case, slots should be allocated to if t1 < eta < t2,
+			# 	# where t1 and t2 are the slot boundary.
+			# 	# We compute the delta_t based on the minimum difference between slots
+			# 	delta_t = compute_delta_t_from_slots(hotspot_handler.slots)
+			# 	kwargs_init['delta_t'] = delta_t
 
 		if use_priorities:
 			try:
@@ -752,6 +773,9 @@ class LocalEngine(Engine):
 				and ('cost_func_archetype' in Model.get_kwargs_init(Model)):
 				kwargs_init['cost_func_archetype'] = hotspot_handler.cf_paras
 
+			if not 'alternative_allocation_rule' in kwargs_init.keys():
+				kwargs_init['alternative_allocation_rule'] = hotspot_handler.alternative_allocation_rule
+
 			# print ('COINCOIN',
 			# 		Model,
 			# 		not 'delta_t' in kwargs_init.keys(),
@@ -759,16 +783,15 @@ class LocalEngine(Engine):
 			# 		 len(hotspot_handler.slots)>1,
 			# 		 ('delta_t' in Model.get_kwargs_init(Model)))
 
-			if (not 'delta_t' in kwargs_init.keys()) \
-				and hotspot_handler.alternative_slot_allocation_rule \
-				and len(hotspot_handler.slots)>1 \
-				and ('delta_t' in Model.get_kwargs_init(Model)):
-				# In this case, slots should be allocated to if t1 < eta < t2,
-				# where t1 and t2 are the slot boundary.
-				# We compute the delta_t based on the minimum difference between slots
-				delta_t = compute_delta_t_from_slots(hotspot_handler.slots)
-				kwargs_init['delta_t'] = delta_t
-
+			# if (not 'delta_t' in kwargs_init.keys()) \
+			# 	and hotspot_handler.alternative_slot_allocation_rule \
+			# 	and len(hotspot_handler.slots)>1 \
+			# 	and ('delta_t' in Model.get_kwargs_init(Model)):
+			# 	# In this case, slots should be allocated to if t1 < eta < t2,
+			# 	# where t1 and t2 are the slot boundary.
+			# 	# We compute the delta_t based on the minimum difference between slots
+			# 	delta_t = compute_delta_t_from_slots(hotspot_handler.slots)
+			# 	kwargs_init['delta_t'] = delta_t
 		self.model = Model(slots=slots, 
 							flights=flights, 
 							**kwargs_init)
@@ -792,7 +815,7 @@ class GetCostVectors:
 
 		return all_vars
 
-	def __init__(self, slots, flights):
+	def __init__(self, slots, flights, alternative_allocation_rule=False):
 		self.slots = slots
 		self.flights = flights
 

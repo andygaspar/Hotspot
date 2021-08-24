@@ -26,8 +26,8 @@ class ExternalFlight:
 		self.cost_func = lambda delay: self.cost_coefficient * delay ** 2
 
 
-def example_delta_t(algo='globaloptimum', delta_t=0.):
-	print ("\n################### Delta t={} ({}) ###################".format(delta_t, algo))
+def example_alternative_rule(algo='globaloptimum'):
+	print ("\n################### No alternative rule ({}) ###################".format(algo))
 	
 	cap_drop = 2
 	#etas = [0.5, 2.1, 3.5, 5., 5.5]
@@ -40,7 +40,8 @@ def example_delta_t(algo='globaloptimum', delta_t=0.):
 	slot_times = list(range(0, cap_drop*len(etas), cap_drop))
 
 	engine = Engine(algo=algo)
-	hotspot_handler = HotspotHandler(engine=engine)
+	hotspot_handler = HotspotHandler(engine=engine,
+									alternative_allocation_rule=False)
 	slots, flights = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=external_flights,
 																		slot_times=slot_times,
 																		attr_map={'name':'flight_name',
@@ -54,22 +55,17 @@ def example_delta_t(algo='globaloptimum', delta_t=0.):
 	hotspot_handler.prepare_all_flights()
 	print ('FPFS allocation:')
 	print_allocation (hotspot_handler.get_allocation())
-	allocation = engine.compute_optimal_allocation(hotspot_handler=hotspot_handler,
-													kwargs_init={'delta_t':delta_t})
+	allocation = engine.compute_optimal_allocation(hotspot_handler=hotspot_handler)
 	allocation_int = OrderedDict([(flight, slot.index) for flight, slot in allocation.items()])
 		
-	if delta_t <2.:
-		assert allocation_int == OrderedDict([('F{}'.format(i), i) for i in range(len(etas))])
-	else:
-		assert allocation_int == OrderedDict([('F0', 0), ('F2', 1), ('F1', 2), ('F3', 3)])
-
+	assert allocation_int == OrderedDict([('F{}'.format(i), i) for i in range(len(etas))])
+	
 	# Allocation is an ordered dict linking flight -> slot
 	print ('Optimal allocation:')
 	print_allocation(allocation)
 	engine.print_optimisation_performance()
 
-def example_automatic(algo='globaloptimum'):
-	print ("\n################### Automatic delta_t setting ({}) ###################".format(algo))
+	print ("\n################### Alternative rule ({}) ###################".format(algo))
 	
 	cap_drop = 2
 	etas = [0, 1, 3, 5]
@@ -80,7 +76,7 @@ def example_automatic(algo='globaloptimum'):
 
 	engine = Engine(algo=algo)
 	hotspot_handler = HotspotHandler(engine=engine,
-									alternative_slot_allocation_rule=True)
+									alternative_allocation_rule=True)
 	slots, flights = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=external_flights,
 																		slot_times=slot_times,
 																		attr_map={'name':'flight_name',
@@ -107,7 +103,5 @@ def example_automatic(algo='globaloptimum'):
 
 if __name__=='__main__':
 	for algo in ['globaloptimum', 'nnbound', 'udpp']:
-		example_delta_t(algo=algo, delta_t=0.)
-		example_delta_t(algo=algo, delta_t=2.)
-		example_automatic(algo=algo)
+		example_alternative_rule(algo=algo)
 

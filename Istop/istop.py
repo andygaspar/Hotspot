@@ -43,7 +43,8 @@ class Istop(mS.ModelStructure):
             j += 1
         return indexes
 
-    def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, triples=False, delta_t=0.):
+    def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, triples=False,
+        alternative_allocation_rule=False):
         self.offers = None
         self.triples = triples
 
@@ -51,7 +52,10 @@ class Istop(mS.ModelStructure):
 
             [wrap_flight_istop(flight) for flight in flights]
 
-            super().__init__(slots, flights, air_ctor=IstopAirline, delta_t=delta_t)
+            super().__init__(slots,
+                            flights,
+                            air_ctor=IstopAirline,
+                            alternative_allocation_rule=alternative_allocation_rule)
 
             self.airlines: List[IstopAirline]
 
