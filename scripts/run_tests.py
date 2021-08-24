@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 """
 Version using the wrapper
 """
@@ -68,6 +71,9 @@ for test_number in tests_to_run:
 		mercury_flights = load_test(test_number)
 		slot_times = list(range(0, 2*len(mercury_flights), 2))
 
+		print ('slot_times:', slot_times)
+		print ('ETAS:', [(flight.name, flight.eta) for flight in mercury_flights])
+
 		mercury_flights_per_airline = {}
 		for flight in mercury_flights:
 			mercury_flights_per_airline[flight.airlineName] = mercury_flights_per_airline.get(flight.airlineName, []) + [flight]
@@ -81,7 +87,7 @@ for test_number in tests_to_run:
 									} for mf in mercury_flights]
 		hh_NM.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
 										slot_times=slot_times) 
-		all_allocated_slots = hh_NM.get_assigned_slots()
+		all_allocated_slots = hh_NM.get_allocation()
 		to_be_sent_to_airlines = {}
 		for airline, flights_in_airline in mercury_flights_per_airline.items():
 			message_to_airline = {}
@@ -176,7 +182,7 @@ for test_number in tests_to_run:
 									} for mf in mercury_flights]
 		hh_NM.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
 										slot_times=slot_times) 
-		all_allocated_slots = hh_NM.get_assigned_slots()
+		all_allocated_slots = hh_NM.get_allocation()
 		to_be_sent_to_airlines = {}
 		for airline, flights_in_airline in mercury_flights_per_airline.items():
 			message_to_airline = {}

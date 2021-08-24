@@ -43,7 +43,6 @@ class GlobalOptimum(mS.ModelStructure):
             )
 
         for slot in self.slots:
-            print ('BOUM', slot, type(slot))
             self.m.addConstraint(
                 xp.Sum(self.x[flight.index, slot.index] for flight in self.flights) <= 1
             )
@@ -58,9 +57,9 @@ class GlobalOptimum(mS.ModelStructure):
 
     def run(self, timing=False, update_flights=False):
         start = time.time()
-        #with print_to_void():
-        self.set_variables()
-        self.set_constraints()
+        with print_to_void():
+            self.set_variables()
+            self.set_constraints()
         end = time.time() - start
         if timing:
             print("Variables and constraints setting time ", end)
@@ -77,16 +76,16 @@ class GlobalOptimum(mS.ModelStructure):
         with print_to_void():
             solution.make_solution(self)
 
-        for flight in self.flights:
-            if flight.eta > flight.newSlot.time:
-                print("********************** negative impact *********************************",
-                      flight, flight.eta, flight.newSlot.time)
+            for flight in self.flights:
+                if flight.eta > flight.newSlot.time:
+                    print("********************** negative impact *********************************",
+                          flight, flight.eta, flight.newSlot.time)
 
         if update_flights:
             self.update_flights()
 
     def assign_flights(self, sol):
-        #with print_to_void():
+        with print_to_void():
             for flight in self.flights:
                 #print ('POUIC flight', flight)
                 for slot in self.slots:

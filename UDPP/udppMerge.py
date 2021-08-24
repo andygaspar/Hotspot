@@ -34,9 +34,12 @@ def udpp_merge(flights, slots):
             sorted_flights.pop(0)
 
         else:
-            flight = get_first_compatible_flight(slots[i], sorted_flights, slots, delta_t=delta_t)
-            flight.newSlot = slots[i]
-            sorted_flights.remove(flight)
+            #print ('FIRST COMPATIBLE FLIGHT', slots[i], slots[i].time, sorted_flights, slots)
+            flight = get_first_compatible_flight(slots[i], sorted_flights, slots)
+            if flight is not None:
+                # This is for the case where some slots will be empty.
+                flight.newSlot = slots[i]
+                sorted_flights.remove(flight)
         i += 1
 
 
@@ -56,14 +59,14 @@ class UDPPMerge(ModelStructure):
             else:
                 airline.flights[0].newSlot = airline.flights[0].slot
 
-        udpp_merge(self.flights, self.slots)
+        udpp_merge(self.flights, self.slots)#, delta_t=self.delta_t)
 
         # print(time.time() - start)
         solution.make_solution(self, performance=hasattr(self, 'initialTotalCosts'))
-        for flight in self.flights:
-            if flight.eta > flight.newSlot.time:
-                print("************** damage, some negative impact has occured****************",
-                      flight, flight.eta, flight.newSlot.time)
+        # for flight in self.flights:
+        #     if flight.eta > flight.newSlot.time:
+        #         print("************** damage, some negative impact has occured****************",
+        #               flight, flight.eta, flight.newSlot.time)
 
     #def reset(self, df_init: pd.DataFrame, costFun: Union[Callable, List[Callable]]):
     # def reset(self, slot_list: List[Slot], flights: List[fl.Flight]):

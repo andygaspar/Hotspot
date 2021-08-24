@@ -85,10 +85,10 @@ class NNBoundModel(mS.ModelStructure):
 
         solution.make_solution(self)
 
-        for flight in self.flights:
-            if flight.eta > flight.newSlot.time:
-                print("********************** negative impact *********************************",
-                      flight, flight.eta, flight.newSlot.time)
+        # for flight in self.flights:
+        #     if flight.eta > flight.newSlot.time:
+        #         print("********************** negative impact *********************************",
+        #               flight, flight.eta, flight.newSlot.time)
 
     def assign_flights(self, sol):
         for flight in self.flights:
