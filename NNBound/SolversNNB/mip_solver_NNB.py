@@ -2,10 +2,10 @@ from typing import Callable, List, Union
 
 import numpy as np
 import pandas as pd
+import mip
 
 import time
 
-import xpress as xp
 
 
 from ..GlobalFuns.globalFuns import HiddenPrints
@@ -17,49 +17,57 @@ from ..ModelStructure.Slot.slot import Slot
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
 
 
-class XpressSolverGO(mS.ModelStructure):
+class MipSolverGO(mS.ModelStructure):
 
     def __init__(self, model, max_time):
+        self.m = mip.Model()
+        self.m.verbose = False
+        self.m.threads = -1
+        self.maxTime = max_time
+        self.x = None
+
         self.flights = model.flights
         self.airlines = model.airlines
         self.slots = model.slots
-        with print_to_void():
-            self.m = xp.problem()
-        self.x = None
 
     def set_variables(self):
         flight: Flight
         airline: air.Airline
         with print_to_void():
-            self.x = np.array([[xp.var(vartype=xp.binary) for _ in self.slots] for _ in self.flights])
+            self.x = np.array([[self.m.add_var(var_type=mip.BINARY) for _ in self.slots] for _ in self.slots])
 
     def set_constraints(self):
 
         flight: Flight
         airline: air.Airline
         for flight in self.flights:
-            self.m.addConstraint(
-                xp.Sum(self.x[flight.index, slot.index] for slot in flight.compatibleSlots) == 1
-            )
+
+                self.m += mip.xsum(self.x[flight.index, slot.index] for slot in flight.compatibleSlots) == 1
+
 
         for slot in self.slots:
-            self.m.addConstraint(
-                xp.Sum(self.x[flight.index, slot.index] for flight in self.flights) <= 1
-            )
+            self.m += mip.xsum(self.x[flight.index, slot.index] for flight in self.flights) <= 1
+
+        for airline in self.airlines:
+            self.m += mip.xsum(flight.cost_fun(flight.slot) for flight in airline.flights) >= \
+                      mip.xsum(self.x[flight.index, slot.index] * flight.cost_fun(slot)
+                               for flight in airline.flights for slot in self.slots)
+
+
 
     def set_objective(self):
         flight: Flight
-        with print_to_void():
-            self.m.setObjective(
-                xp.Sum(self.x[flight.index, slot.index] * flight.cost_fun(slot)
-                       for flight in self.flights for slot in self.slots)
+
+        self.m.objective = mip.minimize(
+            mip.xsum(self.x[flight.index, slot.index] * flight.cost_fun(slot)
+                   for flight in self.flights for slot in self.slots)
             )
 
     def run(self, timing=False, update_flights=False):
         start = time.time()
-        with print_to_void():
-            self.set_variables()
-            self.set_constraints()
+
+        self.set_variables()
+        self.set_constraints()
         end = time.time() - start
         if timing:
             print("Variables and constraints setting time ", end)
@@ -67,7 +75,7 @@ class XpressSolverGO(mS.ModelStructure):
         self.set_objective()
 
         start = time.time()
-        self.m.solve()
+        self.m.optimize(max_seconds=self.maxTime)
         end = time.time() - start
         if timing:
             print("Simplex time ", end)
@@ -83,11 +91,7 @@ class XpressSolverGO(mS.ModelStructure):
         if update_flights:
             self.update_flights()
 
-        return self.m.getSolution(self.x)
+        return np.array([[el.x for el in col] for col in self.x])
 
     def reset(self):
-
-        with HiddenPrints():
-            self.m.reset()
-
-        self.x = None
+       pass
