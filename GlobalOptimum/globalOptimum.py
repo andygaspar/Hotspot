@@ -15,8 +15,8 @@ from ..ModelStructure.Flight.flight import Flight
 from ..ModelStructure.Solution import solution
 from ..ModelStructure.Slot.slot import Slot
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
-from Solvers import xpress_solver import XpressSolverGO
-from Solvers import mip_solver import MipSolverGO
+from SolversGO import xpress_solver_go import XpressSolverGO
+from SolversGO import mip_solver_go import MipSolverGO
 
 
 class GlobalOptimum(mS.ModelStructure):
