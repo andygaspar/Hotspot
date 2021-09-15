@@ -95,7 +95,7 @@ class ModelStructure:
     def make_schedule_matrix(self):
         arr = []
         for flight in self.flights:
-            arr.append([flight.slot.time] + [flight.eta] + flight.costVect)
+            arr.append([flight.slot.time] + [flight.etaSlot.time] + flight.costVect)
         return np.array(arr)
 
     def __str__(self):

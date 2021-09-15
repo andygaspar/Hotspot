@@ -8,8 +8,8 @@ from ..ModelStructure.Flight.flight import Flight
 from ..ModelStructure.Solution import solution
 from ..ModelStructure.Slot.slot import Slot
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
-from SolversNNB import xpress_solver_NNB import XpressSolverNNB
-from SolversNNB import mip_solver_NNB import MipSolverNNB
+from ..NNBound.SolversNNB.xpress_solver_NNB import XpressSolverNNB
+from ..NNBound.SolversNNB.mip_solver_NNB import MipSolverNNB
 
 from ..GlobalFuns.globalFuns import HiddenPrints
 
@@ -30,7 +30,7 @@ class NNBoundModel(mS.ModelStructure):
                         alternative_allocation_rule=alternative_allocation_rule)
 
 
-    def run(self, timing=False, update_flights=False, max_time=120):
+    def run(self, timing=False, update_flights=False, max_time=2000):
 
         try:
 

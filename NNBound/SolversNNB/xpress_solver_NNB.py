@@ -8,16 +8,16 @@ import time
 import xpress as xp
 
 
-from ..GlobalFuns.globalFuns import HiddenPrints
-from ..ModelStructure import modelStructure as mS
-from ..ModelStructure.Airline import airline as air
-from ..ModelStructure.Flight.flight import Flight
-from ..ModelStructure.Solution import solution
-from ..ModelStructure.Slot.slot import Slot
-from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
+from ...GlobalFuns.globalFuns import HiddenPrints
+from ...ModelStructure import modelStructure as mS
+from ...ModelStructure.Airline import airline as air
+from ...ModelStructure.Flight.flight import Flight
+from ...ModelStructure.Solution import solution
+from ...ModelStructure.Slot.slot import Slot
+from ...libs.uow_tool_belt.general_tools import write_on_file as print_to_void
 
 
-class XpressSolverGO(mS.ModelStructure):
+class XpressSolverNNB(mS.ModelStructure):
 
     def __init__(self, model, max_time):
         self.flights = model.flights
