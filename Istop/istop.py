@@ -96,7 +96,7 @@ class Istop(mS.ModelStructure):
         print("preprocess concluded in sec:", time.time() - start, "   Number of possible offers: ", len(self.matches))
         return len(self.matches) > 0
 
-    def run(self, max_time=120, timing=False):
+    def run(self, max_time=2000, timing=False):
         feasible = self.check_and_set_matches()
         if feasible:
 

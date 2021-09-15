@@ -21,6 +21,8 @@ class UDPPLocal(ModelStructure):
 
     def __init__(self, slots: List[Slot] = None, flights: List[fl.Flight] = None,
         alternative_allocation_rule=False):
+
+        self.hfes = hfes
         
         if not flights is None:
             super().__init__(slots,
