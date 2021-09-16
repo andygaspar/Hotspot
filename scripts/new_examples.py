@@ -7,6 +7,10 @@ Version using the wrapper
 
 import sys
 sys.path.insert(1, '../..')
+sys.path.append('/home/andrea/Scrivania')
+print(sys.path)
+
+
 
 import numpy as np
 from typing import Callable
@@ -29,7 +33,7 @@ class ExternalFlight:
 		self.cost_func = lambda delay: self.cost_coefficient * delay ** 2
 
 def create_original_flights(n_f=50):
-	df = pd.read_csv("david_test.csv")
+	df = pd.read_csv("../test_data/df_test.csv")
 	external_flights = []
 	for i in list(range(df.shape[0]))[:n_f]:
 		line = df.iloc[i]
