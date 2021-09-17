@@ -31,7 +31,9 @@ class NNBoundModel(mS.ModelStructure):
 
 
     def run(self, timing=False, update_flights=False, max_time=2000):
-
+        # print("using MIP")
+        # m = MipSolverNNB(self, max_time)
+        # solution_vect = m.run(timing, update_flights)
         try:
 
             m = XpressSolverNNB(self, max_time)
@@ -54,7 +56,7 @@ class NNBoundModel(mS.ModelStructure):
     def assign_flights(self, sol):
         for flight in self.flights:
             for slot in self.slots:
-                if self.m.getSolution(sol[flight.index, slot.index]) > 0.5:
+                if sol[flight.index, slot.index] > 0.5:
                     flight.newSlot = slot
 
     def reset(self, slots: List[Slot] = None, flights: List[Flight] = None):

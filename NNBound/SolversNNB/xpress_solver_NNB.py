@@ -32,6 +32,7 @@ class XpressSolverNNB(mS.ModelStructure):
         airline: air.Airline
 
         self.x = np.array([[xp.var(vartype=xp.binary) for _ in self.slots] for _ in self.flights])
+        self.m.addVariable(self.x)
 
     def set_constraints(self):
 
@@ -79,13 +80,13 @@ class XpressSolverNNB(mS.ModelStructure):
         if timing:
             print("Simplex time ", end)
 
-        with print_to_void():
-            solution.make_solution(self)
-
-            for flight in self.flights:
-                if flight.eta > flight.newSlot.time:
-                    print("********************** negative impact *********************************",
-                          flight, flight.eta, flight.newSlot.time)
+        # with print_to_void():
+        #     # solution.make_solution(self)
+        #
+        #     for flight in self.flights:
+        #         if flight.eta > flight.newSlot.time:
+        #             print("********************** negative impact *********************************",
+        #                   flight, flight.eta, flight.newSlot.time)
 
         if update_flights:
             self.update_flights()
