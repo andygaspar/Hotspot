@@ -73,13 +73,13 @@ class XpressSolverGO(mS.ModelStructure):
         if timing:
             print("Simplex time ", end)
 
-        with print_to_void():
-            solution.make_solution(self)
-
-            for flight in self.flights:
-                if flight.eta > flight.newSlot.time:
-                    print("********************** negative impact *********************************",
-                          flight, flight.eta, flight.newSlot.time)
+        # with print_to_void():
+        #     solution.make_solution(self)
+        #
+        #     for flight in self.flights:
+        #         if flight.eta > flight.newSlot.time:
+        #             print("********************** negative impact *********************************",
+        #                   flight, flight.eta, flight.newSlot.time)
 
         if update_flights:
             self.update_flights()
