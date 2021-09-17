@@ -25,8 +25,9 @@ class GlobalOptimum(mS.ModelStructure):
         super().__init__(slots=slots, flights=flights, alternative_allocation_rule=alternative_allocation_rule)
 
     def run(self, timing=False, update_flights=False, max_time=2000):
-
-
+        # print("using MIP")
+        # m = MipSolverGO(self, max_time)
+        # solution_vect = m.run(timing, update_flights)
         try:
             m = XpressSolverGO(self, max_time)
             solution_vect = m.run(timing, update_flights)
