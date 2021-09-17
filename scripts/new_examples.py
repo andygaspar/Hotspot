@@ -7,10 +7,6 @@ Version using the wrapper
 
 import sys
 sys.path.insert(1, '../..')
-sys.path.append('/home/andrea/Scrivania')
-print(sys.path)
-
-
 
 import numpy as np
 from typing import Callable
@@ -33,7 +29,7 @@ class ExternalFlight:
 		self.cost_func = lambda delay: self.cost_coefficient * delay ** 2
 
 def create_original_flights(n_f=50):
-	df = pd.read_csv("../test_data/df_test.csv")
+	df = pd.read_csv("test_data/david_test.csv")
 	external_flights = []
 	for i in list(range(df.shape[0]))[:n_f]:
 		line = df.iloc[i]
@@ -161,7 +157,7 @@ def examples_direct_cost_vector(algo='istop'):
 	# In this case, a parametrisable cost function can be passed.
 	# One can also pass a list of cost functions in this case, just like
 	# above.
-	df = pd.read_csv("david_test.csv").iloc[:n_f]
+	df = pd.read_csv("test_data/david_test.csv").iloc[:n_f]
 	# Add margins and jumps to df
 	df['margin'] = np.random.uniform(5., 30., size=len(df))
 	df['jump'] = np.random.uniform(20., 100., size=len(df))
