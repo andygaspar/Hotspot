@@ -104,7 +104,6 @@ class Istop(mS.ModelStructure):
                 m = XpressSolver(self, max_time)
                 solution_vect, offers_vect = m.run(timing=True)
             except:
-                raise 
                 print("using MIP")
                 p = MipSolver(self, max_time)
                 solution_vect, offers_vect = p.run(timing=True)

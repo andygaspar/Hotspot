@@ -110,6 +110,15 @@ def fit_cost_curve(x, y, max_delay, fixed_paras={}, steps=8, approx_fun=None):
     # function
     best_initial_guess = np.array([test_values[np.argmin(guesses)][3][k] for k in approx_fun.get_var_paras()])
 
+    # print ('COINCOINCOIN', best_initial_guess)
+    # print ('COINCOINCOIN', fixed_paras)
+    # print ('XXXX', x)
+    # print ('YYYY', y)
+    # import pickle
+    # with open('cost_function_test.pic', 'wb') as f:
+    #     pickle.dump(approx_fun, f)
+
+    #raise Exception()
     solution = minimize(obj_approx,
                         best_initial_guess,
                         args=(fixed_paras, x, y, approx_fun),
@@ -118,10 +127,12 @@ def fit_cost_curve(x, y, max_delay, fixed_paras={}, steps=8, approx_fun=None):
                                 'xtol': 0.5,
                                 'ftol': 0.01})
 
+    print ('SOLUTION TO FIT:', solution)
+
     return solution.x
 
 def make_preference_fun(max_delay: float, delay_cost_vect: np.array, fixed_paras={}, approx_fun=None):
-    delays = np.linspace(0, max_delay + 0.1, len(delay_cost_vect))#50)
+    delays = np.linspace(fixed_paras['eta'], fixed_paras['eta']+max_delay + 0.1, len(delay_cost_vect))#50)
     result = fit_cost_curve(delays, delay_cost_vect, max_delay,
                             fixed_paras=fixed_paras, approx_fun=approx_fun)
     return result

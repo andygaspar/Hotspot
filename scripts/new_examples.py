@@ -29,7 +29,7 @@ class ExternalFlight:
 		self.cost_func = lambda delay: self.cost_coefficient * delay ** 2
 
 def create_original_flights(n_f=50):
-	df = pd.read_csv("test_data/david_test.csv")
+	df = pd.read_csv("../test_data/david_test.csv")
 	external_flights = []
 	for i in list(range(df.shape[0]))[:n_f]:
 		line = df.iloc[i]
@@ -1240,40 +1240,158 @@ def other_examples6(algo='udpp_merge'):
 	# print (engine.model.report)
 	# print (engine.model.solution)
 
+def other_examples7(algo='udpp_merge'):
+
+	slot_times = [1367.7272727272727, 1369.090909090909, 1371.8181818181818, 1373.1818181818182, 1375.909090909091, 1381.3636363636363, 1382.7272727272727, 1384.090909090909, 1385.4545454545455, 1386.8181818181818, 1388.1818181818182, 1389.5454545454545, 1392.2727272727273, 1393.6363636363637, 1395.0, 1396.3636363636363, 1397.7272727272727, 1399.090909090909, 1400.4545454545455, 1401.8181818181818, 1403.1818181818182, 1404.5454545454545, 1405.909090909091, 1407.2727272727273, 1408.6363636363637, 1410.0, 1411.3636363636363, 1412.7272727272727, 1414.090909090909, 1415.4545454545455, 1416.8181818181818, 1418.1818181818182, 1419.5454545454545, 1420.909090909091, 1422.2727272727273, 1423.6363636363637, 1425.0, 1426.3636363636363, 1427.7272727272727, 1430.4545454545455, 1431.8181818181818, 1433.1818181818182, 1435.909090909091, 1437.2727272727273, 1438.6363636363635, 1440.0, 1441.3636363636363, 1442.7272727272727, 1444.090909090909, 1445.4545454545455, 1446.8181818181818, 1448.1818181818182, 1449.5454545454545, 1450.909090909091, 1452.2727272727273, 1453.6363636363635, 1455.0, 1456.3636363636363, 1457.7272727272727, 1459.090909090909, 1460.4545454545455, 1461.8181818181818, 1463.1818181818182, 1464.5454545454545, 1465.0, 1466.111111111111, 1467.2222222222222, 1468.3333333333333, 1469.4444444444443, 1470.5555555555557, 1471.6666666666667, 1472.7777777777778, 1473.888888888889, 1475.0, 1476.111111111111, 1481.6666666666667, 1482.7777777777778, 1486.111111111111, 1490.5555555555557, 1491.6666666666667, 1492.7777777777778, 1496.111111111111, 1497.2222222222222, 1498.3333333333333, 1499.4444444444443, 1507.2222222222222, 1512.7777777777778]
+	f_airline = [(1080, 702), (1062, 661), (1074, 661), (1086, 661), (1092, 753), (1100, 742), (1122, 661), (1124, 701), (1130, 661), (1132, 666), (1128, 661), (1142, 695), (1148, 661), (1156, 661), (1168, 658), (1174, 661), (1180, 674), (1184, 661), (1164, 661), (1186, 661), (1188, 792), (1190, 713), (1192, 661), (1204, 661), (1196, 658), (1198, 670), (1200, 661), (1202, 661), (1206, 678), (1208, 661), (1210, 659), (1214, 661), (1216, 661), (1218, 661), (1220, 661), (1222, 689), (1170, 737), (1230, 695), (1232, 695), (1236, 661), (1238, 661), (1240, 661), (1244, 661), (1078, 722), (1226, 661), (1246, 678), (1248, 661), (1242, 792), (1250, 661), (1252, 661), (1254, 661), (1258, 771), (1264, 661), (1266, 661), (1270, 661), (1272, 740), (1274, 661), (1276, 661), (1294, 678), (1300, 661), (1310, 699), (1280, 674), (1308, 739), (1286, 692), (1288, 734), (1290, 766), (1292, 737), (1296, 657), (1090, 780), (1304, 661), (1306, 661), (1098, 661), (1316, 766), (1318, 675), (1134, 661), (1144, 669), (1150, 661), (1328, 695), (1158, 661), (1228, 661), (1160, 661), (1162, 721), (1330, 713), (1154, 661), (1332, 713), (1178, 721), (1182, 661)]
+	f_eta = [1469.441, 1424.998, 1425.422, 1440.283, 1373.093, 1441.222, 1419.173, 1428.104, 1409.446, 1445.641, 1366.755, 1372.608, 1366.503, 1409.441, 1440.409, 1404.249, 1382.162, 1399.996, 1406.866, 1419.737, 1427.535, 1365.422, 1396.859, 1441.383, 1422.791, 1422.526, 1407.77, 1391.349, 1389.601, 1412.941, 1512.794, 1394.949, 1395.754, 1383.424, 1439.698, 1408.224, 1383.434, 1386.023, 1387.985, 1403.62, 1398.523, 1421.223, 1415.142, 1444.5060556527485, 1421.351, 1391.46, 1418.026, 1442.023, 1431.964, 1391.297, 1401.824, 1407.61, 1422.766, 1436.5140000000001, 1415.883, 1482.832, 1413.829, 1418.373, 1436.289, 1497.213, 1443.869, 1491.225, 1406.411, 1495.132, 1487.217, 1492.877, 1428.434, 1475.689, 1507.6424555208569, 1435.571, 1443.616, 1467.4797561063974, 1492.179, 1458.616, 1397.0253681667077, 1471.8367314119298, 1481.7071043764936, 1476.023, 1389.5352554237943, 1448.2949142557209, 1395.5645448915632, 1423.2847972164782, 1499.701, 1467.1994468439282, 1498.021, 1417.6948575706058, 1449.0810754288987]
+
+	# f_eta = [1617.817, 1591.55, 1622.315, 1603.712, 1621.759, 1620.7469999999998, 1600.946, 1584.556, 1598.742, 1612.628, 1626.974, 1586.415, 1612.435, 1612.148, 1629.5210000000002, 1599.492, 1608.1155168866874, 1600.1703964621527, 1660.8967263927457, 1648.1796221298284, 1597.5595093881843]
+	# f_airline = [(14592, 2269), (15361, 2613), (15646, 2613), (15662, 2367), (15676, 2613), (17087, 2280), (16923, 2268), (17135, 2613), (17280, 2613), (17483, 2531), (17576, 2613), (17604, 2613), (17687, 2613), (17704, 2408), (17849, 2613), (17894, 2613), (15645, 2613), (15659, 2613), (16178, 2291), (16254, 2613), (15937, 2613)]
+	# slot_times = [1586, 1588, 1590, 1596, 1598, 1600, 1601, 1603, 1605, 1606, 1611, 1613, 1615, 1616, 1620, 1621, 1623, 1628, 1630, 1646, 1660]
+	print ()
+	print ("########### Custom example for Mercury {} ############".format(algo))
+	n_f = len(f_eta)
+	mercury_flights = create_original_flights(n_f=n_f)
+	for i, flight in enumerate(mercury_flights):
+		flight.eta = f_eta[i]
+		flight.airlineName = f_airline[i][1]
+	
+	#print ('Flights/ETA:', [(flight.name, flight.eta) for flight in mercury_flights])
+	mercury_flights_per_airline = {}
+	for flight in mercury_flights:
+		mercury_flights_per_airline[flight.airlineName] = mercury_flights_per_airline.get(flight.airlineName, []) + [flight]
+
+	# ------- Network Manager agent starts here ----- # 
+	engine = Engine(algo=algo)
+	if not algo == 'udpp_merge':
+		cost_func_archetype = 'jump'
+	else:
+		cost_func_archetype = None
+	hh_NM = HotspotHandler(engine=engine,
+							cost_func_archetype=cost_func_archetype,
+							alternative_allocation_rule=True)
+	mercury_flights_dict = [{'flight_name':mf.name,
+								'airline_name':mf.airlineName,
+								'eta':mf.eta,
+								} for mf in mercury_flights]
+	hh_NM.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
+									slot_times=slot_times) 
+	#hh_NM.compute_FPFS()
+	# Current allocation (FPFS)
+	all_allocated_slots = hh_NM.get_allocation()
+	to_be_sent_to_airlines = {}
+	for airline, flights_in_airline in mercury_flights_per_airline.items():
+		message_to_airline = {}
+		for flight in flights_in_airline:
+			message_to_airline[flight] = {'slot':all_allocated_slots[flight.name]}
+		message_to_airline['cost_func_archetype'] = cost_func_archetype
+		message_to_airline['slots'] = hh_NM.slots #list(all_allocated_slots.values())
+		to_be_sent_to_airlines[airline] = message_to_airline
+	# ------- Network Manager agents ends here ----- # 
+	
+	all_messages = []
+	for airline, mercury_flights_airline in mercury_flights_per_airline.items():
+		# ------ Flight agent starts here ------ #
+		message_from_NM = to_be_sent_to_airlines[airline]
+
+		if algo=='udpp_merge':
+			algo_local = models_correspondence_cost_vect[algo]
+		else:
+			algo_local = models_correspondence_approx[algo]
+
+		engine_local = LocalEngine(algo=algo_local)
+
+		#print ('Creating hotspot handler for airline', airline)
+		hh = HotspotHandler(engine=engine_local,
+							cost_func_archetype=message_from_NM['cost_func_archetype'],
+							alternative_allocation_rule=True)
+
+		mercury_flights_dict = [{'flight_name':mf.name,
+								'airline_name':mf.airlineName,
+								'eta':mf.eta,
+								'cost_function':mf.cost_func, # pass real cost function here
+								'slot':message_from_NM[mf]['slot']
+								} for mf in mercury_flights_airline]
+
+		_, flights_airline = hh.prepare_hotspot_from_dict(attr_list=mercury_flights_dict,
+															slots=message_from_NM['slots'],
+															set_cost_function_with={'cost_function':'cost_function',
+																					'kind':'lambda',
+																					'absolute':False,
+																					'eta':'eta'},
+															)
+
+		hh.prepare_all_flights()
+		preferences = engine_local.compute_optimal_parameters(hotspot_handler=hh,
+																kwargs_init={})
+		to_be_sent_to_NM = {}
+		for i, (name, pref) in enumerate(preferences.items()):
+			to_be_sent_to_NM[name] = pref
+			# ------- Flight agent ends here ------ #
+		all_messages.append(to_be_sent_to_NM)
+								
+	# ------- Network Manager agent starts here again ----- # 
+	if algo=='udpp_merge':
+		set_cost_function_with = None
+	else:
+		set_cost_function_with = 'default_cf_paras'
+	for message in all_messages:
+		hh_NM.update_flight_attributes_int_from_dict(attr_list=message,
+													set_cost_function_with=set_cost_function_with
+													) 
+	hh_NM.prepare_all_flights()
+
+	allocation = engine.compute_optimal_allocation(hotspot_handler=hh_NM,
+													kwargs_init={} # due to a weird bug, this line is required
+													)
+	print_allocation(allocation)
+	# print (engine.model.report)
+	# print (engine.model.solution)
+
+# TO test
+"""
+Slots: [1365.0, 1366.7142857142858, 1368.4285714285713, 1371.857142857143, 1373.5714285714287, 1378.7142857142858, 1380.4285714285713, 1382.142857142857, 1383.857142857143, 1385.5714285714287, 1387.0, 1388.3333333333333, 1391.0, 1393.6666666666667, 1395.0, 1396.3333333333333, 1397.6666666666667, 1399.0, 1400.3333333333333, 1401.6666666666667, 1404.3333333333333, 1405.6666666666667, 1407.0, 1408.3333333333333, 1409.6666666666667, 1411.0, 1412.3333333333333, 1413.6666666666667, 1415.0, 1416.3333333333333, 1417.6666666666667, 1419.0, 1420.3333333333333, 1421.6666666666667, 1423.0, 1424.3333333333333, 1425.6666666666667, 1427.0, 1428.3333333333333, 1429.6666666666667, 1431.0, 1432.3333333333333, 1433.6666666666667, 1435.0, 1437.6666666666667, 1439.0, 1440.3333333333333, 1441.6666666666667, 1443.0, 1444.3333333333333, 1445.6666666666667, 1447.0, 1448.3333333333333, 1449.6666666666667, 1451.0, 1452.3333333333333, 1453.6666666666667, 1455.0, 1456.3333333333333, 1457.6666666666667, 1459.0, 1460.3333333333333, 1461.6666666666667, 1463.0, 1464.3333333333333, 1465.6666666666667, 1467.0, 1468.3333333333333, 1469.6666666666667, 1471.0, 1472.3333333333333, 1473.6666666666667, 1475.0, 1476.3333333333333, 1477.6666666666667, 1479.0, 1480.3333333333333, 1481.6666666666667, 1483.0, 1487.1818181818182, 1491.5454545454545, 1492.6363636363637, 1493.7272727272727, 1494.8181818181818, 1495.909090909091, 1497.0, 1498.090909090909, 1512.2727272727273, 1513.3636363636363, 1515.5454545454545, 1516.6363636363637, 1529.7272727272727, 1530.8181818181818, 1549.3636363636363, 1560.2727272727273, 1566.8181818181818, 1574.4545454545455, 1576.6363636363635, 1578.8181818181818, 1593.0, 1594.090909090909, 1598.4545454545455, 1610.4545454545455, 1618.090909090909, 1619.1818181818182]
+Flights/airlines: [(1080, 702), (1062, 661), (1078, 722), (1074, 661), (1086, 661), (1090, 780), (1092, 753), (1096, 698), (1122, 661), (1130, 661), (1132, 666), (1136, 716), (1128, 661), (1148, 661), (1150, 661), (1158, 661), (1154, 661), (1168, 658), (1178, 721), (1180, 674), (1184, 661), (1164, 661), (1186, 661), (1188, 792), (1190, 713), (1192, 661), (1204, 661), (1196, 658), (1198, 670), (1200, 661), (1202, 661), (1206, 678), (1208, 661), (1210, 659), (1214, 661), (1216, 661), (1218, 661), (1220, 661), (1222, 689), (1224, 661), (1170, 737), (1230, 695), (1232, 695), (1236, 661), (1238, 661), (1240, 661), (1244, 661), (1226, 661), (1246, 678), (1248, 661), (1242, 792), (1250, 661), (1252, 661), (1254, 661), (1258, 771), (1262, 659), (1264, 661), (1266, 661), (1270, 661), (1272, 740), (1274, 661), (1276, 661), (1294, 678), (1300, 661), (1310, 699), (1280, 674), (1308, 739), (1286, 692), (1288, 734), (1290, 766), (1292, 737), (1296, 657), (1298, 684), (1302, 655), (1304, 661), (1306, 661), (1312, 765), (1098, 661), (1100, 742), (1316, 766), (1318, 675), (1320, 716), (1322, 691), (1324, 797), (1326, 661), (1124, 701), (1138, 780), (1140, 661), (1362, 661), (1142, 695), (1144, 669), (1152, 661), (1328, 695), (1156, 661), (1228, 661), (1162, 721), (1330, 713), (1368, 671), (1160, 661), (1332, 713), (1334, 661), (1372, 713), (1174, 661), (1176, 749), (1182, 661)]
+ETA: [1474.4279999999999, 1429.335, 1429.135, 1425.095, 1444.996, 1477.354, 1372.133, 1366.938, 1422.992, 1410.523, 1441.26, 1457.9, 1366.755, 1366.271, 1418.093, 1365.896, 1421.907, 1440.409, 1391.417, 1382.162, 1399.996, 1406.866, 1419.737, 1425.647, 1365.0, 1396.859, 1441.383, 1422.791, 1421.568, 1407.77, 1391.349, 1389.601, 1412.941, 1512.794, 1394.949, 1395.754, 1383.424, 1435.848, 1409.736, 1619.675, 1383.434, 1386.023, 1381.466, 1405.252, 1398.523, 1421.223, 1415.142, 1421.351, 1391.46, 1418.026, 1440.353, 1431.964, 1393.392, 1401.824, 1407.61, 1550.362, 1422.766, 1436.5140000000001, 1415.883, 1482.832, 1413.829, 1418.373, 1436.289, 1497.213, 1443.869, 1491.225, 1406.411, 1495.132, 1487.217, 1492.433, 1428.434, 1475.689, 1530.719, 1517.144, 1435.571, 1443.616, 1560.612, 1459.0632864365184, 1467.9812216354167, 1496.004, 1458.616, 1567.387, 1514.137, 1574.913, 1530.198, 1451.2364736727225, 1516.1357160597952, 1593.7308727605246, 1579.078, 1414.5979480794585, 1474.4767542787304, 1618.4752685655558, 1476.023, 1432.4012381377083, 1432.1547751538608, 1424.5783221884876, 1492.039, 1610.543, 1396.2468523532002, 1498.021, 1577.481, 1593.7060000000001, 1428.1972835208906, 1599.1244470440324, 1460.0164943586387]
+"""
 if __name__=='__main__':
-	for algo in ['udpp', 'istop', 'nnbound', 'globaloptimum']:
-		examples_direct_cost_vector(algo=algo)
+	# for algo in ['udpp', 'istop', 'nnbound', 'globaloptimum']:
+	# 	examples_direct_cost_vector(algo=algo)
 
-	for algo in ['istop_approx', 'nnbound_approx', 'globaloptimum_approx']:
-	#for algo in ['istop_approx']:
-		examples_direct_approx(algo=algo)
+	# for algo in ['istop_approx', 'nnbound_approx', 'globaloptimum_approx']:
+	# #for algo in ['istop_approx']:
+	# 	examples_direct_approx(algo=algo)
 
-	for algo in ['udpp_merge', 'istop', 'nnbound', 'globaloptimum']:
-		example_agent_paradigm_vect(algo=algo)
+	# for algo in ['udpp_merge', 'istop', 'nnbound', 'globaloptimum']:
+	# 	example_agent_paradigm_vect(algo=algo)
 
-	for algo in ['istop', 'nnbound', 'globaloptimum']:
-		example_agent_paradigm_approx(algo=algo)
+	# for algo in ['istop', 'nnbound', 'globaloptimum']:
+	# 	example_agent_paradigm_approx(algo=algo)
 
-	for algo in ['nnbound', 'globaloptimum']: # istop not working yet
-		example_agent_paradigm_approx_alternate(algo=algo)
-
-	for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
-		example_mercury_test_case(algo=algo)
-
-	for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
-		other_examples(algo=algo)
-
-	for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
-		other_examples2(algo=algo)
-
-	for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
-		other_examples3(algo=algo)
-
-	for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
-		other_examples4(algo=algo)
+	# for algo in ['nnbound', 'globaloptimum']: # istop not working yet
+	# 	example_agent_paradigm_approx_alternate(algo=algo)
 
 	# for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
-	# 	other_examples5(algo=algo)
+	# 	example_mercury_test_case(algo=algo)
 
-	for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
-		other_examples6(algo=algo)
+	# for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
+	# 	other_examples(algo=algo)
+
+	# for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
+	# 	other_examples2(algo=algo)
+
+	# for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
+	# 	other_examples3(algo=algo)
+
+	# for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
+	# 	other_examples4(algo=algo)
+
+	# # for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
+	# # 	other_examples5(algo=algo)
+
+	# for algo in ['udpp_merge', 'nnbound', 'globaloptimum']: # istop not working yet
+	# 	other_examples6(algo=algo)
+
+	for algo in ['udpp_merge', 'nnbound', 'istop', 'globaloptimum']: # istop not working yet
+		other_examples7(algo=algo)
