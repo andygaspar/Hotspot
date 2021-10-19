@@ -3,9 +3,9 @@ import pandas as pd
 
 
 def make_performance_df(model):
-    from Hotspot.ModelStructure.modelStructure import ModelStructure
-    from Hotspot.ModelStructure.Airline.airline import Airline
-    from Hotspot.ModelStructure.Flight.flight import Flight
+    from ..modelStructure import ModelStructure
+    from ..Airline.airline import Airline
+    from ..Flight.flight import Flight
     model: ModelStructure
     airline: Airline
     flight: Flight

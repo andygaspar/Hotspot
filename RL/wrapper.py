@@ -478,8 +478,9 @@ class HotspotHandler:
 		return sorted(new_flight_list, key=lambda f: f.slot)
 
 	def print_summary(self):
-		print ('Slots:', self.slots)
-		print ('Flights/ETA:', [(flight.name, flight.eta) for flight in self.get_flight_list()])
+		print ('Slots:', [slot.time for slot in self.slots])
+		print ('Flights/airlines:', [(flight.name, flight.airlineName) for flight in self.get_flight_list()])
+		print ('ETA:', [flight.eta for flight in self.get_flight_list()])
 
 class RLFlight(HFlight):
 	pass
@@ -551,7 +552,7 @@ class Flight(HFlight):
 		if kind=='lambda':
 			self.set_cost_function_from_lambda(cost_function, **kwargs)
 		elif kind=='paras':
-			self.set_cost_function_from_paras(cost_function)
+			self.set_cost_function_from_paras(cost_function, **kwargs)
 
 	def compute_lambda_from_paras(self, cost_function_paras):
 		"""
@@ -589,11 +590,11 @@ class Flight(HFlight):
 
 		return f#, ff
 
-	def set_cost_function_from_paras(self, cost_function_paras):
+	def set_cost_function_from_paras(self, cost_function_paras, absolute=True):
 		f = self.compute_lambda_from_paras(cost_function_paras)
 		self.set_cost_function_from_lambda(f,
 											#cost_function_declared=fd,
-											absolute=True)
+											absolute=absolute)
 
 	def set_cost_function_from_lambda(self, cost_function, #cost_function_declared=None,
 		absolute=True, eta=None):
@@ -775,13 +776,6 @@ class LocalEngine(Engine):
 
 			if not 'alternative_allocation_rule' in kwargs_init.keys():
 				kwargs_init['alternative_allocation_rule'] = hotspot_handler.alternative_allocation_rule
-
-			# print ('COINCOIN',
-			# 		Model,
-			# 		not 'delta_t' in kwargs_init.keys(),
-			# 		 hotspot_handler.alternative_slot_allocation_rule,
-			# 		 len(hotspot_handler.slots)>1,
-			# 		 ('delta_t' in Model.get_kwargs_init(Model)))
 
 			# if (not 'delta_t' in kwargs_init.keys()) \
 			# 	and hotspot_handler.alternative_slot_allocation_rule \
