@@ -110,10 +110,10 @@ def fit_cost_curve(x, y, max_delay, fixed_paras={}, steps=8, approx_fun=None):
     # function
     best_initial_guess = np.array([test_values[np.argmin(guesses)][3][k] for k in approx_fun.get_var_paras()])
 
-    # print ('COINCOINCOIN', best_initial_guess)
-    # print ('COINCOINCOIN', fixed_paras)
-    # print ('XXXX', x)
-    # print ('YYYY', y)
+    # print ('COINCOINCOIN best_initial_guess=', best_initial_guess)
+    # print ('COINCOINCOIN fixed_paras=', fixed_paras)
+    # print ('XXXX x=', x)
+    # print ('YYYY y=', y)
     # import pickle
     # with open('cost_function_test.pic', 'wb') as f:
     #     pickle.dump(approx_fun, f)
@@ -127,7 +127,9 @@ def fit_cost_curve(x, y, max_delay, fixed_paras={}, steps=8, approx_fun=None):
                                 'xtol': 0.5,
                                 'ftol': 0.01})
 
-    print ('SOLUTION TO FIT:', solution)
+    # print ('SOLUTION TO FIT:', solution)
+    # print ()
+    # print ()
 
     return solution.x
 
@@ -160,6 +162,7 @@ class FunctionApprox(ModelStructure):
         for flight in self.flights:
             max_delay = self.slots[-1].time - self.slots[0].time
             fixed_parameters = {attr:getattr(flight, attr) for attr in self.cost_func_archetype.fixed_paras}
+            # print ('OYOYO flight:', flight.name)
             paras = make_preference_fun(max_delay,
                                         flight.delayCostVect,
                                         fixed_paras=fixed_parameters,

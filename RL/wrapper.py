@@ -482,6 +482,7 @@ class HotspotHandler:
 		print ('Flights/airlines:', [(flight.name, flight.airlineName) for flight in self.get_flight_list()])
 		print ('ETA:', [flight.eta for flight in self.get_flight_list()])
 
+
 class RLFlight(HFlight):
 	pass
 
@@ -491,7 +492,7 @@ class Flight(HFlight):
 	# 	**kwargs):
 
 	# 	"""
-	# 	You can just extend ah HFlight instance by passing it in argument. Note that in this case,
+	# 	You can just extend an HFlight instance by passing it in argument. Note that in this case,
 	# 	all other arguments are ignored, except cost_function which is mandatory.
 	# 	"""
 	# 	kwargs_copy = kwargs.copy()
@@ -560,16 +561,18 @@ class Flight(HFlight):
 		Not that final cost function argument is absolute time, 
 		not delay
 		"""
-		class DummyFlight:
-			pass
+		# class DummyFlight:
+		# 	pass
 		
-		class DummySlot:
-			pass
+		# class DummySlot:
+		# 	pass
 		
 		# Real cost function
 		def f(time):
-			slot = DummySlot()
-			slot.time = time
+			# slot = DummySlot()
+			# slot.time = time
+			# print ('ALLLLLLO', time)
+			# print ("ALLLO", {attr:getattr(self, attr) for attr in cost_function_paras.paras})
 			return cost_function_paras(time, **{attr:getattr(self, attr) for attr in cost_function_paras.paras})
 		
 		#self.cost_f_true = f 
