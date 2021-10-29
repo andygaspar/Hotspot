@@ -1,13 +1,15 @@
 from typing import Callable, List, Union
 
-import ModelStructure.modelStructure
-from ModelStructure import modelStructure as mS
+
 from gurobipy import Model, GRB, quicksum, Env
 
-from ModelStructure.Airline import airline as air
-from ModelStructure.Flight.flight import Flight
-from ModelStructure.Solution import solution
-from ModelStructure.Slot.slot import Slot
+from ...GlobalFuns.globalFuns import HiddenPrints
+from ...ModelStructure import modelStructure as mS
+from ...ModelStructure.Airline import airline as air
+from ...ModelStructure.Flight.flight import Flight
+from ...ModelStructure.Solution import solution
+from ...ModelStructure.Slot.slot import Slot
+# from ...libs.uow_tool_belt.general_tools import write_on_file as print_to_void
 
 import numpy as np
 import pandas as pd
@@ -39,7 +41,6 @@ class NNBoundGurobi(mS.ModelStructure):
         self.m = Model('CVRP')
         # self.m.setParam('Method', 2) ###################testare == 2 !!!!!!!!!!!!111c
         self.m.modelSense = GRB.MINIMIZE
-        self.rescaling = 1000 / max([flight.maxCost for flight in self.flights])
         self.x = None
 
     def set_variables(self):
@@ -63,22 +64,19 @@ class NNBoundGurobi(mS.ModelStructure):
 
         for airline in self.airlines:
             self.m.addConstr(
-                quicksum(flight.cost_fun(flight.slot) * self.rescaling for flight in airline.flights) >= \
-                quicksum(self.x[flight.index, slot.index] * flight.cost_fun(slot) * self.rescaling
+                quicksum(flight.cost_fun(flight.slot) for flight in airline.flights) >= \
+                quicksum(self.x[flight.index, slot.index] * flight.cost_fun(slot)
                        for flight in airline.flights for slot in self.slots)
             )
 
     def set_objective(self):
         flight: Flight
         self.m.setObjective(
-            quicksum(self.x[flight.index, slot.index] * flight.cost_fun(slot)*self.rescaling
+            quicksum(self.x[flight.index, slot.index] * flight.cost_fun(slot)
                    for flight in self.flights for slot in self.slots)
         )
 
-    def run(self, timing=False, verbose=False, time_limit=60, rescaling=True):
-
-        if not rescaling:
-            self.rescaling = 1
+    def run(self, timing=False, verbose=False, time_limit=60):
 
         self.m._time_limit = time_limit
         if not verbose:
@@ -102,7 +100,7 @@ class NNBoundGurobi(mS.ModelStructure):
         if timing:
             print("Simplex time ", end)
 
-        return self.x.x
+        return self.get_sol_array()
 
 
     def assign_flights(self, sol):
@@ -110,3 +108,11 @@ class NNBoundGurobi(mS.ModelStructure):
             for slot in self.slots:
                 if sol[flight.index, slot.index].x > 0.5:
                     flight.newSlot = slot
+
+    def get_sol_array(self):
+        solution = np.zeros((len(self.flights), len(self.slots)))
+        for flight in self.flights:
+            for slot in self.slots:
+                if self.x[flight.index, slot.index].x > 0.5:
+                    solution[flight.index, slot.index] = 1
+        return solution

@@ -3,12 +3,13 @@ from typing import Callable, List, Union
 from .SolversNNB.gurobi_solver_NNB import NNBoundGurobi
 from ..ModelStructure import modelStructure as mS
 import xpress as xp
+
 xp.controls.outputlog = 0
 from ..ModelStructure.Airline import airline as air
 from ..ModelStructure.Flight.flight import Flight
 from ..ModelStructure.Solution import solution
 from ..ModelStructure.Slot.slot import Slot
-from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
+# from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
 from ..NNBound.SolversNNB.xpress_solver_NNB import XpressSolverNNB
 from ..NNBound.SolversNNB.mip_solver_NNB import MipSolverNNB
 
@@ -24,26 +25,22 @@ class NNBoundModel(mS.ModelStructure):
     requirements = ['delayCostVect', 'costVect']
 
     def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None,
-        xp_problem=None, alternative_allocation_rule=False):
+                 xp_problem=None, alternative_allocation_rule=False):
 
         super().__init__(slots,
-                        flights,
-                        alternative_allocation_rule=alternative_allocation_rule)
+                         flights,
+                         alternative_allocation_rule=alternative_allocation_rule)
 
+    def run(self, timing=False, update_flights=False, max_time=2000, verbose=False, time_limit=60, rescaling=False):
 
-    def run(self, timing=False, update_flights=False, max_time=2000):
-        # print("using MIP")
-        # m = MipSolverNNB(self, max_time)
-        # solution_vect = m.run(timing, update_flights)
         try:
 
             m = XpressSolverNNB(self, max_time)
             solution_vect = m.run(timing, update_flights)
-
         except:
             try:
-                m = NNBoundGurobi(self, max_time)
-                solution_vect = m.run(timing, update_flights)
+                m = NNBoundGurobi(self)
+                solution_vect = m.run(timing=timing, verbose=verbose, time_limit=time_limit)
 
             except:
                 print("using MIP")

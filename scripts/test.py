@@ -20,10 +20,10 @@ num_flights = 50
 num_airlines = 5
 
 
-df = pd.read_csv("../Test/df_test.csv")
-df_costs = pd.read_csv("../Test/df_costs.csv")
+df = pd.read_csv("../test_data/df_test.csv")
+df_costs = pd.read_csv("../test_data/df_costs.csv")
 
-slot_list, fl_list = make_flight_list(df, df_costs)
+slot_list, fl_list = make_flight_list(df)
 
 # fl_list has flight objects: you can now manually set slot, margin1, jump2, margin2, jump2
 
