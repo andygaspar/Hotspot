@@ -1,5 +1,6 @@
 from typing import Callable, List, Union
 
+from .SolversNNB.gurobi_solver_NNB import NNBoundGurobi
 from ..ModelStructure import modelStructure as mS
 import xpress as xp
 xp.controls.outputlog = 0
@@ -40,9 +41,14 @@ class NNBoundModel(mS.ModelStructure):
             solution_vect = m.run(timing, update_flights)
 
         except:
-            print("using MIP")
-            m = MipSolverNNB(self, max_time)
-            solution_vect = m.run(timing, update_flights)
+            try:
+                m = NNBoundGurobi(self, max_time)
+                solution_vect = m.run(timing, update_flights)
+
+            except:
+                print("using MIP")
+                m = MipSolverNNB(self, max_time)
+                solution_vect = m.run(timing, update_flights)
 
         self.assign_flights(solution_vect)
 
