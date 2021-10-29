@@ -5,10 +5,12 @@ import time
 
 import pandas as pd
 
+from .LocalOptimised.udppLocalOptGuroby import UDPPlocalOptGurobi
+from .LocalOptimised.udppLocalOptMIP import UDPPlocalOptMIP
 from ..GlobalFuns.globalFuns import HiddenPrints, preferences_from_flights
 from ..ModelStructure.Airline.airline import Airline
 from ..ModelStructure.modelStructure import ModelStructure
-from ..UDPP.LocalOptimised.udppLocalOpt import UDPPlocalOpt
+from ..UDPP.LocalOptimised.udppLocalOptXP import UDPPlocalOptXP
 from ..UDPP.udppMerge import udpp_merge
 from ..ModelStructure.Solution import solution
 from ..ModelStructure.Slot.slot import Slot
@@ -42,8 +44,15 @@ class UDPPLocal(ModelStructure):
         airline: Airline
         for airline in self.airlines:
             if airline.numFlights > 1:
-                with HiddenPrints():
-                    UDPPlocalOpt(airline, self.slots)
+                UDPPlocalOptGurobi(airline, self.slots)
+                try:
+                    with HiddenPrints():
+                        UDPPlocalOptXP(airline, self.slots)
+                except:
+                    try:
+                        UDPPlocalOptGurobi(airline, self.slots)
+                    except:
+                        UDPPlocalOptMIP(airline, self.slots)
             else:
                 airline.flights[0].udppPriority = "N"
                 airline.flights[0].udppPriorityNumber = 0

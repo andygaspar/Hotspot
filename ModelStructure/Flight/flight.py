@@ -54,6 +54,14 @@ class Flight:
 
         self.newSlot = None
 
+        # udpp attributes
+
+        self.udppPriority = None
+
+        self.tna = None
+
+        self.udppPriorityNumber = None
+
     def __str__(self):
         return str(self.name)
 
