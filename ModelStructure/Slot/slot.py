@@ -31,3 +31,6 @@ class Slot:
 
     def __ge__(self, other: Slot):
         return self.time >= other.time
+
+    def __hash__(self):
+        return hash(self.index)
