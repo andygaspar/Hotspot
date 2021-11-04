@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import time
 
+from .Solvers.gurobi_solver import GurobiSolver
 from ..GlobalFuns.globalFuns import HiddenPrints
 from .Solvers.mip_solver import MipSolver
 from .Solvers.xpress_solver import XpressSolver
@@ -96,7 +97,7 @@ class Istop(mS.ModelStructure):
         print("preprocess concluded in sec:", time.time() - start, "   Number of possible offers: ", len(self.matches))
         return len(self.matches) > 0
 
-    def run(self, max_time=2000, timing=False):
+    def run(self, timing=False, max_time=2000, verbose=False, time_limit=60):
         feasible = self.check_and_set_matches()
         if feasible:
 
@@ -104,9 +105,13 @@ class Istop(mS.ModelStructure):
                 m = XpressSolver(self, max_time)
                 solution_vect, offers_vect = m.run(timing=True)
             except:
-                print("using MIP")
-                p = MipSolver(self, max_time)
-                solution_vect, offers_vect = p.run(timing=True)
+                try:
+                    m = GurobiSolver(self)
+                    solution_vect = m.run(timing=timing, verbose=verbose, time_limit=time_limit)
+                except:
+                    print("using MIP")
+                    p = MipSolver(self, max_time)
+                    solution_vect, offers_vect = p.run(timing=True)
 
             self.assign_flights(solution_vect)
 
