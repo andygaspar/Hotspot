@@ -185,9 +185,17 @@ class HotspotHandler:
 	def pre_prepare_hotspot(self):
 		# Check that the first flight has an ETA corresponding to 
 		# the first slot, otherwise change its ETA internally.
-		first_flight = self.get_flight_list()[np.argmin([flight.eta for flight in self.get_flight_list()])]		 
-		if first_flight.eta > self.slots[0].time:
-			first_flight.eta = self.slots[0].time
+		# This is commented because sometimes there are lots of more
+		# slots than flights ( for instance whenusing UDPPLocal)
+		# and the first flight does not have to be on the first slot
+		# systematically
+		# print ('LOVA', [flight.eta for flight in self.get_flight_list()])
+		# print ('LOVA2', self.get_flight_list())
+		# first_flight = self.get_flight_list()[np.argmin([flight.eta for flight in self.get_flight_list()])]		 
+		# if first_flight.eta > self.slots[0].time:
+		# 	if first_flight.name==1205:
+		# 		print ('WOOOOOOOO', first_flight.name, first_flight.eta)
+		# 	first_flight.eta = self.slots[0].time
 
 		for flight in self.get_flight_list():
 			flight.set_compatible_slots(self.slots,
@@ -478,9 +486,30 @@ class HotspotHandler:
 		return sorted(new_flight_list, key=lambda f: f.slot)
 
 	def print_summary(self):
-		print ('Slots:', [slot.time for slot in self.slots])
-		print ('Flights/airlines:', [(flight.name, flight.airlineName) for flight in self.get_flight_list()])
-		print ('ETA:', [flight.eta for flight in self.get_flight_list()])
+		print ('slot_times =', [slot.time for slot in self.slots])
+		print ('f_airline =', [(flight.name, flight.airlineName) for flight in self.get_flight_list()])
+		print ('f_eta =', [flight.eta for flight in self.get_flight_list()])
+		# df = pd.DataFrame([flight.costVect for flight in self.get_flight_list()],
+		# 					columns=[slot.time for slot in self.slots],
+		# 					index=[flight.name for flight in self.get_flight_list()])
+		# df.to_csv('cost_matrix_debug.csv')
+		print ('Cost matrix (external flights/internal slots) dumped as cost_matrix_debug.csv')
+
+	def set_cost_matrix(self, cost_matrix):
+		"""
+		This method should ONLY BE USED FOR BUG TRACKING.
+		It sets the costVect of all the flights, independently
+		of their cost function.
+
+		Parameters
+		==========
+		cost_matrix: DataFrame (lines: flight name, columns: slot index, cell: absolute cost)
+		"""
+
+		for name, flight in self.flights.items():
+			costs = np.array(cost_matrix.loc[name, :])
+
+			flight.costVect = costs
 
 
 class RLFlight(HFlight):
@@ -666,7 +695,7 @@ class Flight(HFlight):
 		This method allows to compute the vector costVect and delayCostVect, 
 		which are required by different optimiser.
 		"""
-		self.costVect = np.array([self.cost_f_true(slot.time) for slot in slots])
+		self.costVect = np.array([max(0., self.cost_f_true(slot.time)) for slot in slots])
 
 	def compute_delay_cost_vect(self, slots):
 		"""
@@ -708,7 +737,6 @@ class Engine:
 		"""
 		flights is a dict {name:Flight}
 		"""
-
 		Model = models[self.algo]
 		
 		if not hotspot_handler is None:
