@@ -32,20 +32,14 @@ class NNBoundModel(mS.ModelStructure):
                          alternative_allocation_rule=alternative_allocation_rule)
 
     def run(self, timing=False, update_flights=False, max_time=2000, verbose=False, time_limit=60, rescaling=False):
-
         try:
-
-            m = XpressSolverNNB(self, max_time)
+            m = NNBoundGurobi(self)
+            print("Using Gurobi")
+            solution_vect = m.run(timing=timing, verbose=verbose, time_limit=time_limit)
+        except Exception as ee:
+            m = MipSolverNNB(self, max_time)
+            print("Using MIP", "(exception from Gurobi:", ee, ")")
             solution_vect = m.run(timing, update_flights)
-        except:
-            try:
-                m = NNBoundGurobi(self)
-                solution_vect = m.run(timing=timing, verbose=verbose, time_limit=time_limit)
-
-            except:
-                print("using MIP")
-                m = MipSolverNNB(self, max_time)
-                solution_vect = m.run(timing, update_flights)
 
         self.assign_flights(solution_vect)
 

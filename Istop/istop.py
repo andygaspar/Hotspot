@@ -48,11 +48,9 @@ class Istop(mS.ModelStructure):
         alternative_allocation_rule=False):
         self.offers = None
         self.triples = triples
-
         if not flights is None:
 
             [wrap_flight_istop(flight) for flight in flights]
-
             super().__init__(slots,
                             flights,
                             air_ctor=IstopAirline,
@@ -85,6 +83,48 @@ class Istop(mS.ModelStructure):
         if self.triples:
             self.matches += self.offerChecker.all_triples_check(self.airlines_triples)
 
+        # #TEST # TO REMOVE?
+        # new_matches = []
+        # for match in self.matches:
+        #     pair1, pair2 = match
+        #     f0, f1 = pair1
+        #     f2, f3 = pair2
+        #     #print (pair1, pair2)
+        #     # if pair1[0].name==1205 and pair1[1].name==1293:
+        #     #     print ('YOYO', pair1[0], pair1[0].slot, pair1[0].eta, pair1[1].compatibleSlots[0].index)
+        #     #     print ('YOYO', pair1[1], pair1[1].slot, pair1[1].eta, pair1[0].compatibleSlots[0].index)
+            
+        #     try:
+        #         assert pair1[0].slot in pair1[1].compatibleSlots
+        #         assert pair1[1].slot in pair1[0].compatibleSlots
+        #         assert pair2[0].slot in pair2[1].compatibleSlots
+        #         assert pair2[1].slot in pair2[0].compatibleSlots
+
+        #         # Probably not useful...
+        #         old_cost0 = f0.fitCostVect[f0.slot.index]
+        #         old_cost1 = f1.fitCostVect[f1.slot.index]
+        #         old_cost2 = f2.fitCostVect[f2.slot.index]
+        #         old_cost3 = f3.fitCostVect[f3.slot.index]
+        #         new_cost0 = f0.fitCostVect[f1.slot.index]
+        #         new_cost1 = f1.fitCostVect[f0.slot.index]
+        #         new_cost2 = f2.fitCostVect[f3.slot.index]
+        #         new_cost3 = f3.fitCostVect[f2.slot.index]
+                
+        #         diff0 = new_cost0-old_cost0
+        #         diff1 = new_cost1-old_cost1
+        #         diff2 = new_cost2-old_cost2
+        #         diff3 = new_cost3-old_cost3
+
+        #         assert diff0+diff1+diff2+diff3<0
+        #         new_matches.append(match)
+        #     except AssertionError as e:
+        #         pass
+        #     except:
+        #         raise
+
+        # self.matches = new_matches
+        # print ('MATCHES AFTER CLEANING:', len(self.matches))
+        
         for match in self.matches:
             for couple in match:
                 if not self.is_in(couple, self.couples):
@@ -100,27 +140,34 @@ class Istop(mS.ModelStructure):
     def run(self, timing=False, max_time=2000, verbose=False, time_limit=60):
         feasible = self.check_and_set_matches()
         if feasible:
-
             try:
-                m = XpressSolver(self, max_time)
-                solution_vect, offers_vect = m.run(timing=True)
-            except:
+                m = GurobiSolver(self)
+                print("Using Gurobi")
                 try:
-                    m = GurobiSolver(self)
-                    solution_vect = m.run(timing=timing, verbose=verbose, time_limit=time_limit)
-                except:
-                    print("using MIP")
-                    p = MipSolver(self, max_time)
-                    solution_vect, offers_vect = p.run(timing=True)
+                    solution_vect, offers_vect = m.run(timing=timing, verbose=verbose, time_limit=time_limit)
+                    self.assign_flights(solution_vect)
 
-            self.assign_flights(solution_vect)
+                    offers = 0
+                    for i in range(len(self.matches)):
+                        if offers_vect[i] > 0.9:
+                            self.offers_selected.append(self.matches[i])
+                            offers += 1
+                    #print("Number of offers selected: ", offers)
+                except Exception as e:
+                    print ('exception', e)
+                    raise
+            except Exception as ee:
+                print("Using MIP", "(exception from gurobi:", ee, ")")
+                p = MipSolver(self, max_time)
+                solution_vect, offers_vect = p.run(timing=True)
+                self.assign_flights(solution_vect)
 
-            offers = 0
-            for i in range(len(self.matches)):
-                if offers_vect[i] > 0.9:
-                    self.offers_selected.append(self.matches[i])
-                    offers += 1
-            print("Number of offers selected: ", offers)
+                offers = 0
+                for i in range(len(self.matches)):
+                    if offers_vect[i] > 0.9:
+                        self.offers_selected.append(self.matches[i])
+                        offers += 1
+                #print("Number of offers selected: ", offers)
 
         else:
             for flight in self.flights:

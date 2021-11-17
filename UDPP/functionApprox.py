@@ -162,7 +162,6 @@ class FunctionApprox(ModelStructure):
         for flight in self.flights:
             max_delay = self.slots[-1].time - self.slots[0].time
             fixed_parameters = {attr:getattr(flight, attr) for attr in self.cost_func_archetype.fixed_paras}
-            # print ('OYOYO flight:', flight.name)
             paras = make_preference_fun(max_delay,
                                         flight.delayCostVect,
                                         fixed_paras=fixed_parameters,
