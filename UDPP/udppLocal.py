@@ -44,15 +44,19 @@ class UDPPLocal(ModelStructure):
         airline: Airline
         for airline in self.airlines:
             if airline.numFlights > 1:
-                UDPPlocalOptGurobi(airline, self.slots)
                 try:
-                    with HiddenPrints():
-                        UDPPlocalOptXP(airline, self.slots)
-                except:
-                    try:
-                        UDPPlocalOptGurobi(airline, self.slots)
-                    except:
-                        UDPPlocalOptMIP(airline, self.slots)
+                    UDPPlocalOptGurobi(airline, self.slots)
+                    #print ('Using Gurobi')
+                    # with HiddenPrints():
+                    #     UDPPlocalOptXP(airline, self.slots)
+                    #     #print ('Using XPress in UDPP Local')
+                except Exception as e:
+                    # try:
+                    #     UDPPlocalOptGurobi(airline, self.slots)
+                    #     #print ('Using Gurobi in UDPP Local')
+                    # except:
+                    UDPPlocalOptMIP(airline, self.slots)
+                    # print ('Using MIP (exception from Gurobi:', e, ')')
             else:
                 airline.flights[0].udppPriority = "N"
                 airline.flights[0].udppPriorityNumber = 0
