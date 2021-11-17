@@ -29,7 +29,10 @@ def udpp_merge(flights, slots, hfes=5):
     i = 0
     while len(sorted_flights) > 0:
         #if slots[i].time >= sorted_flights[0].eta - delta_t :
-        if slots[i] in sorted_flights[0].compatibleSlots or slots[i].time >= sorted_flights[0].eta - hfes:#sorted_flights[0]#slots[i].time >= sorted_flights[0].eta - delta_t :
+        if slots[i] in sorted_flights[0].compatibleSlots:# or slots[i].time >= sorted_flights[0].eta - hfes:#sorted_flights[0]#slots[i].time >= sorted_flights[0].eta - delta_t :
+            # if sorted_flights[0].name==1191:
+            #     print ('HHEEEEEEEEEEEEEEERE', slots[i])
+            #     #raise Exception()
             sorted_flights[0].newSlot = slots[i]
             sorted_flights.pop(0)
 
