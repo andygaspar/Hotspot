@@ -14,7 +14,6 @@ from ..ModelStructure.Flight.flight import Flight
 from ..ModelStructure.Solution import solution
 from ..ModelStructure.Slot.slot import Slot
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
-from ..GlobalOptimum.SolversGO.xpress_solver_go import XpressSolverGO
 from ..GlobalOptimum.SolversGO.mip_solver_go import MipSolverGO
 
 
@@ -29,10 +28,12 @@ class GlobalOptimum(mS.ModelStructure):
         # m = MipSolverGO(self, max_time)
         # solution_vect = m.run(timing, update_flights)
         try:
+            from ..GlobalOptimum.SolversGO.xpress_solver_go import XpressSolverGO
             m = XpressSolverGO(self, max_time)
+            print("Using Xpress")
             solution_vect = m.run(timing, update_flights)
-        except:
-            print("using MIP")
+        except Exception as e:
+            print("Using MIP (xpress exception:", e, ')')
             m = MipSolverGO(self, max_time)
             solution_vect = m.run(timing, update_flights)
 

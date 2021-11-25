@@ -20,7 +20,7 @@ def compatible_slots(slots, eta, alternative_rule=False):
 
 class Flight:
 
-    def __init__(self, flight_name: str, airline_name: str,
+    def __init__(self, flight_name, airline_name,
                  eta: float, slot: Slot=None, delay_cost_vect: np.array=None,
                  cost_vect: np.array = None, **garbage):
 

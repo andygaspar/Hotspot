@@ -1,6 +1,5 @@
 from typing import Callable, List, Union
 
-from .SolversNNB.gurobi_solver_NNB import NNBoundGurobi
 from ..ModelStructure import modelStructure as mS
 import xpress as xp
 
@@ -10,8 +9,9 @@ from ..ModelStructure.Flight.flight import Flight
 from ..ModelStructure.Solution import solution
 from ..ModelStructure.Slot.slot import Slot
 # from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
-from ..NNBound.SolversNNB.xpress_solver_NNB import XpressSolverNNB
+# from ..NNBound.SolversNNB.xpress_solver_NNB import XpressSolverNNB
 from ..NNBound.SolversNNB.mip_solver_NNB import MipSolverNNB
+from .SolversNNB.gurobi_solver_NNB import NNBoundGurobi
 
 from ..GlobalFuns.globalFuns import HiddenPrints
 

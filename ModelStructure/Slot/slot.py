@@ -1,4 +1,4 @@
-from __future__ import annotations
+# from __future__ import annotations
 
 import numpy as np
 import pandas as pd
@@ -17,19 +17,19 @@ class Slot:
     def __repr__(self):
         return str(self.index)+":"+str(self.time)
 
-    def __eq__(self, other: Slot):
+    def __eq__(self, other):#: Slot):
         return self.time == other.time
 
-    def __lt__(self, other: Slot):
+    def __lt__(self, other):#: Slot):
         return self.time < other.time
 
-    def __le__(self, other: Slot):
+    def __le__(self, other):#: Slot):
         return self.time <= other.time
 
-    def __gt__(self, other: Slot):
+    def __gt__(self, other):#: Slot):
         return self.time > other.time
 
-    def __ge__(self, other: Slot):
+    def __ge__(self, other):#: Slot):
         return self.time >= other.time
 
     def __hash__(self):

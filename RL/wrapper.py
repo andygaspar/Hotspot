@@ -281,7 +281,8 @@ class HotspotHandler:
 							else:
 								# iterable
 								# cost functions are different for each flight
-								dd[k] = v[i]
+								#dd[k] = v[i] # SOMETHING IS MISSING HERE, WHAT IS i?
+								raise Exception()
 					else:
 						if type(v) is str and v in attr_list.keys():
 							dd[k] = attr_list[v]

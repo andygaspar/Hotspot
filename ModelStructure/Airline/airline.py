@@ -1,4 +1,4 @@
-from __future__ import annotations
+#from __future__ import annotations
 import numpy as np
 import pandas as pd
 from typing import List, Callable
@@ -10,7 +10,7 @@ from ..Slot.slot import Slot
 
 class Airline:
 
-    def __init__(self, airline_name: str, flights: List[Flight]):
+    def __init__(self, airline_name, flights: List[Flight]):
 
         self.name = airline_name
 
