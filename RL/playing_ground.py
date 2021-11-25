@@ -7,6 +7,8 @@ import pandas as pd
 # from tf_agents.policies.policy_saver import PolicySaver
 # from tf_agents.trajectories.time_step import TimeStep
 
+from scipy.optimize import differential_evolution
+
 from Hotspot.libs.other_tools import print_allocation
 from Hotspot.libs.uow_tool_belt.general_tools import nice_colors
 
@@ -240,7 +242,7 @@ class PlayingGround:
 			action = None
 			#time_step = self.collect_env.reset()
 			#action = self.tf_agent.policy.action(time_step)
-			#stuff = self.train_env.step(action)
+			stuff = self.train_env.step(action)
 			rewards_eval.append(stuff.reward.numpy()[0])
 		rewards_eval = np.array(rewards_eval)
 
@@ -267,7 +269,8 @@ class PlayingGround:
 			time_step = self.collect_env.reset()
 
 			# Compute best solution on allocation
-			f = function_builder(self.collect_env)
+			# f = function_builder(self.collect_env) # WHAT IS THAT FUNCTION
+			f = None # to avoid error from compiler until the above is solved
 			sol = differential_evolution(f, [(0, 100), (0, 100), (0, 100), (0, 100)])
 			rewards_best.append(100.-sol['fun'])
 
@@ -384,6 +387,7 @@ class PlayingGround:
 
 	def do_training_plots(self, file_name=None, instantaneous=False):
 		try:
+			import os
 			dir_name = '/'.join(file_name.split('/')[:-1])
 			os.makedirs(dir_name)
 		except OSError as e:

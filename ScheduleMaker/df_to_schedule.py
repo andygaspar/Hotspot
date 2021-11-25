@@ -3,6 +3,7 @@ from typing import Union, List, Callable
 from ..ModelStructure.Slot.slot import Slot
 from ..ModelStructure import modelStructure
 from ..ModelStructure.Flight import flight as fl
+from ..ModelStructure.Costs.costFunctionDict import JumpCostFunction
 import numpy as np
 import pandas as pd
 
@@ -32,7 +33,9 @@ def make_flight(line, slot_times):
 
     slots = [DummySlot(st) for st in slot_times]
 
-    cost_vect = [CostFuns().costFun['jump'](flight, slot) for slot in slots]
+    # TODO: revise the line
+    #cost_vect = [CostFuns().costFun['jump'](flight, slot) for slot in slots]
+    cost_vect = [JumpCostFunction()(flight, slot) for slot in slots]
 
     # slot = Slot(slot_index, slot_time)
 

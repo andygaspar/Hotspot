@@ -8,7 +8,7 @@ import time
 from .Solvers.gurobi_solver import GurobiSolver
 from ..GlobalFuns.globalFuns import HiddenPrints
 from .Solvers.mip_solver import MipSolver
-from .Solvers.xpress_solver import XpressSolver
+#from .Solvers.xpress_solver import XpressSolver
 from ..ModelStructure import modelStructure as mS
 from itertools import combinations
 from .AirlineAndFlight.istopAirline import IstopAirline

@@ -21,7 +21,7 @@ class IstopAirline(air.Airline):
     def triplet(list_to_comb):
         return np.array(list(combinations(list_to_comb, 3)))
 
-    def __init__(self, airline_name: str, flights: List[Flight]):
+    def __init__(self, airline_name, flights: List[Flight]):
 
         super().__init__(airline_name, flights)
 

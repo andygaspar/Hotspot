@@ -36,7 +36,7 @@ def compute_gate_costs(kind, time):
     y1 = at_gate[at_gate["flight"] == kind][str(delay_range[i])].values[0]
     x2 = delay_range[i + 1]
     x1 = delay_range[i]
-    return y1 + (slot.time - x1) * (y2 - y1) / (x2 - x1)
+    return y1 + (time - x1) * (y2 - y1) / (x2 - x1)
 
 
 class ArchetypeCostFunction:
