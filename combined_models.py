@@ -112,20 +112,30 @@ def combine_model(Models, assign_slots_after_models=False, sequential_requiremen
 
 	return CombinedModel
 
+# TODO: change the naming convention here, it's very bad...
 # UDPP from scratch
 UDPPTotal = combine_model([UDPPLocal, UDPPMerge])
 
-# Istop from scratch with approximation (otherwise use only istop)
-IstopTotalApprox = combine_model([FunctionApprox, Istop])
+# UDPP with approximation function
+UDPPTotalApprox = combine_model([FunctionApprox, UDPPTotal])
 
-# NNbound from scratch with approximation
+# UDPPTotal + ISTOP, both using the approximation function
+UDPPTotalIstopApprox = combine_model([UDPPTotalApprox, Istop])
+
+# Istop only with approximation (otherwise use only istop)
+IstopApprox = combine_model([FunctionApprox, Istop])
+
+# NNbound with approximation
 NNBoundTotalApprox = combine_model([FunctionApprox, NNBoundModel])
 
-# GlobalOptimum from scratch with approximation
+# GlobalOptimum with approximation
 GlobalOptimumTotalApprox = combine_model([FunctionApprox, GlobalOptimum])
 
-# UDPP merge first, Istop second
-UDPPMergeIstop = combine_model([UDPPMerge, Istop], assign_slots_after_models=[True, False], sequential_requirements=False)
+# UDPP merge first, Istop second, from cost vect
+UDPPMergeIstop = combine_model([UDPPMerge, Istop],
+								assign_slots_after_models=[True, False],
+								sequential_requirements=False) # because you need cost vectors for Istop
 
 # Computes preferences AND function approximation (for UDPPMergeIstop for instance)
-UDPPLocalFunctionApprox = combine_model([UDPPLocal, FunctionApprox], sequential_requirements=False)
+UDPPLocalFunctionApprox = combine_model([UDPPLocal, FunctionApprox],
+										sequential_requirements=False)
