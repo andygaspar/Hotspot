@@ -14,7 +14,8 @@ import numpy as np
 import dill as pickle
 import time
 import multiprocessing
-from multiprocessing import Pool
+#from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor as Pool
 
 num_cpu = multiprocessing.cpu_count()
 
@@ -102,8 +103,9 @@ def fit_cost_curve(x, y, max_delay, fixed_paras={}, steps=8, approx_fun=None):
     test_values = compute_test_values(x, y, max_delay, approx_fun,
                                     fixed_paras=fixed_paras, steps=steps)
     
-    pool = Pool(num_cpu)
-    guesses = pool.map(fit_curve, test_values)
+    #pool = Pool(num_cpu)
+    with Pool(max_workers=num_cpu) as pool:
+        guesses = pool.map(fit_curve, test_values)
     # best_initial_guess = np.array(test_values[np.argmin(guesses)][2:-1])
     # Here I don't use the values method because I want to make sure that
     # these values are in the same order as they appear in the archetype
