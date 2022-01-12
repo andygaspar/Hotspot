@@ -94,6 +94,20 @@ def compute_test_values(x, y, max_delay, approx_fun, fixed_paras={}, steps=8):
                     
                     test_values.append(
                         (x, y, fixed_paras, params, approx_fun))
+    
+    elif approx_fun.nickname=='jump2':
+        test_values = []
+        max_val = max(y)
+        #for slope in np.linspace(0, 1, steps):
+        for margin in np.linspace(0, 3*max_delay//4, steps):
+            for jump in np.linspace(10, max_val, steps//2):
+                params = {}
+                #params['slope'] = slope
+                params['margin'] = margin
+                params['jump'] = jump
+                
+                test_values.append(
+                    (x, y, fixed_paras, params, approx_fun))
     else:
         raise Exception('Cost function approximator not implemented for', approx_fun.nickname)
 

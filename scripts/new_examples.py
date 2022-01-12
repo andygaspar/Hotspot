@@ -229,7 +229,7 @@ def examples_direct_approx(algo='istop_total'):
 
 	engine = Engine(algo=algo)
 
-	cost_func_archetype = 'jump'
+	cost_func_archetype = 'jump2'
 	hotspot_handler = HotspotHandler(engine=engine,
 									cost_func_archetype=cost_func_archetype)
 	
@@ -265,6 +265,10 @@ def examples_direct_approx(algo='istop_total'):
 
 	# You can also get another shiny list of flights
 	new_flights = hotspot_handler.get_new_flight_list()
+
+	# you can see the results of each individual engine by accessing this attribute
+	print ('Merged results:', engine.model.merge_results)
+
 	print ()
 
 def example_agent_paradigm_vect(algo='udpp_merge'):
@@ -278,7 +282,6 @@ def example_agent_paradigm_vect(algo='udpp_merge'):
 	(in the NM) is through dictionaries. This is the preferred way of communication in this case.
 	"""
 
-	print ()
 	print ("########### Agent-based {} with cost vectors ############".format(algo))
 	# mercury_flights = load_test(test_number)
 	# slot_times = list(range(0, 2*len(mercury_flights), 2))
