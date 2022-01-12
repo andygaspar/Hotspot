@@ -99,10 +99,12 @@ class ModelStructure:
         return np.array(arr)
 
     def __str__(self):
-        return str(self.airlines)
+        #return str(self.airlines)
+        return "Model {}".format(self.__name__)
 
     def __repr__(self):
-        return str(self.airlines)
+        #return str(self.airlines)
+        return "Model {}".format(self.__name__)
 
     def print_schedule(self):
         print(self.df)

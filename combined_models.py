@@ -108,6 +108,8 @@ def combine_model(Models, assign_slots_after_models=False, sequential_requiremen
 			self.solution = model.solution
 			self.report = model.report
 
+			self.merge_results = merge_results
+
 			return merge_results
 
 	return CombinedModel
@@ -120,7 +122,7 @@ UDPPTotal = combine_model([UDPPLocal, UDPPMerge])
 UDPPTotalApprox = combine_model([FunctionApprox, UDPPTotal])
 
 # UDPPTotal + ISTOP, both using the approximation function
-UDPPTotalIstopApprox = combine_model([UDPPTotalApprox, Istop])
+UDPPIstopApprox = combine_model([UDPPTotalApprox, Istop])
 
 # Istop only with approximation (otherwise use only istop)
 IstopApprox = combine_model([FunctionApprox, Istop])

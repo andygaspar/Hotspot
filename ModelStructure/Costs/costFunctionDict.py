@@ -115,6 +115,20 @@ class JumpCostFunction(ArchetypeCostFunction):
                     (time - eta) * slope + jump
 
 
+class Jump2CostFunction(ArchetypeCostFunction):
+    nickname = 'jump2'
+    # BEWARE: the parameters should appear in the same order than in
+    # single computation method.
+    paras = ['eta', 'margin', 'jump']
+    fixed_paras = ['eta']
+    
+    def single_computation(self, time, eta=None, margin=None, jump=None):
+        slope = 0.1
+        return 0 if time - eta < 0 else (time - eta) * slope \
+                    if (time - eta) < margin else \
+                    (time - eta) * slope + jump
+
+
 class DoubleJumpCostFunction(ArchetypeCostFunction):
     # BEWARE: the parameters should appear in the same order than in
     # single computation method.
@@ -155,6 +169,7 @@ archetypes_cost_functions = {LinearCostFunction.nickname:LinearCostFunction,
                             QuadraticCostFunction.nickname:QuadraticCostFunction,
                             StepCostFunction.nickname:StepCostFunction,
                             JumpCostFunction.nickname:JumpCostFunction,
+                            Jump2CostFunction.nickname:Jump2CostFunction,
                             DoubleJumpCostFunction.nickname:DoubleJumpCostFunction,
                             GateCostFunction.nickname:GateCostFunction,
                             RealisticCostFunction.nickname:RealisticCostFunction,
