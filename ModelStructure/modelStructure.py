@@ -144,7 +144,7 @@ class ModelStructure:
 
     @staticmethod
     def get_kwargs_init(cls):
-        all_vars = [k for k in inspect.signature(cls.__init__).parameters.keys() if not k in ['self', 'slots', 'flights']]
+        all_vars = {k:v for k, v in inspect.signature(cls.__init__).parameters.items() if not k in ['self', 'slots', 'flights']}
 
         return all_vars
 
@@ -197,6 +197,12 @@ class ModelStructure:
     def update_flights(self):
         [flight.update_slot() for flight in self.flights]
 
+    def name(self):
+        return self.__name__
+
+    @staticmethod
+    def name_cls(cls):
+        return cls.__name__
 
 def make_slot_and_flight(slot_time: float, slot_index: int,
                          flight_name: str = None, airline_name: str = None, eta: float = None,

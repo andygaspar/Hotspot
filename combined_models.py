@@ -20,11 +20,19 @@ from .Istop.istop import Istop
 from .GlobalOptimum.globalOptimum import GlobalOptimum
 from .NNBound.nnBound import NNBoundModel
 
+# def kwargs_init_from_combined(combined_model):
+# 	for Model in combined_model.Models:
+# 		if not Model is CombinedModel:
+# 			all_vars = inspect.signature(Model.__init__).parameters
+# 		else:
+
 
 def init_and_run(Model, slots, flights, kwargs_init, kwargs_run):
 	# Get all kwargs for init and init
-	all_vars = inspect.signature(Model.__init__).parameters
+	all_vars = Model.get_kwargs_init(Model)
+
 	kwargs_init_res = {k:kwargs_init.get(k, v.default) for k, v in all_vars.items() if not k in ['self', 'slots', 'flights']}
+	#print ('KWARGS SELECTED FOR Model {}: {}'.format(Model.name_cls(Model), kwargs_init_res))
 	model = Model(slots, flights, **kwargs_init_res)
 
 	# Get all kwargs for run and run
@@ -34,30 +42,34 @@ def init_and_run(Model, slots, flights, kwargs_init, kwargs_run):
 
 	return model, results
 
-def combine_model(Models, assign_slots_after_models=False, sequential_requirements=True):
+def combine_model(Models_list, assign_slots_after_models=False, sequential_requirements=True):
 	"""
 	Creates a model that combines sequentially the models in Models.
 	"""
 
 	class CombinedModel(mS.ModelStructure):
+		Models = Models_list
+
 		if not sequential_requirements:
 			requirements = list(set([req for Model in Models for req in Model.requirements]))
 		else:
 			requirements = Models[0].requirements
 
 		@staticmethod
-		def get_kwargs_init(dummy):
+		def get_kwargs_init(cls):
 			"""
 			Gets all kwargs from models' init functions to avoid inspection issues
 			with kwargs_init.
 			"""
-			all_vars = list(set([k for Model in Models for k in inspect.signature(Model.__init__).parameters.keys() if not k in ['self', 'slots', 'flights']]))
+			#all_vars = list(set([k for Model in Models for k in inspect.signature(Model.__init__).parameters.keys() if not k in ['self', 'slots', 'flights']]))
+			#all_vars = list(set([k for Model in self.Models for k in Model.get_kwargs_init() if not k in ['self', 'slots', 'flights']]))
+			all_vars = {k:v for Model in cls.Models for k, v in Model.get_kwargs_init(Model).items() if not k in ['self', 'slots', 'flights']}
 
 			return all_vars
 
 		@staticmethod
-		def get_kwargs_run(dummy):
-			all_vars = list(set([k for Model in Models for k in inspect.signature(Model.run).parameters.keys() if not k in ['self', 'slots', 'flights']]))
+		def get_kwargs_run(cls):
+			all_vars = list(set([k for Model in cls.Models for k in inspect.signature(Model.run).parameters.keys() if not k in ['self', 'slots', 'flights']]))
 
 			return all_vars
 			
@@ -66,15 +78,19 @@ def combine_model(Models, assign_slots_after_models=False, sequential_requiremen
 			self.slots = slots
 			self.flights = flights
 			self.kwargs_init = kwargs_init
-			
+
 			# Check that all flights have the attributes required by the model(s)
 			if checks:
 				self.check_requirements()
 
+		@staticmethod
+		def name_cls(cls):
+			return '_'.join([Model.name_cls(Model) for Model in cls.Models])
+
 		def run(self, **kwargs_run):
 			merge_results = {f.name:{} for f in self.flights}
-
-			for i, Model in enumerate(Models):
+			#print ('Models to run:', [m.name_cls(m) for m in self.Models])
+			for i, Model in enumerate(self.Models):
 				# Cost vectors will be recomputed if they are required during the
 				# next step AND a cost archetype function is given in input.
 				# This is typically the case for FuncApprox + Istop, NN bound etc.
@@ -85,6 +101,7 @@ def combine_model(Models, assign_slots_after_models=False, sequential_requiremen
 													cost_function=self.kwargs_init['cost_func_archetype'])
 						flight.compute_cost_vectors(self.slots)
 
+				#print ('Computing Model', Model.name_cls(Model))
 				model, results = init_and_run(Model, self.slots, self.flights, self.kwargs_init, kwargs_run)
 				
 				# One can reassign slots between models. This is useful for isntance
