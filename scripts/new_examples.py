@@ -1827,7 +1827,7 @@ if __name__=='__main__':
 	for algo in ['udpp', 'istop', 'nnbound', 'globaloptimum']:
 		examples_direct_cost_vector(algo=algo)
 
-	for algo in ['istop_approx', 'nnbound_approx', 'globaloptimum_approx']:
+	for algo in ['istop_approx', 'udpp_approx', 'udpp_istop_approx', 'nnbound_approx', 'globaloptimum_approx']:
 	#for algo in ['istop_approx']:
 		examples_direct_approx(algo=algo)
 
