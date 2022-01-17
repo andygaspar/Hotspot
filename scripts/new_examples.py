@@ -1831,8 +1831,6 @@ if __name__=='__main__':
 	#for algo in ['istop_approx']:
 		examples_direct_approx(algo=algo)
 
-	raise Exception()
-
 	for algo in ['udpp_merge', 'istop', 'nnbound', 'globaloptimum']:
 		example_agent_paradigm_vect(algo=algo)
 
