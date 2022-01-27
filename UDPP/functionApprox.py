@@ -126,27 +126,19 @@ def fit_cost_curve(x, y, max_delay, fixed_paras={}, steps=8, approx_fun=None):
     # function
     best_initial_guess = np.array([test_values[np.argmin(guesses)][3][k] for k in approx_fun.get_var_paras()])
 
-    # print ('COINCOINCOIN best_initial_guess=', best_initial_guess)
-    # print ('COINCOINCOIN fixed_paras=', fixed_paras)
-    # print ('XXXX x=', x)
-    # print ('YYYY y=', y)
-    # import pickle
-    # with open('cost_function_test.pic', 'wb') as f:
-    #     pickle.dump(approx_fun, f)
+    if approx_fun.nickname=='jump':
+        bounds = ([0., None], [0., None], [0., None])
+    elif approx_fun.nickname=='jump2':
+        bounds = ([0., None], [0., None])
 
-    #raise Exception()
     solution = minimize(obj_approx,
                         best_initial_guess,
                         args=(fixed_paras, x, y, approx_fun),
-                        method='Powell',
+                        method='L-BFGS-B',
                         options={'maxiter': 10000,
                                 'xtol': 0.5,
-                                'ftol': 0.01})
-
-    # print ('SOLUTION TO FIT:', solution)
-    # print ()
-    # print ()
-
+                                'ftol': 0.01},
+                        bounds=bounds)
     return solution.x
 
 def make_preference_fun(max_delay: float, delay_cost_vect: np.array, fixed_paras={}, approx_fun=None):

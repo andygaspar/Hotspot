@@ -139,7 +139,14 @@ UDPPTotal = combine_model([UDPPLocal, UDPPMerge])
 UDPPTotalApprox = combine_model([FunctionApprox, UDPPTotal])
 
 # UDPPTotal + ISTOP, both using the approximation function
-UDPPIstopApprox = combine_model([UDPPTotalApprox, Istop])
+UDPPIstopApprox = combine_model([UDPPTotalApprox, Istop],
+							assign_slots_after_models=[True, False],
+							)
+
+# UDPPTotal + Istop, both using cost vect
+UDPPIstop = combine_model([UDPPTotal, Istop],
+							assign_slots_after_models=[True, False],
+							)
 
 # Istop only with approximation (otherwise use only istop)
 IstopApprox = combine_model([FunctionApprox, Istop])

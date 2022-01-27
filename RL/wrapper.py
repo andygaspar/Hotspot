@@ -16,7 +16,7 @@ from ..GlobalOptimum.globalOptimum import GlobalOptimum
 from ..ModelStructure.Costs.costFunctionDict import archetypes_cost_functions
 from ..ModelStructure.Flight.flight import compatible_slots
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
-from ..combined_models import UDPPMergeIstop, UDPPLocalFunctionApprox, UDPPTotal, UDPPTotalApprox
+from ..combined_models import UDPPMergeIstop, UDPPLocalFunctionApprox, UDPPTotal, UDPPTotalApprox, UDPPIstop
 from ..combined_models import IstopApprox, NNBoundTotalApprox, GlobalOptimumTotalApprox, UDPPIstopApprox
 #from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
 
@@ -31,6 +31,7 @@ models = {'istop':Istop,
 		'udpp':UDPPTotal,
 		'udpp_approx':UDPPTotalApprox,
 		'udpp_istop_approx':UDPPIstopApprox,
+		'udpp_istop':UDPPIstop,
 		'istop_approx':IstopApprox,
 		'globaloptimum_approx':GlobalOptimumTotalApprox,
 		'nnbound_approx':NNBoundTotalApprox}
@@ -47,7 +48,8 @@ models_correspondence_cost_vect = {'istop':'get_cost_vectors',
 models_correspondence_approx = {'istop':'function_approx',
 								'globaloptimum':'function_approx',
 								'nnbound':'function_approx',
-								'udpp_merge_istop':'udpp_local_function_approx'}
+								'udpp_merge_istop':'udpp_local_function_approx',
+								'udpp_istop':'function_approx'}
 
 def allocation_from_df(df, name_slot='new slot'):
 	return OrderedDict(df[['flight', name_slot]].set_index('flight').to_dict()[name_slot])
@@ -90,17 +92,12 @@ def assign_FPFS_slot(slots, flights, alternative_allocation_rule=False):
 	# of slots is used, which compares time only (and several slots may have
 	# the same time).
 	assigned = []
-	#print ('alternative_allocation_rule=', alternative_allocation_rule)
 	for flight in flights_ordered:
 		cs = compatible_slots(slots, flight.eta, alternative_rule=alternative_allocation_rule)
-		#print ('YAHOU', flight, flight.eta, cs)
 		for slot in cs:
-			#print ('Trying slot', slot)
 			if not slot.index in assigned:
 				flight.slot = slot
-				#print ('Assigning slot', slot, 'to flight', flight)
 				assigned.append(slot.index)
-				#print ('Assigned slots:', assigned)
 				break
 
 # def compute_delta_t_from_slots(slots):
