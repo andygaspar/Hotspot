@@ -16,6 +16,7 @@ from .ModelStructure import modelStructure as mS
 from .UDPP.udppMerge import UDPPMerge
 from .UDPP.udppLocal import UDPPLocal
 from .UDPP.functionApprox import FunctionApprox
+from .UDPP.functionApproxCost import FunctionApproxCost
 from .Istop.istop import Istop
 from .GlobalOptimum.globalOptimum import GlobalOptimum
 from .NNBound.nnBound import NNBoundModel
@@ -138,10 +139,18 @@ UDPPTotal = combine_model([UDPPLocal, UDPPMerge])
 # UDPP with approximation function
 UDPPTotalApprox = combine_model([FunctionApprox, UDPPTotal])
 
+# UDPP with approximation function
+UDPPTotalApproxCost = combine_model([FunctionApproxCost, UDPPTotal])
+
 # UDPPTotal + ISTOP, both using the approximation function
 UDPPIstopApprox = combine_model([UDPPTotalApprox, Istop],
-							assign_slots_after_models=[True, False],
-							)
+								assign_slots_after_models=[True, False],
+								)
+
+# UDPPTotal + ISTOP, both using the approximation function
+UDPPIstopApproxCost = combine_model([UDPPTotalApproxCost, Istop],
+									assign_slots_after_models=[True, False],
+									)
 
 # UDPPTotal + Istop, both using cost vect
 UDPPIstop = combine_model([UDPPTotal, Istop],
@@ -151,11 +160,20 @@ UDPPIstop = combine_model([UDPPTotal, Istop],
 # Istop only with approximation (otherwise use only istop)
 IstopApprox = combine_model([FunctionApprox, Istop])
 
+# Istop only with approximation (otherwise use only istop)
+IstopApproxCost = combine_model([FunctionApproxCost, Istop])
+
 # NNbound with approximation
 NNBoundTotalApprox = combine_model([FunctionApprox, NNBoundModel])
 
+# NNbound with approximation
+NNBoundTotalApproxCost = combine_model([FunctionApproxCost, NNBoundModel])
+
 # GlobalOptimum with approximation
 GlobalOptimumTotalApprox = combine_model([FunctionApprox, GlobalOptimum])
+
+# GlobalOptimum with approximation
+GlobalOptimumTotalApproxCost = combine_model([FunctionApproxCost, GlobalOptimum])
 
 # UDPP merge first, Istop second, from cost vect
 UDPPMergeIstop = combine_model([UDPPMerge, Istop],
@@ -164,4 +182,8 @@ UDPPMergeIstop = combine_model([UDPPMerge, Istop],
 
 # Computes preferences AND function approximation (for UDPPMergeIstop for instance)
 UDPPLocalFunctionApprox = combine_model([UDPPLocal, FunctionApprox],
+										sequential_requirements=False)
+
+# Computes preferences AND function approximation (for UDPPMergeIstop for instance)
+UDPPLocalFunctionApproxCost = combine_model([UDPPLocal, FunctionApproxCost],
 										sequential_requirements=False)
