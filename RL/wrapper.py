@@ -12,12 +12,15 @@ from ..NNBound.nnBound import NNBoundModel
 from ..UDPP.udppMerge import UDPPMerge
 from ..UDPP.udppLocal import UDPPLocal
 from ..UDPP.functionApprox import FunctionApprox
+from ..UDPP.functionApproxCost import FunctionApproxCost
 from ..GlobalOptimum.globalOptimum import GlobalOptimum
 from ..ModelStructure.Costs.costFunctionDict import archetypes_cost_functions
 from ..ModelStructure.Flight.flight import compatible_slots
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
 from ..combined_models import UDPPMergeIstop, UDPPLocalFunctionApprox, UDPPTotal, UDPPTotalApprox, UDPPIstop
 from ..combined_models import IstopApprox, NNBoundTotalApprox, GlobalOptimumTotalApprox, UDPPIstopApprox
+from ..combined_models import UDPPLocalFunctionApproxCost, UDPPTotalApproxCost
+from ..combined_models import IstopApproxCost, NNBoundTotalApproxCost, GlobalOptimumTotalApproxCost, UDPPIstopApproxCost
 #from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
 
 models = {'istop':Istop,
@@ -27,14 +30,21 @@ models = {'istop':Istop,
 		'udpp_local':UDPPLocal,
 		'function_approx':FunctionApprox,
 		'udpp_local_function_approx':UDPPLocalFunctionApprox,
+		'function_approx_cost':FunctionApproxCost,
+		'udpp_local_function_approx_cost':UDPPLocalFunctionApproxCost,
 		'udpp_merge_istop':UDPPMergeIstop,
 		'udpp':UDPPTotal,
 		'udpp_approx':UDPPTotalApprox,
 		'udpp_istop_approx':UDPPIstopApprox,
+		'udpp_approx_cost':UDPPTotalApproxCost,
+		'udpp_istop_approx_cost':UDPPIstopApproxCost,
 		'udpp_istop':UDPPIstop,
 		'istop_approx':IstopApprox,
 		'globaloptimum_approx':GlobalOptimumTotalApprox,
-		'nnbound_approx':NNBoundTotalApprox}
+		'nnbound_approx':NNBoundTotalApprox,
+		'istop_approx_cost':IstopApproxCost,
+		'globaloptimum_approx_cost':GlobalOptimumTotalApproxCost,
+		'nnbound_approx_cost':NNBoundTotalApproxCost}
 
 # Models (values) to be run with models (keys) if cost vectors are used.
 models_correspondence_cost_vect = {'istop':'get_cost_vectors',
@@ -97,6 +107,7 @@ def assign_FPFS_slot(slots, flights, alternative_allocation_rule=False):
 		for slot in cs:
 			if not slot.index in assigned:
 				flight.slot = slot
+				flight.fpfs_slot = slot
 				assigned.append(slot.index)
 				break
 

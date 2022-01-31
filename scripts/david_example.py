@@ -11,7 +11,8 @@ class Flight:
 	pass
 
 def test1():
-	algo = 'udpp_istop_approx'
+	print ('TEST NUMBER ONE: BAD APPROXIMATION.')
+	algo = 'udpp_istop_approx_cost'
 
 	flight_names = ['A5002', 'A3000', 'A1004', 'A3003', 'A3004', 'A3005', 'A3002',
 					'A1006', 'A1010', 'A3006', 'A2010', 'A2009', 'A5005']
@@ -59,7 +60,8 @@ def test1():
 
 	cost_func_archetype = 'jump2'
 	hotspot_handler = HotspotHandler(engine=engine,
-									cost_func_archetype=cost_func_archetype)
+									cost_func_archetype=cost_func_archetype,
+									alternative_allocation_rule=True)
 
 	slots, flights = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=external_flights,
 																		slot_times=slot_times,
@@ -105,12 +107,15 @@ def test1():
 	new_flights = hotspot_handler.get_new_flight_list()
 
 	# you can see the results of each individual engine by accessing this attribute
-	print ('Merged results:', engine.model.merge_results)
+	# print ('Merged results:', engine.model.merge_results)
 
+	print ()
+	print ()
 	print ()
 
 def test2():
-	algo = 'udpp_approx'
+	print ('TEST NUMBER TWO: BETTER APPROXIMATION.')
+	algo = 'udpp_istop_approx'
 
 	flight_names = ['A5002', 'A3000', 'A1004', 'A3003', 'A3004', 'A3005', 'A3002',
 					'A1006', 'A1010', 'A3006', 'A2010', 'A2009', 'A5005']
@@ -130,22 +135,47 @@ def test2():
 					'A2009': array([    0.   ,     0.   ,     0.   ,     0.   ,     0.   ,     0.   , 0.   ,     0.   ,     0.   ,     0.   , 28504.232, 29511.352, 70318.472]),
 					'A5005': array([    0.  ,     0.  ,     0.  ,     0.  ,     0.  ,     0.  , 0.  ,     0.  ,     0.  ,     0.  ,     0.  ,     0.  , 17407.16])} 
 
+	slot_times = [600, 615, 630, 635, 640, 645, 650,
+			  655, 660, 665, 670, 675, 680]
+
+	def build_function(slot_times, eta, cv):
+		def f(x):
+			try:
+				idx = next(k for k in range(len(slot_times)) if x<(slot_times[k]-eta))
+			except StopIteration:
+				idx = len(slot_times)
+				
+			idx = max(0, idx-1)
+			
+			return cv[idx]
+
+		return f
+
 	external_flights = [] 
 	for i, name in enumerate(flight_names):
 		flight = Flight()
 		flight.name = name
 		flight.eta = etas[i]
 		flight.airlineName = name[:2]
+		cv = costVec_dict[name]
+
+		flight.cost_func = build_function(slot_times, etas[i], cv)
+
+		import numpy as np
+		import matplotlib.pyplot as plt
+		x = np.linspace(0., 100., 1000)
+		plt.plot(x, np.vectorize(flight.cost_func)(x))
+
 		external_flights.append(flight)
 
-	slot_times = [600, 615, 630, 635, 640, 645, 650,
-				  655, 660, 665, 670, 675, 680]
+	plt.show()
 
 	engine = Engine(algo=algo)
 
 	cost_func_archetype = 'jump2'
 	hotspot_handler = HotspotHandler(engine=engine,
-									cost_func_archetype=cost_func_archetype)
+									cost_func_archetype=cost_func_archetype,
+									alternative_allocation_rule=True)
 
 	slots, flights = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=external_flights,
 																		slot_times=slot_times,
@@ -153,10 +183,10 @@ def test2():
 																				'airlineName':'airline_name',
 																				'eta':'eta'
 																				},
-																		# set_cost_function_with={'cost_function':'cost_func',
-																		# 						'kind':'lambda',
-																		# 						'absolute':False,
-																		# 						'eta':'eta'}
+																		set_cost_function_with={'cost_function':'cost_func',
+																								'kind':'lambda',
+																								'absolute':False,
+																								'eta':'eta'}
 																		)
 	for flight in flights.values():
 		flight.costVect = costVec_dict[flight.name]
@@ -170,6 +200,7 @@ def test2():
 
 	# Run model
 	allocation = engine.compute_optimal_allocation(hotspot_handler=hotspot_handler,
+												# kwargs_init={'default_parameters':{'margin':15., 'jump':20000}}
 												)
 
 	# Allocation is an ordered dict linking flight -> slot
@@ -191,7 +222,7 @@ def test2():
 	new_flights = hotspot_handler.get_new_flight_list()
 
 	# you can see the results of each individual engine by accessing this attribute
-	print ('Merged results:', engine.model.merge_results)
+	# print ('Merged results:', engine.model.merge_results)
 
 	print ()
 

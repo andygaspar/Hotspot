@@ -98,11 +98,9 @@ def compute_test_values(x, y, max_delay, approx_fun, fixed_paras={}, steps=8):
     elif approx_fun.nickname=='jump2':
         test_values = []
         max_val = max(y)
-        #for slope in np.linspace(0, 1, steps):
         for margin in np.linspace(0, 3*max_delay//4, steps):
             for jump in np.linspace(10, max_val, steps//2):
                 params = {}
-                #params['slope'] = slope
                 params['margin'] = margin
                 params['jump'] = jump
                 
@@ -131,14 +129,30 @@ def fit_cost_curve(x, y, max_delay, fixed_paras={}, steps=8, approx_fun=None):
     elif approx_fun.nickname=='jump2':
         bounds = ([0., None], [0., None])
 
+    # print ('BEST INITIAL GUESS:', best_initial_guess)
+
     solution = minimize(obj_approx,
                         best_initial_guess,
                         args=(fixed_paras, x, y, approx_fun),
-                        method='L-BFGS-B',
+                        #method='L-BFGS-B',
+                        method='Powell',
                         options={'maxiter': 10000,
                                 'xtol': 0.5,
                                 'ftol': 0.01},
                         bounds=bounds)
+
+    # if best_initial_guess[0]==0.:
+    #     print ('SOLUTION:', solution)
+    #     import matplotlib.pyplot as plt
+    #     plt.plot(x, y)
+    #     plt.plot(x, [approx_fun(xx,
+    #                             eta=fixed_paras['eta'],
+    #                             margin=solution.x[0],
+    #                             jump=solution.x[1]) for xx in x])
+    #     plt.show()
+
+        # raise Exception()
+
     return solution.x
 
 def make_preference_fun(max_delay: float, delay_cost_vect: np.array, fixed_paras={}, approx_fun=None):
@@ -151,7 +165,7 @@ def make_preference_fun(max_delay: float, delay_cost_vect: np.array, fixed_paras
     # plt.show()
 
 
-class FunctionApprox(ModelStructure):
+class FunctionApproxCost(ModelStructure):
     requirements = ['delayCostVect']
 
     def __init__(self, slots: List[Slot]=None, flights: List[fl.Flight]=None,

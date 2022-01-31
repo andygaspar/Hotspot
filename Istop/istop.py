@@ -60,6 +60,7 @@ class Istop(mS.ModelStructure):
 
             max_delay = self.slots[-1].time - self.slots[0].time
             for flight in self.flights:
+                # print ('COMPATIBLE SLOTS IN ISTOP:', flight, flight.eta, flight.compatibleSlots)
                 flight.fitCostVect = flight.costVect
 
             for airline in self.airlines:
@@ -123,7 +124,7 @@ class Istop(mS.ModelStructure):
         #         raise
 
         # self.matches = new_matches
-        # print ('MATCHES AFTER CLEANING:', len(self.matches))
+        # print ('MATCHES AFTER CLEANING:', self.matches)
         
         for match in self.matches:
             for couple in match:
@@ -133,6 +134,9 @@ class Istop(mS.ModelStructure):
                         self.flights_in_matches.append(couple[0])
                     if not self.f_in_matched(couple[1]):
                         self.flights_in_matches.append(couple[1])
+
+        # print ('COUPLES:', self.couples)
+        # print ('flights_in_matches:', self.flights_in_matches)
 
         print("preprocess concluded in sec:", time.time() - start, "   Number of possible offers: ", len(self.matches))
         return len(self.matches) > 0
@@ -145,6 +149,7 @@ class Istop(mS.ModelStructure):
                 print("Using Gurobi")
                 try:
                     solution_vect, offers_vect = m.run(timing=timing, verbose=verbose, time_limit=time_limit)
+                    # print ('SOLUTION VECT:', solution_vect)
                     self.assign_flights(solution_vect)
 
                     offers = 0
@@ -214,7 +219,10 @@ class Istop(mS.ModelStructure):
     def assign_flights(self, solution_vect):
         for flight in self.flights:
             for slot in self.slots:
-                if solution_vect[flight.slot.index, slot.index] > 0.9:
+                #if solution_vect[flight.slot.index, slot.index] > 0.9:
+                if solution_vect[flight.fpfs_slot.index, slot.index] > 0.9:
+                    # print ('FLIGHT {} IS GOING FROM SLOT {} TO SLOT {}'.format(flight, flight.slot, slot))
+                    # print (slot in flight.compatibleSlots)
                     flight.newSlot = slot
 
     # def reset(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
