@@ -2,8 +2,8 @@ import sys
 import time
 from typing import List
 
-import xpress as xp
-xp.controls.outputlog = 0
+# import xpress as xp
+# xp.controls.outputlog = 0
 import numpy as np
 
 from ...ModelStructure.Flight.flight import Flight
@@ -196,7 +196,7 @@ class GurobiSolver:
 
         self.m.setObjective(
             quicksum(self.x[flight.index, j.index] * flight.fitCostVect[j.index]
-                   for flight in self.flights for j in self.slots), sense=xp.minimize)  # s
+                   for flight in self.flights for j in self.slots), sense=GRB.MINIMIZE)  # s
 
     def run(self, timing=False, verbose=False, time_limit=60):
 

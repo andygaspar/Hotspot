@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from pathlib import Path
+import pandas as pd
 
 def print_allocation(allocation):
 	#al_sorted = OrderedDict(sorted(allocation.items(), key=lambda t: t[1]))
@@ -22,6 +23,33 @@ def compare_allocations(allocation1, allocation2):
 		print (s)
 	else:
 		print ('Allocations are the same!')
+
+def compare_allocations_costs(allocation1, allocation2, flights, cost_vect):
+	comparison = {}
+	comparison['initial_cost'] = compute_cost(flights, allocation1, cost_vect)
+	comparison['final_cost'] = compute_cost(flights, allocation2, cost_vect)
+
+	return comparison
+
+def generate_comparison(allocation1, allocation2, airlines, cost_vect):
+	results = {'airline':[], 'num flights':[], 'initial costs':[], 'final costs':[], 'reduction %':[]}
+	for air, flights in airlines.items():
+		c = compare_allocations_costs(allocation1, allocation2, flights, cost_vect)
+		results['airline'].append(air)
+		results['num flights'].append(len(flights))
+		results['initial costs'].append(c['initial_cost'])
+		results['final costs'].append(c['final_cost'])
+		results['reduction %'].append(100*(c['final_cost']-c['initial_cost'])/c['initial_cost'])
+	
+	results = pd.DataFrame(results)
+
+	results.loc['total', ['num flights', 'initial costs', 'final costs']] = results.sum(axis=0)[['num flights', 'initial costs', 'final costs']]
+	results.loc['total', 'airline'] = 'total'
+
+	results.loc['total', 'reduction %'] = results['reduction %'].mean()
+
+	print (results.reset_index())
+
 
 # TODO: make it work for any version
 def agent_file_name(nfp, nn=128, n_h=2, v='v1.0', nf_tot_game=10, n_a=3,
@@ -59,3 +87,8 @@ def root_file_name(nfp=None, nn=128, n_h=2, v='v1.0', nf_tot_game=10, n_a=3,
 		raise Exception('Unrecognised game_type:', game_type)
 		
 	return file_name
+
+def compute_cost(flights, allocation, cost_vect):
+	cost = sum([cost_vect[f][allocation[f].index] for f in flights])
+
+	return cost

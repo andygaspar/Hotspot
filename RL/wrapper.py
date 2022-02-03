@@ -219,11 +219,8 @@ class HotspotHandler:
 		# else:
 		# 	self.delta_t = delta_t
 
-		# print ('POIN, delta_t', self.delta_t)
-
 	def prepare_all_flights(self):
 		reqs = self.get_requirements_from_engine()
-		#print ('Reqs:', reqs)
 		for flight in self.flights.values():
 			if 'delayCostVect' in reqs or 'costVect' in reqs:
 				flight.compute_cost_vectors(self.slots)
@@ -596,50 +593,20 @@ class Flight(HFlight):
 
 	def compute_lambda_from_paras(self, cost_function_paras):
 		"""
-		cost_function_paras takes a flight and slot as input.
 		Not that final cost function argument is absolute time, 
 		not delay
 		"""
-		# class DummyFlight:
-		# 	pass
-		
-		# class DummySlot:
-		# 	pass
-		
-		# Real cost function
-		def f(time):
-			# slot = DummySlot()
-			# slot.time = time
-			# print ('ALLLLLLO', time)
-			# print ("ALLLO", {attr:getattr(self, attr) for attr in cost_function_paras.paras})
-			return cost_function_paras(time, **{attr:getattr(self, attr) for attr in cost_function_paras.paras})
-		
-		#self.cost_f_true = f 
-		
-		# def ff(time):
-		# 	# Declared cost function
-		# 	declared_flight = DummyFlight()
-		# 	declared_flight.eta = self.eta
-		# 	declared_flight.margin1 = getattr(self, 'margin1_declared', self.margin1)
-		# 	declared_flight.slope = getattr(self, 'slope_declared', self.slope)
-		# 	declared_flight.jump1 = getattr(self, 'jump1_declared', self.jump1)
-			
-		# 	slot = DummySlot()
-		# 	slot.time = time
-		# 	return cost_function_paras(declared_flight, slot)
-		
-		#self.cost_f_declared = ff
 
-		return f#, ff
+		def f(time):
+			return cost_function_paras(time, **{attr:getattr(self, attr) for attr in cost_function_paras.paras})
+
+		return f
 
 	def set_cost_function_from_paras(self, cost_function_paras, absolute=True):
 		f = self.compute_lambda_from_paras(cost_function_paras)
-		self.set_cost_function_from_lambda(f,
-											#cost_function_declared=fd,
-											absolute=absolute)
+		self.set_cost_function_from_lambda(f, absolute=absolute)
 
-	def set_cost_function_from_lambda(self, cost_function, #cost_function_declared=None,
-		absolute=True, eta=None):
+	def set_cost_function_from_lambda(self, cost_function, absolute=True, eta=None):
 		"""
 		Useful to set a cost function which has the signature delay -> cost or
 		absolute time -> cost. In the former case, one should select absolute=False
@@ -647,10 +614,6 @@ class Flight(HFlight):
 		"""
 		if absolute:
 			self.cost_f_true = cost_function
-			#if not cost_function_declared is None:
-			#	self.cost_f_declared = cost_function_declared
-			#else:
-			#	self.cost_f_declared = cost_function
 		else:
 			def f(x):
 				if x-eta<0.:
@@ -660,30 +623,19 @@ class Flight(HFlight):
 
 			self.cost_f_true = f
 
-			# if not cost_function_declared is None:
-			# 	def ff(x):
-			# 		if x-eta<0.:
-			# 			return 0.
-			# 		else:
-			# 			return cost_function_declared(x-eta)
-
-			# 	self.cost_f_declared = ff
-			# else:
-			# 	self.cost_f_declared = f
-
-	def compute_cost_vectors(self, slots):
+	def compute_cost_vectors(self, slots, force_computation=False):
 		"""
 		Compute costVect and delayCostVect, required for all models. If one or the 
 		other is given, the other is computed from it. If none are given, costVect
 		is computed from the cost function, and delayCostVect from costVect.
 		"""
-		if self.costVect is None:
-			if self.delayCostVect is None:
+		if self.costVect is None or force_computation:
+			if self.delayCostVect is None or force_computation:
 				self.compute_cost_vect_from_cost_function(slots)
 			else:
 				self.compute_cost_vect_from_delay_cost_vect(slots)
 
-		if self.delayCostVect is None:
+		if self.delayCostVect is None or force_computation:
 			# This is computed always from costVect.
 			self.compute_delay_cost_vect(slots)
 

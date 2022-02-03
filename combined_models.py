@@ -95,16 +95,24 @@ def combine_model(Models_list, assign_slots_after_models=False, sequential_requi
 				# Cost vectors will be recomputed if they are required during the
 				# next step AND a cost archetype function is given in input.
 				# This is typically the case for FuncApprox + Istop, NN bound etc.
+				
+				# print ('Computing Model', Model.name_cls(Model))
 				if i>0 and ('delayCostVect' in Model.requirements or 'costVect' in Model.requirements):
 					for flight in self.flights:
-						if 'cost_func_archetype' in self.kwargs_init.keys() and self.kwargs_init['cost_func_archetype'] is not None:
+						stuff = 'cost_func_archetype' in self.kwargs_init.keys() and self.kwargs_init['cost_func_archetype'] is not None
+						if stuff:
+							# print ('Setting cost functions')
+							# print ('Flight margin:', flight.margin)
 							flight.set_cost_function(kind='paras',
-													cost_function=self.kwargs_init['cost_func_archetype'])
-						flight.compute_cost_vectors(self.slots)
+													cost_function=self.kwargs_init['cost_func_archetype'],
+													)
+						# print ('Compute cost vectors')
+						flight.compute_cost_vectors(self.slots,
+													force_computation=stuff)
+						# print (flight.name, ':', flight.costVect)
 
-				#print ('Computing Model', Model.name_cls(Model))
 				model, results = init_and_run(Model, self.slots, self.flights, self.kwargs_init, kwargs_run)
-				
+
 				# One can reassign slots between models. This is useful for isntance
 				# if using to global models one after the other, like UDPP merge and Istop.
 				if type(assign_slots_after_models) in [tuple, list]:
