@@ -188,5 +188,9 @@ class FunctionApproxCost(ModelStructure):
                                         flight.delayCostVect,
                                         fixed_paras=fixed_parameters,
                                         approx_fun=self.cost_func_archetype)
+            
+            for i, k in enumerate(self.cost_func_archetype.get_var_paras()):
+                setattr(flight, k, paras[i])
+
             all_paras[flight.name] = {k:paras[i] for i, k in enumerate(self.cost_func_archetype.get_var_paras())}
         return all_paras

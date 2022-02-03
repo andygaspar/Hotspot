@@ -60,7 +60,6 @@ class Istop(mS.ModelStructure):
 
             max_delay = self.slots[-1].time - self.slots[0].time
             for flight in self.flights:
-                # print ('COMPATIBLE SLOTS IN ISTOP:', flight, flight.eta, flight.compatibleSlots)
                 flight.fitCostVect = flight.costVect
 
             for airline in self.airlines:
@@ -123,7 +122,8 @@ class Istop(mS.ModelStructure):
         #     except:
         #         raise
 
-        # self.matches = new_matches
+        #self.matches = new_matches
+        
         # print ('MATCHES AFTER CLEANING:', self.matches)
         
         for match in self.matches:
@@ -221,8 +221,6 @@ class Istop(mS.ModelStructure):
             for slot in self.slots:
                 #if solution_vect[flight.slot.index, slot.index] > 0.9:
                 if solution_vect[flight.fpfs_slot.index, slot.index] > 0.9:
-                    # print ('FLIGHT {} IS GOING FROM SLOT {} TO SLOT {}'.format(flight, flight.slot, slot))
-                    # print (slot in flight.compatibleSlots)
                     flight.newSlot = slot
 
     # def reset(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
