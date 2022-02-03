@@ -39,14 +39,14 @@ def generate_comparison(allocation1, allocation2, airlines, cost_vect):
 		results['num flights'].append(len(flights))
 		results['initial costs'].append(c['initial_cost'])
 		results['final costs'].append(c['final_cost'])
-		results['reduction %'].append(100*(c['final_cost']-c['initial_cost'])/c['initial_cost'])
+		results['reduction %'].append(-100*(c['final_cost']-c['initial_cost'])/c['initial_cost'])
 	
 	results = pd.DataFrame(results)
 
 	results.loc['total', ['num flights', 'initial costs', 'final costs']] = results.sum(axis=0)[['num flights', 'initial costs', 'final costs']]
 	results.loc['total', 'airline'] = 'total'
 
-	results.loc['total', 'reduction %'] = results['reduction %'].mean()
+	results.loc['total', 'reduction %'] = -100*(results.loc['total','final costs']-results.loc['total','initial costs'])/results.loc['total','initial costs']
 
 	print (results.reset_index())
 

@@ -547,6 +547,96 @@ def test6():
 	# print ('Merged results:', engine.model.merge_results)
 
 	print ()
+	print ()
+	print ()
+
+def test7():
+	print ('TEST NUMBER 7: ACTUAL COST GLOBAL OPTIMUM')
+	algo = 'globaloptimum'
+
+	external_flights = [] 
+	for i, name in enumerate(flight_names):
+		flight = Flight()
+		flight.name = name
+		flight.eta = etas[i]
+		flight.airlineName = name[:2]
+		cv = costVec_dict[name]
+
+		flight.cost_func = build_function(slot_times, etas[i], cv)
+
+		external_flights.append(flight)
+
+	# 	import numpy as np
+	# 	import matplotlib.pyplot as plt
+	# 	x = np.linspace(0., 100., 1000)
+	# 	plt.plot(x, np.vectorize(flight.cost_func)(x))
+	
+	# plt.show()
+
+	engine = Engine(algo=algo)
+
+	#cost_func_archetype = 'jump2'
+	hotspot_handler = HotspotHandler(engine=engine,
+									#cost_func_archetype=cost_func_archetype,
+									alternative_allocation_rule=True)
+
+	slots, flights = hotspot_handler.prepare_hotspot_from_flights_ext(flights_ext=external_flights,
+																		slot_times=slot_times,
+																		attr_map={'name':'flight_name',
+																				'airlineName':'airline_name',
+																				'eta':'eta'
+																				},
+																		# set_cost_function_with={'cost_function':'cost_func',
+																		# 						'kind':'lambda',
+																		# 						'absolute':False,
+																		# 						'eta':'eta'}
+																		)
+	for flight in flights.values():
+		flight.costVect = costVec_dict[flight.name]
+
+	# This computes the cost vectors if needed.
+	hotspot_handler.prepare_all_flights()
+
+	print ('FPFS allocation:')
+	fpfs_allocation = hotspot_handler.get_allocation()
+	print_allocation(fpfs_allocation)
+	print ()
+
+	# Run model
+	allocation = engine.compute_optimal_allocation(hotspot_handler=hotspot_handler,
+												kwargs_init={}
+												)
+
+	# Allocation is an ordered dict linking flight -> slot
+	print ('Final allocation:')
+	print_allocation(allocation)
+	print ()
+	print ('Reduction in cost (last stage of model, approximated costs:')
+	engine.print_optimisation_performance()
+
+	print ()
+	print ('Reduction in cost (overall, real costs:')
+	generate_comparison(fpfs_allocation, allocation, airlines, costVec_dict)
+
+	# Put slots in the original flight object as attribute "attr_slot_ext"
+	hotspot_handler.assign_slots_to_flights_ext_from_allocation(allocation, attr_slot_ext='slot')
+	print ('Slot assigned to first flight:', external_flights[0].slot)
+
+	# One can also use this method to use internal flights object to get the slot, instead of the
+	# allocation dict.
+	hotspot_handler.update_flight_attributes_int_to_ext({'newSlot':'slot'})
+	print ('Slot assigned to last flight:', external_flights[-1].slot)
+
+	# You can also get another shiny list of flights
+	new_flights = hotspot_handler.get_new_flight_list()
+
+	# you can see the results of each individual engine by accessing this attribute
+	# print ('Merged results:', engine.model.merge_results)
+
+	print ()
+	print ()
+	print ()
+
 
 if __name__=='__main__':
 	test1()
@@ -560,3 +650,5 @@ if __name__=='__main__':
 	test5()
 
 	test6()
+
+	test7()
