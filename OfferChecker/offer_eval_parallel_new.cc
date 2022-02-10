@@ -81,6 +81,7 @@ class OfferChecker{
 
 
         bool check_couple_condition(short* flights){
+            std::cout<<"mandi"<<std::endl;
             for (short i = 0; i< couples_rows; i++){
 
                 // first airline eta check
