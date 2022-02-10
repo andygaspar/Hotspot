@@ -10,7 +10,7 @@ from ..GlobalFuns.globalFuns import HiddenPrints
 from .Solvers.mip_solver import MipSolver
 #from .Solvers.xpress_solver import XpressSolver
 from ..ModelStructure import modelStructure as mS
-from itertools import combinations
+from itertools import combinations, permutations
 from .AirlineAndFlight.istopAirline import IstopAirline
 from ..ModelStructure.Flight.flight import Flight
 from ..ModelStructure.Slot.slot import Slot
@@ -69,6 +69,9 @@ class Istop(mS.ModelStructure):
             self.airlines_triples = np.array(list(combinations(self.airlines, 3)))
 
             self.epsilon = sys.float_info.min
+
+            self.flights.sort(key=lambda f: f.slot)
+            self.scheduleMatrix = self.set_schedule_matrix()
             self.offerChecker = OfferChecker(self.scheduleMatrix)
 
             self.matches = []
@@ -76,6 +79,13 @@ class Istop(mS.ModelStructure):
             self.flights_in_matches = []
 
             self.offers_selected = []
+
+    def set_schedule_matrix(self):
+        arr = []
+        flight: Flight
+        for flight in self.flights:
+            arr.append([flight.slot.time] + [flight.eta] + list(flight.standardisedVector))
+        return np.array(arr)
 
     def check_and_set_matches(self):
         start = time.time()
@@ -143,6 +153,7 @@ class Istop(mS.ModelStructure):
 
     def run(self, timing=False, max_time=2000, verbose=False, time_limit=60):
         feasible = self.check_and_set_matches()
+
         if feasible:
             try:
                 m = GurobiSolver(self)
@@ -151,13 +162,10 @@ class Istop(mS.ModelStructure):
                     solution_vect, offers_vect = m.run(timing=timing, verbose=verbose, time_limit=time_limit)
                     # print ('SOLUTION VECT:', solution_vect)
                     self.assign_flights(solution_vect)
+                    self.offers_selected = [match for i, match in enumerate(self.matches) if offers_vect[i] > 0.9]
 
-                    offers = 0
-                    for i in range(len(self.matches)):
-                        if offers_vect[i] > 0.9:
-                            self.offers_selected.append(self.matches[i])
-                            offers += 1
-                    #print("Number of offers selected: ", offers)
+                    print("Number of offers selected: ", len(self.offers_selected))
+                    print("Offers selected", self.offers_selected)
                 except Exception as e:
                     print ('exception', e)
                     raise
@@ -177,7 +185,7 @@ class Istop(mS.ModelStructure):
         else:
             for flight in self.flights:
                 flight.newSlot = flight.slot
-
+        print("Number of offers selected: ", 0)
         solution.make_solution(self)
         self.offer_solution_maker()
 
@@ -189,7 +197,7 @@ class Istop(mS.ModelStructure):
         return np.intersect1d(others_slots, flight.compatibleSlots, assume_unique=True)
 
     def offer_solution_maker(self):
-        flight: IstopFlight
+        flight: Flight
         airline_names = ["total"] + [airline.name for airline in self.airlines]
         flights_numbers = [self.numFlights] + [len(airline.flights) for airline in self.airlines]
         # to fix.... it / 4 works only for couples
@@ -249,3 +257,4 @@ class Istop(mS.ModelStructure):
     #     self.flights_in_matches = []
 
     #     self.offers_selected = []
+

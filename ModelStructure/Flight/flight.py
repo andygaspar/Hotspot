@@ -62,6 +62,12 @@ class Flight:
 
         self.udppPriorityNumber = None
 
+        # istop attributes
+
+        self.fitCostVect = None
+
+        self.standardisedVector = None
+
     def __str__(self):
         return str(self.name)
 

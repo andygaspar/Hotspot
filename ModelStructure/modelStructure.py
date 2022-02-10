@@ -39,8 +39,6 @@ class ModelStructure:
             if 'costVect' in self.requirements or 'delayCostVect' in self.requirements:
                 self.initialTotalCosts = self.compute_costs(self.flights, "initial")
 
-                self.scheduleMatrix = self.set_schedule_matrix()
-
             self.emptySlots = []
 
             self.solution = None
@@ -92,11 +90,7 @@ class ModelStructure:
         if which == "final":
             return sum([flight.newSlot.time-flight.eta for flight in flights])
 
-    def make_schedule_matrix(self):
-        arr = []
-        for flight in self.flights:
-            arr.append([flight.slot.time] + [flight.etaSlot.time] + flight.costVect)
-        return np.array(arr)
+
 
     def __str__(self):
         #return str(self.airlines)
@@ -162,12 +156,6 @@ class ModelStructure:
         for flight in self.flights:
             flight.delayVect = np.array(
                 [0 if slot.time < flight.eta else slot.time - flight.eta for slot in self.slots])
-
-    def set_schedule_matrix(self):
-        arr = []
-        for flight in self.flights:
-            arr.append([flight.slot.time] + [flight.eta] + list(flight.costVect))
-        return np.array(arr)
 
     def make_airlines(self, air_ctor):
         air_flight_dict = {}

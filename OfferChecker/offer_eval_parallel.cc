@@ -37,6 +37,7 @@ class OfferChecker{
             couples{new short*[coup_row]}, couples_rows{coup_row}, couples_cols{coup_col}, 
             triples{new short*[trip_row]}, triples_rows{trip_row}, triples_cols{trip_col}, 
             num_procs{n_procs}
+
          {
             
          for (int i = 0 ; i< row; i++) {
@@ -81,17 +82,19 @@ class OfferChecker{
 
 
         bool check_couple_condition(short* flights){
+
             for (short i = 0; i< couples_rows; i++){
 
                 // first airline eta check
                 if (mat[flights[0]][1] <= mat[flights[couples[i][0]]][0]){
+
                     if (mat[flights[1]][1] <= mat[flights[couples[i][1]]][0]){
 
-                        // couples[i]hecouples[i]k first airline's couples[i]onveniencouples[i]e
+                        // check first airline's convenience
                         if (mat[flights[0]][ 2 + flights[0]] + mat[flights[1]][ 2 + flights[1]] > 
                                 mat[flights[0]][ 2 + flights[couples[i][0]]] + mat[flights[1]][ 2 + flights[couples[i][1]]]){
 
-                            // secouples[i]ond airline eta couples[i]hecouples[i]k
+                            // second airline eta check
                             if (mat[flights[2]][1] <= mat[flights[couples[i][2]]][0]){
 
                                 if (mat[flights[3]][1] <= mat[flights[couples[i][3]]][0]){
@@ -114,7 +117,7 @@ class OfferChecker{
 
 
         bool* air_couple_check(short* airl_pair, unsigned offers){
-            bool* matches = new bool[offers]; 
+            bool* matches = new bool[offers];
             omp_set_num_threads(num_procs);
             #pragma omp parallel for schedule(dynamic) shared(matches, airl_pair, offers, mat)
             for (int k = 0; k < offers; k++){
