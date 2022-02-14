@@ -1,5 +1,6 @@
 from typing import Callable, List, Union
 
+
 from gurobipy import Model, GRB, quicksum, Env
 
 from ...GlobalFuns.globalFuns import HiddenPrints
@@ -17,6 +18,7 @@ import time
 
 
 def stop(model, where):
+
     if where == GRB.Callback.MIP:
         run_time = model.cbGet(GRB.Callback.RUNTIME)
 
@@ -25,7 +27,7 @@ def stop(model, where):
             model.terminate()
 
 
-class NNBoundGurobi:
+class GOGurobi(mS.ModelStructure):
 
     def __init__(self, model: mS.ModelStructure):
 
@@ -58,18 +60,12 @@ class NNBoundGurobi:
                 quicksum(self.x[flight.index, slot.index] for flight in self.flights) <= 1
             )
 
-        for airline in self.airlines:
-            self.m.addConstr(
-                quicksum(flight.cost_fun(flight.slot) for flight in airline.flights) >= \
-                quicksum(self.x[flight.index, slot.index] * flight.cost_fun(slot)
-                         for flight in airline.flights for slot in self.slots)
-            )
 
     def set_objective(self):
         flight: Flight
         self.m.setObjective(
             quicksum(self.x[flight.index, slot.index] * flight.cost_fun(slot)
-                     for flight in self.flights for slot in self.slots)
+                   for flight in self.flights for slot in self.slots)
         )
 
     def run(self, timing=False, verbose=False, time_limit=60):
@@ -91,11 +87,13 @@ class NNBoundGurobi:
         self.m.optimize(stop)
         # self.m.printStats()
 
+
         end = time.time() - start
         if timing:
             print("Simplex time ", end)
 
         return self.get_sol_array()
+
 
     def assign_flights(self, sol):
         for flight in self.flights:

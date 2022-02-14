@@ -42,7 +42,7 @@ def air_triple_check(air_triple):
 
 class OfferChecker(object):
 
-    def __init__(self, schedule_mat, flights, offers_convenience_tol=0.01):
+    def __init__(self, schedule_mat, flights, offers_convenience_tol=0):
         # os.system('./OfferChecker/install_parallel.sh')
         self.numProcs = os.cpu_count()
         roor_dir = Path(__file__).resolve().parents[1]
