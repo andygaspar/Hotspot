@@ -27,7 +27,9 @@ class IstopAirline(air.Airline):
 
         self.flight_pairs = self.pairs(self.flights)
 
-        self.flight_triplets = self.triplet(self.flights)
+        # self.flight_triplets = self.triplet(self.flights)
+
+        self.flight_pairs_idx = np.array(list(combinations([fl.slot.index for fl in self.flights], 2)), dtype=np.short)
 
     def set_and_standardise_fit_vect(self):
         self.flights: List[Flight]
@@ -35,6 +37,7 @@ class IstopAirline(air.Airline):
         # for flight in self.flights:
         #     flight.set_fit_vect()
         max_cost = max([cost for flight in self.flights for cost in flight.fitCostVect])
+        max_cost = max_cost if max_cost > 0 else 1
 
         for flight in self.flights:
             flight.standardisedVector = flight.fitCostVect / max_cost
