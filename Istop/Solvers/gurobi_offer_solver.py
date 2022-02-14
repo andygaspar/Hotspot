@@ -67,7 +67,8 @@ class GurobiOfferSolver:
         self.numOffers = len(self.offers)
         self.reductions = np.array([reductions[i] for i in order])
 
-        if len(self.reductions) > max_offers:
+        if len(self.offers) > max_offers:
+            self.offers = self.offers[:max_offers]
             self.reductions = self.reductions[:max_offers]
 
         self.set_match_for_flight(model.flights)
