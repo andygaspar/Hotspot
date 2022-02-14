@@ -44,7 +44,7 @@ class GOGurobi(mS.ModelStructure):
     def set_variables(self):
         flight: Flight
         airline: air.Airline
-        self.x = self.m.addVars([(i, j) for i in range(self.numFlights) for j in range(self.numFlights)],
+        self.x = self.m.addVars([(i, j) for i in range(self.numFlights) for j in range(len(self.slots))],
                                 vtype=GRB.BINARY)
 
     def set_constraints(self):
