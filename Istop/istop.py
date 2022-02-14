@@ -45,7 +45,7 @@ class Istop(mS.ModelStructure):
             j += 1
         return indexes
 
-    def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, triples=False,
+    def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, triples=True,
         alternative_allocation_rule=False):
         self.offers = None
         self.triples = triples
