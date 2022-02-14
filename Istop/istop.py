@@ -6,8 +6,9 @@ import pandas as pd
 import time
 
 from .Solvers.gurobi_solver import GurobiSolver
+from .Solvers.gurobi_offer_solver import GurobiOfferSolver
 from ..GlobalFuns.globalFuns import HiddenPrints
-from .Solvers.mip_solver import MipSolver
+
 #from .Solvers.xpress_solver import XpressSolver
 from ..ModelStructure import modelStructure as mS
 from itertools import combinations, permutations
@@ -44,7 +45,7 @@ class Istop(mS.ModelStructure):
             j += 1
         return indexes
 
-    def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, triples=False,
+    def __init__(self, slots: List[Slot]=None, flights: List[Flight]=None, triples=True,
         alternative_allocation_rule=False):
         self.offers = None
         self.triples = triples
@@ -72,7 +73,9 @@ class Istop(mS.ModelStructure):
 
             self.flights.sort(key=lambda f: f.slot)
             self.scheduleMatrix = self.set_schedule_matrix()
-            self.offerChecker = OfferChecker(self.scheduleMatrix)
+            self.offerChecker = OfferChecker(self.scheduleMatrix, self.flights)
+
+            self.reductions = None
 
             self.matches = []
             self.couples = []
@@ -89,52 +92,11 @@ class Istop(mS.ModelStructure):
 
     def check_and_set_matches(self):
         start = time.time()
-        self.matches = self.offerChecker.all_couples_check(self.airlines_pairs)
+        self.matches, self.reductions = self.offerChecker.all_couples_check(self.airlines_pairs)
         if self.triples:
-            self.matches += self.offerChecker.all_triples_check(self.airlines_triples)
-
-        # #TEST # TO REMOVE?
-        # new_matches = []
-        # for match in self.matches:
-        #     pair1, pair2 = match
-        #     f0, f1 = pair1
-        #     f2, f3 = pair2
-        #     #print (pair1, pair2)
-        #     # if pair1[0].name==1205 and pair1[1].name==1293:
-        #     #     print ('YOYO', pair1[0], pair1[0].slot, pair1[0].eta, pair1[1].compatibleSlots[0].index)
-        #     #     print ('YOYO', pair1[1], pair1[1].slot, pair1[1].eta, pair1[0].compatibleSlots[0].index)
-            
-        #     try:
-        #         assert pair1[0].slot in pair1[1].compatibleSlots
-        #         assert pair1[1].slot in pair1[0].compatibleSlots
-        #         assert pair2[0].slot in pair2[1].compatibleSlots
-        #         assert pair2[1].slot in pair2[0].compatibleSlots
-
-        #         # Probably not useful...
-        #         old_cost0 = f0.fitCostVect[f0.slot.index]
-        #         old_cost1 = f1.fitCostVect[f1.slot.index]
-        #         old_cost2 = f2.fitCostVect[f2.slot.index]
-        #         old_cost3 = f3.fitCostVect[f3.slot.index]
-        #         new_cost0 = f0.fitCostVect[f1.slot.index]
-        #         new_cost1 = f1.fitCostVect[f0.slot.index]
-        #         new_cost2 = f2.fitCostVect[f3.slot.index]
-        #         new_cost3 = f3.fitCostVect[f2.slot.index]
-                
-        #         diff0 = new_cost0-old_cost0
-        #         diff1 = new_cost1-old_cost1
-        #         diff2 = new_cost2-old_cost2
-        #         diff3 = new_cost3-old_cost3
-
-        #         assert diff0+diff1+diff2+diff3<0
-        #         new_matches.append(match)
-        #     except AssertionError as e:
-        #         pass
-        #     except:
-        #         raise
-
-        #self.matches = new_matches
-        
-        # print ('MATCHES AFTER CLEANING:', self.matches)
+            matches, reductions = self.offerChecker.all_triples_check(self.airlines_triples)
+            self.matches += matches
+            self.reductions = np.append(self.reductions, reductions)
         
         for match in self.matches:
             for couple in match:
@@ -145,42 +107,24 @@ class Istop(mS.ModelStructure):
                     if not self.f_in_matched(couple[1]):
                         self.flights_in_matches.append(couple[1])
 
-        # print ('COUPLES:', self.couples)
-        # print ('flights_in_matches:', self.flights_in_matches)
-
         print("preprocess concluded in sec:", time.time() - start, "   Number of possible offers: ", len(self.matches))
         return len(self.matches) > 0
 
-    def run(self, timing=False, max_time=2000, verbose=False, time_limit=60):
+    def run(self, max_offers=5000, timing=False):
         feasible = self.check_and_set_matches()
 
         if feasible:
-            try:
-                m = GurobiSolver(self)
-                print("Using Gurobi")
-                try:
-                    solution_vect, offers_vect = m.run(timing=timing, verbose=verbose, time_limit=time_limit)
-                    # print ('SOLUTION VECT:', solution_vect)
-                    self.assign_flights(solution_vect)
-                    self.offers_selected = [match for i, match in enumerate(self.matches) if offers_vect[i] > 0.9]
+            g_offer_solver = GurobiOfferSolver(
+                self, offers=self.matches, max_offers=max_offers, time_limit=120, reductions=self.reductions, mip_gap=0)
+            self.offers_selected = g_offer_solver.run(timing=timing)
+            print("reduction gurobi ", g_offer_solver.m.getObjective().getValue())
 
-                    print("Number of offers selected: ", len(self.offers_selected))
-                    print("Offers selected", self.offers_selected)
-                except Exception as e:
-                    print ('exception', e)
-                    raise
-            except Exception as ee:
-                print("Using MIP", "(exception from gurobi:", ee, ")")
-                p = MipSolver(self, max_time)
-                solution_vect, offers_vect = p.run(timing=True)
-                self.assign_flights(solution_vect)
+            solution_assignment = self.offerChecker.get_solution_assignment(self.offers_selected)
+            self.assign_flights(solution_assignment)
 
-                offers = 0
-                for i in range(len(self.matches)):
-                    if offers_vect[i] > 0.9:
-                        self.offers_selected.append(self.matches[i])
-                        offers += 1
-                #print("Number of offers selected: ", offers)
+            print("Number of offers selected: ", len(self.offers_selected))
+            print("Offers selected", self.offers_selected)
+
 
         else:
             for flight in self.flights:
@@ -224,12 +168,15 @@ class Istop(mS.ModelStructure):
                 return True
         return False
 
-    def assign_flights(self, solution_vect):
+    def assign_flights(self, solution_assignment):
+        assigned_flights = []
+        for tup in solution_assignment:
+            assigned_flights.append(tup[0])
+            tup[0].newSlot = tup[1]
+
         for flight in self.flights:
-            for slot in self.slots:
-                #if solution_vect[flight.slot.index, slot.index] > 0.9:
-                if solution_vect[flight.fpfs_slot.index, slot.index] > 0.9:
-                    flight.newSlot = slot
+            if flight not in assigned_flights:
+                flight.newSlot = flight.slot
 
     # def reset(self, df_init, costFun: Union[Callable, List[Callable]], alpha=1, triples=False):
     #     # To avoid calling xp.problem(), creating a blank line

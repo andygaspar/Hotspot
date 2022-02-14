@@ -4,8 +4,10 @@
 """
 Version using the wrapper
 """
-
+import random
 import sys
+
+
 sys.path.insert(1, '../..')
 
 import numpy as np
@@ -18,6 +20,7 @@ from Hotspot import Engine, LocalEngine, HotspotHandler, print_allocation
 from Hotspot.libs.uow_tool_belt.general_tools import sort_lists
 
 np.random.seed(0)
+random.seed(0)
 
 # First bit to simulate things coming from another model, e.g. 
 # flight objects
