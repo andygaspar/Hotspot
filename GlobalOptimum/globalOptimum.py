@@ -1,20 +1,10 @@
 from typing import Callable, List, Union
-
-import numpy as np
-import pandas as pd
-
-import time
-
-import xpress as xp
-
-from ..GlobalFuns.globalFuns import HiddenPrints
+from .SolversGO.gurobi_solver_go import GOGurobi
 from ..ModelStructure import modelStructure as mS
-from ..ModelStructure.Airline import airline as air
 from ..ModelStructure.Flight.flight import Flight
 from ..ModelStructure.Solution import solution
 from ..ModelStructure.Slot.slot import Slot
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
-from ..GlobalOptimum.SolversGO.mip_solver_go import MipSolverGO
 
 
 class GlobalOptimum(mS.ModelStructure):
@@ -23,28 +13,13 @@ class GlobalOptimum(mS.ModelStructure):
     def __init__(self, slots: List[Slot] = None, flights: List[Flight] = None, alternative_allocation_rule=0.):
         super().__init__(slots=slots, flights=flights, alternative_allocation_rule=alternative_allocation_rule)
 
-    def run(self, timing=False, update_flights=False, max_time=2000):
-        # print("using MIP")
-        # m = MipSolverGO(self, max_time)
-        # solution_vect = m.run(timing, update_flights)
-        try:
-            from ..GlobalOptimum.SolversGO.xpress_solver_go import XpressSolverGO
-            m = XpressSolverGO(self, max_time)
-            print("Using Xpress")
-            solution_vect = m.run(timing, update_flights)
-        except Exception as e:
-            print("Using MIP (xpress exception:", e, ')')
-            m = MipSolverGO(self, max_time)
-            solution_vect = m.run(timing, update_flights)
+    def run(self, timing=False, update_flights=False, time_limit=60):
 
+        m = GOGurobi(self)
+        print("Using Gurobi")
+        solution_vect = m.run(timing=timing, time_limit=time_limit)
         self.assign_flights(solution_vect)
-        with print_to_void():
-            solution.make_solution(self)
-
-            for flight in self.flights:
-                if flight.eta > flight.newSlot.time:
-                    print("********************** negative impact *********************************",
-                          flight, flight.eta, flight.newSlot.time)
+        solution.make_solution(self)
 
         if update_flights:
             self.update_flights()
@@ -52,12 +27,6 @@ class GlobalOptimum(mS.ModelStructure):
     def assign_flights(self, solution_vect):
         with print_to_void():
             for flight in self.flights:
-                # print ('POUIC flight', flight)
                 for slot in self.slots:
-                    # print ('POUIC slot', slot, self.m.getSolution(sol[flight.index, slot.index]))
                     if solution_vect[flight.index, slot.index] > 0.5:
-                        # print ('POUIC match', flight)
                         flight.newSlot = slot
-
-    # def reset(self, slots, flights):
-    #     super().__init__(slots, flights)
