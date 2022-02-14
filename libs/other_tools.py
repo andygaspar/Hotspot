@@ -48,7 +48,7 @@ def generate_comparison(allocation1, allocation2, airlines, cost_vect):
 
 	results.loc['total', 'reduction %'] = -100*(results.loc['total','final costs']-results.loc['total','initial costs'])/results.loc['total','initial costs']
 
-	print (results.reset_index())
+	return results.reset_index()
 
 
 # TODO: make it work for any version
