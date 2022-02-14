@@ -40,83 +40,6 @@ class GurobiSolver:
 
         self.epsilon = sys.float_info.min
 
-        # # For debugging
-        # stuff0 = [f.name for f in self.flights]
-        # stuff = [f.index for f in self.flights]
-        # stuff2 = [f.slot for f in self.flights]
-        # # print ('slots:', self.slots)
-        # # print ('SLOTS IN GurobiSolver for each flight:', stuff2)
-        # stuff3 = [f.compatibleSlots for f in self.flights]
-        # stuff4 = [f.notCompatibleSlots for f in self.flights]
-        # stuff5 = [f.fitCostVect for f in self.flights]
-        # #print ('MATCHES:', [[[f.name for f in stuff2] for stuff2 in stuff] for stuff in self.matches])
-        # #raise Exception()
-        # to_save = (stuff0, stuff, stuff2, stuff3, stuff4, stuff5,
-        #             self.slots, #self.matches,
-        #             self.emptySlots, [f.index for f in self.flights_in_matches],
-        #             [[[f.name for f in stuff2] for stuff2 in stuff] for stuff in self.matches])
-
-        # for flight in self.flights:
-        #     if flight.slot.index<flight.compatibleSlots[0].index:
-        #         print ('BAAAAAAAAMMMMMM', flight.name, flight.slot, flight.compatibleSlots[:1])
-        #         raise Exception()
-
-        # for match in self.matches:
-        #     pair1, pair2 = match
-        #     #print (pair1, pair2)
-
-        #     # if pair1[0].name==1205:
-        #     #     print ('CHECKCHECK', pair1[0].name, pair1[0].slot)
-
-        #     try:
-        #         assert pair1[0].slot in pair1[1].compatibleSlots
-        #     except:
-        #         print (pair1, pair1[0].slot, pair1[1].compatibleSlots[0])
-        #     try:
-        #         assert pair1[1].slot in pair1[0].compatibleSlots
-        #     except:
-        #         print (pair1, pair1[1].slot, pair1[0].compatibleSlots[0])
-        #     try:
-        #         assert pair2[0].slot in pair2[1].compatibleSlots
-        #     except:
-        #         print (pair2, pair2[0].slot, pair2[1].compatibleSlots[0])
-        #     try:
-        #         assert pair2[1].slot in pair2[0].compatibleSlots
-        #     except:
-        #         print (pair2, pair2[1].slot, pair2[0].compatibleSlots[0])
-
-        # import pickle
-        # with open('gurobi_solver_state2.pic', 'wb') as f:
-        #     pickle.dump(to_save, f)
-
-        # # FOR TESTING
-        # n1 = 14 # 15 optimal
-        # n2 = 25# 24 optimal
-        # exclude = [15, 16, 17, 18, 21, 22, 23]
-        # #self.flights = self.flights[n1:n2]
-        # self.flights = [flight for i, flight in enumerate(self.flights) if i>=n1 and i<n2 and (not i in exclude)]
-        # #self.slots = [flight.slot for flight in self.flights]
-        # f_name = [flight.name for flight in self.flights]
-        # self.matches = [[pair1, pair2] for pair1, pair2 in self.matches if (pair1[0].name in f_name) and
-        #                                                                     (pair1[1].name in f_name) and
-        #                                                                     (pair2[0].name in f_name) and
-        #                                                                     (pair2[1].name in f_name)]
-        # self.flights_in_matches = [flight for flight in self.flights_in_matches if flight in self.flights]
-        # #print ('matches:', self.matches)
-        # for i, flight in enumerate(self.flights):
-        #     flight.old_index = flight.index
-        #     flight.index = i
-        # print ('REMAINING FLIGHTS:', self.flights)
-        # print ('INDEXES:', [flight.index for flight in self.flights])
-        # print ('FLIGHTS IN MATCHES', self.flights_in_matches)
-
-        # if load_debug:
-        #     import pickle
-        #     with open('gurobi_solver_state.pic', 'rb') as f:
-        #         self.flights, self.airlines, self.slots, self.matches,
-        #         self.emptySlots, self.flights_in_matches, self.f_in_matched,
-        #         self.get_match_for_flight, self.check_and_set_matches = pickle.load(f)
-
         self.x = None
         self.c = None
 
@@ -180,8 +103,6 @@ class GurobiSolver:
                     self.epsilon)
 
         self.m.addConstr(quicksum(self.c[i] for i in range(len(self.matches))) == 1)
-
-        # 239980.2416
 
     def set_objective(self):
         self.flights: List[Flight]

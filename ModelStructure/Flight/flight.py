@@ -68,6 +68,8 @@ class Flight:
 
         self.standardisedVector = None
 
+        self.offers = []
+
     def __str__(self):
         return str(self.name)
 
