@@ -496,10 +496,10 @@ class HotspotHandler:
 		print ('slot_times =', [slot.time for slot in self.slots])
 		print ('f_airline =', [(flight.name, flight.airlineName) for flight in self.get_flight_list()])
 		print ('f_eta =', [flight.eta for flight in self.get_flight_list()])
-		# df = pd.DataFrame([flight.costVect for flight in self.get_flight_list()],
-		# 					columns=[slot.time for slot in self.slots],
-		# 					index=[flight.name for flight in self.get_flight_list()])
-		# df.to_csv('cost_matrix_debug.csv')
+		df = pd.DataFrame([flight.costVect for flight in self.get_flight_list()],
+							columns=[slot.time for slot in self.slots],
+							index=[flight.name for flight in self.get_flight_list()])
+		df.to_csv('cost_matrix_debug.csv')
 		print ('Cost matrix (external flights/internal slots) dumped as cost_matrix_debug.csv')
 
 	def set_cost_matrix(self, cost_matrix):
