@@ -107,7 +107,7 @@ class Istop(mS.ModelStructure):
                     if not self.f_in_matched(couple[1]):
                         self.flights_in_matches.append(couple[1])
 
-        print("preprocess concluded in sec:", time.time() - start, "   Number of possible offers: ", len(self.matches))
+        # print("preprocess concluded in sec:", time.time() - start, "   Number of possible offers: ", len(self.matches))
         return len(self.matches) > 0
 
     def run(self, max_offers=5000, timing=False):
@@ -123,13 +123,13 @@ class Istop(mS.ModelStructure):
             self.assign_flights(solution_assignment)
 
             print("Number of offers selected: ", len(self.offers_selected))
-            print("Offers selected", self.offers_selected)
-
+            # print("Offers selected", self.offers_selected)
 
         else:
             for flight in self.flights:
                 flight.newSlot = flight.slot
-        print("Number of offers selected: ", 0)
+            print("Number of offers selected: 0")
+            
         solution.make_solution(self)
         self.offer_solution_maker()
 

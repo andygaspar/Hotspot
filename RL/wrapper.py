@@ -68,6 +68,10 @@ def allocation_from_flights(flights, name_slot='newSlot'):
 	#return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
 	return OrderedDict(sorted([(flight.name, getattr(flight, name_slot)) for flight in flights], key=lambda x:x[1].time))
 
+def allocation_from_flights_debug(flights, name_slot='newSlot'):
+	#return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
+	return OrderedDict([(flight.name, getattr(flight, name_slot)) for flight in flights])
+
 def df_from_flights(flights, name_slot='newSlot'):
 	"""
 	Mostly for showing purposes, is not used for internal calculations anymore.
@@ -171,6 +175,9 @@ class HotspotHandler:
 
 	def get_allocation(self, name_slot='slot'):
 		return allocation_from_flights(self.get_flight_list(), name_slot=name_slot)
+
+	def get_allocation_debug(self, name_slot='slot'):
+		return allocation_from_flights_debug(self.get_flight_list(), name_slot=name_slot)
 
 	def get_cost_vectors(self):
 		return {flight.name:{'costVect':flight.costVect, 'delayCostVect':flight.delayCostVect} for flight in self.get_flight_list()}
@@ -518,6 +525,13 @@ class HotspotHandler:
 
 			flight.costVect = costs
 
+	def get_hotspot_data(self):
+		flight_names = list(self.flights.keys())
+		etas = [self.flights[f].eta for f in flight_names]
+		costVects = [self.flights[f].costVect for f in flight_names]
+
+		return self.slot_times, flight_names, etas, costVects
+
 
 class RLFlight(HFlight):
 	pass
@@ -713,15 +727,6 @@ class Engine:
 			if not 'alternative_allocation_rule' in kwargs_init.keys():
 				kwargs_init['alternative_allocation_rule'] = hotspot_handler.alternative_allocation_rule
 
-			# if (not 'delta_t' in kwargs_init.keys()) \
-			# 	and hotspot_handler.alternative_slot_allocation_rule \
-			# 	and len(hotspot_handler.slots)>1:
-			# 	# In this case, slots should be allocated to if t1 < eta < t2,
-			# 	# where t1 and t2 are the slot boundary.
-			# 	# We compute the delta_t based on the minimum difference between slots
-			# 	delta_t = compute_delta_t_from_slots(hotspot_handler.slots)
-			# 	kwargs_init['delta_t'] = delta_t
-
 		if use_priorities:
 			try:
 				assert hasattr(flights[0], 'udppPriority')
@@ -733,9 +738,6 @@ class Engine:
 				raise Exception("You asked to use priorities for optimal allocation, this is only possible when selecting 'uddp_merge' as optimiser.")
 			kwargs_run['optimised'] = False
 
-		# if self.algo=='nnbound':
-		# 	self.model.reset(slots, flights, **kwargs_init)
-		# else:
 		self.model = Model(slots, flights, **kwargs_init)
 		self.model.run(**kwargs_run)
 		
