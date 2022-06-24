@@ -205,32 +205,17 @@ class HotspotHandler:
 		# slots than flights ( for instance whenusing UDPPLocal)
 		# and the first flight does not have to be on the first slot
 		# systematically
-		# print ('LOVA', [flight.eta for flight in self.get_flight_list()])
-		# print ('LOVA2', self.get_flight_list())
-		# first_flight = self.get_flight_list()[np.argmin([flight.eta for flight in self.get_flight_list()])]		 
-		# if first_flight.eta > self.slots[0].time:
-		# 	if first_flight.name==1205:
-		# 		print ('WOOOOOOOO', first_flight.name, first_flight.eta)
-		# 	first_flight.eta = self.slots[0].time
 
 		for flight in self.get_flight_list():
 			flight.set_compatible_slots(self.slots,
 										alternative_allocation_rule=self.alternative_allocation_rule)
-            
 
-		# if delta_t is None:
-		# 	if self.alternative_slot_allocation_rule and len(self.slots)>1:
-		# 		self.delta_t = compute_delta_t_from_slots(self.slots)
-		# 	else:
-		# 		self.delta_t = 0.
-		# else:
-		# 	self.delta_t = delta_t
-
-	def prepare_all_flights(self):
-		reqs = self.get_requirements_from_engine()
-		for flight in self.flights.values():
-			if 'delayCostVect' in reqs or 'costVect' in reqs:
-				flight.compute_cost_vectors(self.slots)
+	def prepare_all_flights(self, skip_cost_vect_computation=False):
+		if not skip_cost_vect_computation:
+			reqs = self.get_requirements_from_engine()
+			for flight in self.flights.values():
+				if 'delayCostVect' in reqs or 'costVect' in reqs:
+					flight.compute_cost_vectors(self.slots)
 
 	def update_flight_attributes_dict_to_ext(self, attr_dict):
 		for flight, d in attr_dict.items():
@@ -263,6 +248,7 @@ class HotspotHandler:
 		set_cost_function_with=None, attr_map=None):
 		"""
 		attr_map is in the ext -> int direction
+		TODO: attr_map does nothing...
 		"""
 		for flight_name, attrs in attr_list.items():
 			flight_int = self.flights[flight_name]
@@ -276,6 +262,12 @@ class HotspotHandler:
 			if set_cost_function_with=='default_cf_paras':
 				dd = {'kind':'paras',
 						'cost_function':self.cf_paras}
+			elif set_cost_function_with=='interpolation':
+				# In this case the function is interpolated based on cost vectors
+				# passed in the constructor. Note that the cost vector is not recomputed!
+				dd = {'kind':'interpolation',
+						'cost_function':'interpolation',
+						'slots':self.slots}
 			else:
 				dd = {}
 				for k, v in set_cost_function_with.items():
@@ -440,6 +432,24 @@ class HotspotHandler:
 
 	def prepare_hotspot_from_dict(self, attr_list=None, slot_times=[], slots=[], attr_map=None,
 		set_cost_function_with={}, assign_FPFS=True):
+		"""
+		Note: if you want to pass a cost vector instead of a lambda cost function, you
+		need to use the keyword 'cost_vect' in the attribute list. If you are using the 
+		function approxiator, you will also need to set an interpolator of the vector. E.G.:
+        flights_dict = [{'flight_name':flight_uid,
+                'airline_name':self.airline,
+                'eta':self.etas[self.flight_index[flight_uid]],
+                'cost_vect':self.RealCostVect[self.flight_index[flight_uid]],
+                'slot':d['slot']
+                } for flight_uid, d in regulation_info['flights'].items()]
+        
+        hh.prepare_hotspot_from_dict(attr_list=flights_dict,
+        							slots=regulation_info['slots'],
+        							set_cost_function_with='interpolation'
+                                    )
+
+        
+		"""
 
 		# {'flight_name':'flight_name',
 		# 'airline_name':'airline_name', 'eta':'eta'}
@@ -604,6 +614,8 @@ class Flight(HFlight):
 			self.set_cost_function_from_lambda(cost_function, **kwargs)
 		elif kind=='paras':
 			self.set_cost_function_from_paras(cost_function, **kwargs)
+		elif kind=='interpolation':
+			self.set_cost_function_from_cost_vector(**kwargs)
 
 	def compute_lambda_from_paras(self, cost_function_paras):
 		"""
@@ -615,6 +627,11 @@ class Flight(HFlight):
 			return cost_function_paras(time, **{attr:getattr(self, attr) for attr in cost_function_paras.paras})
 
 		return f
+
+	def set_cost_function_from_cost_vector(self, slots):
+		self.cost_f_true = self.compute_interpolated_function(slots)
+
+		#self.compute_delay_cost_vect(slots)
 
 	def set_cost_function_from_paras(self, cost_function_paras, absolute=True):
 		f = self.compute_lambda_from_paras(cost_function_paras)
@@ -688,6 +705,12 @@ class Flight(HFlight):
 				i += 1
 
 			self.delayCostVect = np.array(self.delayCostVect)
+
+	def compute_interpolated_function(self, slots):
+		def f(x):
+			return np.interp(x, [s.time for s in slots], self.costVect)
+
+		return f
 
 
 class Engine:

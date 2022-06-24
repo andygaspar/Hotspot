@@ -98,11 +98,6 @@ class Flight:
         self.notCompatibleSlots = not_compatible_slots
 
     def set_eta_slot(self, slots):
-        # i = 0
-        # #print ('ALLOALLO flight name, eta, delta_t, slots:', self.name, self.eta, delta_t, slots)
-        # while slots[i].time < self.eta-delta_t:# and i<len(slots)-1:
-        #     #print ('KWABUNGA', slots[i].time)
-        #     i += 1
         self.etaSlot = self.compatibleSlots[0]#slots[i]#[i-1]
 
     def get_attributes(self):
