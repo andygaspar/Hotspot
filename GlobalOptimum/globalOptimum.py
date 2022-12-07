@@ -16,7 +16,7 @@ class GlobalOptimum(mS.ModelStructure):
     def run(self, timing=False, update_flights=False, time_limit=60):
 
         m = GOGurobi(self)
-        print("Using Gurobi")
+        # print("Using Gurobi")
         solution_vect = m.run(timing=timing, time_limit=time_limit)
         self.assign_flights(solution_vect)
         solution.make_solution(self)
