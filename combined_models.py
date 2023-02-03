@@ -147,6 +147,9 @@ UDPPTotal = combine_model([UDPPLocal, UDPPMerge])
 # UDPP with approximation function
 UDPPTotalApprox = combine_model([FunctionApprox, UDPPTotal])
 
+# Compute UDPP local with an approximated function
+FuncApproxUDPPLocal = combine_model([FunctionApprox, UDPPLocal])
+
 # UDPP with approximation function
 UDPPTotalApproxCost = combine_model([FunctionApproxCost, UDPPTotal])
 

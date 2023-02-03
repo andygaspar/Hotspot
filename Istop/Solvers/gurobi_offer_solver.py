@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 
 from ...ModelStructure.Flight.flight import Flight
+from ...GlobalFuns.globalFuns import HiddenPrints
 from gurobipy import Model, GRB, quicksum, Env
 
 import time
@@ -45,7 +46,8 @@ class GurobiOfferSolver:
         self.m = Model('CVRP')
         # self.m.setParam('Method', 2) ###################testare == 2 !!!!!!!!!!!!111c
         self.m.modelSense = GRB.MAXIMIZE
-        self.m.setParam('MIPGap', mip_gap)
+        with HiddenPrints():
+            self.m.setParam('MIPGap', mip_gap)
         self.m._time_limit = time_limit
 
         self.flights = model.flights
@@ -133,7 +135,7 @@ class GurobiOfferSolver:
             status = "optimal"
         if self.m.status == 3:
             status = "infeasible"
-        print(status)
+        #print(status)
 
         offer_solution = self.get_solution_offers()
 

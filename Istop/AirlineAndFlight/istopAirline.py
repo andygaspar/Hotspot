@@ -40,4 +40,4 @@ class IstopAirline(air.Airline):
         max_cost = max_cost if max_cost > 0 else 1
 
         for flight in self.flights:
-            flight.standardisedVector = flight.fitCostVect / max_cost
+            flight.standardisedVector = np.array(flight.fitCostVect) / max_cost

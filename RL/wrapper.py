@@ -19,7 +19,7 @@ from ..ModelStructure.Flight.flight import compatible_slots
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
 from ..combined_models import UDPPMergeIstop, UDPPLocalFunctionApprox, UDPPTotal, UDPPTotalApprox, UDPPIstop
 from ..combined_models import IstopApprox, NNBoundTotalApprox, GlobalOptimumTotalApprox, UDPPIstopApprox
-from ..combined_models import UDPPLocalFunctionApproxCost, UDPPTotalApproxCost
+from ..combined_models import UDPPLocalFunctionApproxCost, UDPPTotalApproxCost, FuncApproxUDPPLocal
 from ..combined_models import IstopApproxCost, NNBoundTotalApproxCost, GlobalOptimumTotalApproxCost, UDPPIstopApproxCost
 #from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
 
@@ -35,6 +35,7 @@ models = {'istop':Istop,
 		'udpp_merge_istop':UDPPMergeIstop,
 		'udpp':UDPPTotal,
 		'udpp_approx':UDPPTotalApprox,
+		'function_approx_udpp_local':FuncApproxUDPPLocal,
 		'udpp_istop_approx':UDPPIstopApprox,
 		'udpp_approx_cost':UDPPTotalApproxCost,
 		'udpp_istop_approx_cost':UDPPIstopApproxCost,
@@ -157,6 +158,7 @@ class HotspotHandler:
 			try:
 				cf_paras = archetypes_cost_functions[cf_paras]()
 			except KeyError:
+				print ('Known archetype functions:', archetypes_cost_functions.keys())
 				raise Exception("Unknown function archetype:", cf_paras)
 
 		self.cf_paras = cf_paras
