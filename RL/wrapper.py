@@ -19,7 +19,7 @@ from ..ModelStructure.Flight.flight import compatible_slots
 from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
 from ..combined_models import UDPPMergeIstop, UDPPLocalFunctionApprox, UDPPTotal, UDPPTotalApprox, UDPPIstop
 from ..combined_models import IstopApprox, NNBoundTotalApprox, GlobalOptimumTotalApprox, UDPPIstopApprox
-from ..combined_models import UDPPLocalFunctionApproxCost, UDPPTotalApproxCost
+from ..combined_models import UDPPLocalFunctionApproxCost, UDPPTotalApproxCost, FuncApproxUDPPLocal
 from ..combined_models import IstopApproxCost, NNBoundTotalApproxCost, GlobalOptimumTotalApproxCost, UDPPIstopApproxCost
 #from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
 
@@ -35,6 +35,7 @@ models = {'istop':Istop,
 		'udpp_merge_istop':UDPPMergeIstop,
 		'udpp':UDPPTotal,
 		'udpp_approx':UDPPTotalApprox,
+		'function_approx_udpp_local':FuncApproxUDPPLocal,
 		'udpp_istop_approx':UDPPIstopApprox,
 		'udpp_approx_cost':UDPPTotalApproxCost,
 		'udpp_istop_approx_cost':UDPPIstopApproxCost,
@@ -67,6 +68,10 @@ def allocation_from_df(df, name_slot='new slot'):
 def allocation_from_flights(flights, name_slot='newSlot'):
 	#return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
 	return OrderedDict(sorted([(flight.name, getattr(flight, name_slot)) for flight in flights], key=lambda x:x[1].time))
+
+def allocation_from_flights_debug(flights, name_slot='newSlot'):
+	#return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
+	return OrderedDict([(flight.name, getattr(flight, name_slot)) for flight in flights])
 
 def df_from_flights(flights, name_slot='newSlot'):
 	"""
@@ -153,6 +158,7 @@ class HotspotHandler:
 			try:
 				cf_paras = archetypes_cost_functions[cf_paras]()
 			except KeyError:
+				print ('Known archetype functions:', archetypes_cost_functions.keys())
 				raise Exception("Unknown function archetype:", cf_paras)
 
 		self.cf_paras = cf_paras
@@ -171,6 +177,9 @@ class HotspotHandler:
 
 	def get_allocation(self, name_slot='slot'):
 		return allocation_from_flights(self.get_flight_list(), name_slot=name_slot)
+
+	def get_allocation_debug(self, name_slot='slot'):
+		return allocation_from_flights_debug(self.get_flight_list(), name_slot=name_slot)
 
 	def get_cost_vectors(self):
 		return {flight.name:{'costVect':flight.costVect, 'delayCostVect':flight.delayCostVect} for flight in self.get_flight_list()}
@@ -198,32 +207,17 @@ class HotspotHandler:
 		# slots than flights ( for instance whenusing UDPPLocal)
 		# and the first flight does not have to be on the first slot
 		# systematically
-		# print ('LOVA', [flight.eta for flight in self.get_flight_list()])
-		# print ('LOVA2', self.get_flight_list())
-		# first_flight = self.get_flight_list()[np.argmin([flight.eta for flight in self.get_flight_list()])]		 
-		# if first_flight.eta > self.slots[0].time:
-		# 	if first_flight.name==1205:
-		# 		print ('WOOOOOOOO', first_flight.name, first_flight.eta)
-		# 	first_flight.eta = self.slots[0].time
 
 		for flight in self.get_flight_list():
 			flight.set_compatible_slots(self.slots,
 										alternative_allocation_rule=self.alternative_allocation_rule)
-            
 
-		# if delta_t is None:
-		# 	if self.alternative_slot_allocation_rule and len(self.slots)>1:
-		# 		self.delta_t = compute_delta_t_from_slots(self.slots)
-		# 	else:
-		# 		self.delta_t = 0.
-		# else:
-		# 	self.delta_t = delta_t
-
-	def prepare_all_flights(self):
-		reqs = self.get_requirements_from_engine()
-		for flight in self.flights.values():
-			if 'delayCostVect' in reqs or 'costVect' in reqs:
-				flight.compute_cost_vectors(self.slots)
+	def prepare_all_flights(self, skip_cost_vect_computation=False):
+		if not skip_cost_vect_computation:
+			reqs = self.get_requirements_from_engine()
+			for flight in self.flights.values():
+				if 'delayCostVect' in reqs or 'costVect' in reqs:
+					flight.compute_cost_vectors(self.slots)
 
 	def update_flight_attributes_dict_to_ext(self, attr_dict):
 		for flight, d in attr_dict.items():
@@ -256,6 +250,7 @@ class HotspotHandler:
 		set_cost_function_with=None, attr_map=None):
 		"""
 		attr_map is in the ext -> int direction
+		TODO: attr_map does nothing...
 		"""
 		for flight_name, attrs in attr_list.items():
 			flight_int = self.flights[flight_name]
@@ -269,6 +264,12 @@ class HotspotHandler:
 			if set_cost_function_with=='default_cf_paras':
 				dd = {'kind':'paras',
 						'cost_function':self.cf_paras}
+			elif set_cost_function_with=='interpolation':
+				# In this case the function is interpolated based on cost vectors
+				# passed in the constructor. Note that the cost vector is not recomputed!
+				dd = {'kind':'interpolation',
+						'cost_function':'interpolation',
+						'slots':self.slots}
 			else:
 				dd = {}
 				for k, v in set_cost_function_with.items():
@@ -433,6 +434,24 @@ class HotspotHandler:
 
 	def prepare_hotspot_from_dict(self, attr_list=None, slot_times=[], slots=[], attr_map=None,
 		set_cost_function_with={}, assign_FPFS=True):
+		"""
+		Note: if you want to pass a cost vector instead of a lambda cost function, you
+		need to use the keyword 'cost_vect' in the attribute list. If you are using the 
+		function approxiator, you will also need to set an interpolator of the vector. E.G.:
+        flights_dict = [{'flight_name':flight_uid,
+                'airline_name':self.airline,
+                'eta':self.etas[self.flight_index[flight_uid]],
+                'cost_vect':self.RealCostVect[self.flight_index[flight_uid]],
+                'slot':d['slot']
+                } for flight_uid, d in regulation_info['flights'].items()]
+        
+        hh.prepare_hotspot_from_dict(attr_list=flights_dict,
+        							slots=regulation_info['slots'],
+        							set_cost_function_with='interpolation'
+                                    )
+
+        
+		"""
 
 		# {'flight_name':'flight_name',
 		# 'airline_name':'airline_name', 'eta':'eta'}
@@ -496,10 +515,10 @@ class HotspotHandler:
 		print ('slot_times =', [slot.time for slot in self.slots])
 		print ('f_airline =', [(flight.name, flight.airlineName) for flight in self.get_flight_list()])
 		print ('f_eta =', [flight.eta for flight in self.get_flight_list()])
-		# df = pd.DataFrame([flight.costVect for flight in self.get_flight_list()],
-		# 					columns=[slot.time for slot in self.slots],
-		# 					index=[flight.name for flight in self.get_flight_list()])
-		# df.to_csv('cost_matrix_debug.csv')
+		df = pd.DataFrame([flight.costVect for flight in self.get_flight_list()],
+							columns=[slot.time for slot in self.slots],
+							index=[flight.name for flight in self.get_flight_list()])
+		df.to_csv('cost_matrix_debug.csv')
 		print ('Cost matrix (external flights/internal slots) dumped as cost_matrix_debug.csv')
 
 	def set_cost_matrix(self, cost_matrix):
@@ -517,6 +536,13 @@ class HotspotHandler:
 			costs = np.array(cost_matrix.loc[name, :])
 
 			flight.costVect = costs
+
+	def get_hotspot_data(self):
+		flight_names = list(self.flights.keys())
+		etas = [self.flights[f].eta for f in flight_names]
+		costVects = [self.flights[f].costVect for f in flight_names]
+
+		return self.slot_times, flight_names, etas, costVects
 
 
 class RLFlight(HFlight):
@@ -590,6 +616,8 @@ class Flight(HFlight):
 			self.set_cost_function_from_lambda(cost_function, **kwargs)
 		elif kind=='paras':
 			self.set_cost_function_from_paras(cost_function, **kwargs)
+		elif kind=='interpolation':
+			self.set_cost_function_from_cost_vector(**kwargs)
 
 	def compute_lambda_from_paras(self, cost_function_paras):
 		"""
@@ -601,6 +629,11 @@ class Flight(HFlight):
 			return cost_function_paras(time, **{attr:getattr(self, attr) for attr in cost_function_paras.paras})
 
 		return f
+
+	def set_cost_function_from_cost_vector(self, slots):
+		self.cost_f_true = self.compute_interpolated_function(slots)
+
+		#self.compute_delay_cost_vect(slots)
 
 	def set_cost_function_from_paras(self, cost_function_paras, absolute=True):
 		f = self.compute_lambda_from_paras(cost_function_paras)
@@ -675,6 +708,12 @@ class Flight(HFlight):
 
 			self.delayCostVect = np.array(self.delayCostVect)
 
+	def compute_interpolated_function(self, slots):
+		def f(x):
+			return np.interp(x, [s.time for s in slots], self.costVect)
+
+		return f
+
 
 class Engine:
 	def __init__(self, algo):
@@ -713,15 +752,6 @@ class Engine:
 			if not 'alternative_allocation_rule' in kwargs_init.keys():
 				kwargs_init['alternative_allocation_rule'] = hotspot_handler.alternative_allocation_rule
 
-			# if (not 'delta_t' in kwargs_init.keys()) \
-			# 	and hotspot_handler.alternative_slot_allocation_rule \
-			# 	and len(hotspot_handler.slots)>1:
-			# 	# In this case, slots should be allocated to if t1 < eta < t2,
-			# 	# where t1 and t2 are the slot boundary.
-			# 	# We compute the delta_t based on the minimum difference between slots
-			# 	delta_t = compute_delta_t_from_slots(hotspot_handler.slots)
-			# 	kwargs_init['delta_t'] = delta_t
-
 		if use_priorities:
 			try:
 				assert hasattr(flights[0], 'udppPriority')
@@ -733,9 +763,6 @@ class Engine:
 				raise Exception("You asked to use priorities for optimal allocation, this is only possible when selecting 'uddp_merge' as optimiser.")
 			kwargs_run['optimised'] = False
 
-		# if self.algo=='nnbound':
-		# 	self.model.reset(slots, flights, **kwargs_init)
-		# else:
 		self.model = Model(slots, flights, **kwargs_init)
 		self.model.run(**kwargs_run)
 		
