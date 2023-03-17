@@ -16,9 +16,9 @@ class Airline:
 
         self.numFlights = len(flights)
 
-        self.flights = flights
+        self.flights = sorted(flights, key=lambda f:f.eta)
 
-        self.AUslots = np.array([flight.slot for flight in self.flights])
+        self.AUslots = np.array(sorted([flight.slot for flight in self.flights], key = lambda s:s.time))
 
         self.finalCosts = None
 

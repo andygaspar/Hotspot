@@ -47,7 +47,8 @@ class GurobiOfferSolver:
         self.m.modelSense = GRB.MAXIMIZE
         self.m.setParam('OutputFlag', 0)
         self.m.setParam('LogToConsole', 0)
-        self.m.setParam('MIPGap', mip_gap)
+        with HiddenPrints():
+            self.m.setParam('MIPGap', mip_gap)
         self.m._time_limit = time_limit
 
         self.flights = model.flights

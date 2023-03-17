@@ -20,10 +20,5 @@ def udpp_local(airline: Airline, slots: List[Slot]):
             local_slots.remove(get_slot_from_time(local_slots, flight.tna))
 
     for flight in airline.flights:
-        #print("\n\n")
         if flight.udppPriority == "N":
-            # print("udpp prioity number", flight.udppPriorityNumber)
-            # print("local slots", local_slots)
-            # print("flight", flight.name, "airline", flight.airline)
             flight.newSlot = local_slots[flight.udppPriorityNumber]
-        #print("\n\n")

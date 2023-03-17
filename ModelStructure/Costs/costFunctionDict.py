@@ -129,6 +129,19 @@ class Jump2CostFunction(ArchetypeCostFunction):
                     (time - eta) * slope + jump
 
 
+class Jump3CostFunction(ArchetypeCostFunction):
+    nickname = 'jump3'
+    # BEWARE: the parameters should appear in the same order than in
+    # single computation method.
+    paras = ['eta', 'slope', 'margin', 'jump', 'offset']
+    fixed_paras = ['eta']
+    
+    def single_computation(self, time, eta=None, slope=None, margin=None, jump=None, offset=None):
+        return offset if time - eta < 0 else offset + (time - eta) * slope \
+                    if (time - eta) < margin else \
+                    offset + (time - eta) * slope + jump
+
+
 class DoubleJumpCostFunction(ArchetypeCostFunction):
     # BEWARE: the parameters should appear in the same order than in
     # single computation method.
@@ -138,10 +151,51 @@ class DoubleJumpCostFunction(ArchetypeCostFunction):
 
     def single_computation(self, time, eta=None, slope=None, margin1=None,
         jump1=None, margin2=None, jump2=None):
-        pass # TODO
-        # return 0 if time - eta < 0 else (time - eta) * slope
-        #     if (time - eta) < margin1 else
-        #     (time - eta) * slope + jump
+        if time - eta < 0:
+            return 0
+        elif 0 <= (time - eta) < margin1:
+            return (time - eta) * slope
+        elif margin1 <= (time - eta) < margin2:
+            return (time - eta) * slope + jump1
+        elif (time - eta) >= margin2:
+            return (time - eta) * slope + jump2
+
+
+class DoubleJump2CostFunction(ArchetypeCostFunction):
+    # BEWARE: the parameters should appear in the same order than in
+    # single computation method.
+    nickname = 'double_jump2'
+    paras = ['eta', 'margin1', 'jump1', 'margin2', 'jump2']
+    fixed_paras = ['eta']
+
+    def single_computation(self, time, eta=None, margin1=None,
+        jump1=None, margin2=None, jump2=None):
+        if time - eta < 0:
+            return 0
+        elif 0 <= (time - eta) < margin1:
+            return 0
+        elif margin1 <= (time - eta) < margin2:
+            return jump1
+        elif (time - eta) >= margin2:
+            return jump2
+
+class DoubleJump3CostFunction(ArchetypeCostFunction):
+    # BEWARE: the parameters should appear in the same order than in
+    # single computation method.
+    nickname = 'double_jump3'
+    paras = ['eta', 'slope', 'margin1', 'jump1', 'margin2', 'jump2', 'offset']
+    fixed_paras = ['eta']
+
+    def single_computation(self, time, eta=None, slope=None, margin1=None,
+        jump1=None, margin2=None, jump2=None, offset=None):
+        if time - eta < 0:
+            return offset
+        elif 0 <= (time - eta) < margin1:
+            return (time - eta) * slope + offset
+        elif margin1 <= (time - eta) < margin2:
+            return (time - eta) * slope + jump1 + offset
+        elif (time - eta) >= margin2:
+            return (time - eta) * slope + jump2 + offset
 
 
 class GateCostFunction(ArchetypeCostFunction):
@@ -170,7 +224,10 @@ archetypes_cost_functions = {LinearCostFunction.nickname:LinearCostFunction,
                             StepCostFunction.nickname:StepCostFunction,
                             JumpCostFunction.nickname:JumpCostFunction,
                             Jump2CostFunction.nickname:Jump2CostFunction,
+                            Jump3CostFunction.nickname:Jump3CostFunction,
                             DoubleJumpCostFunction.nickname:DoubleJumpCostFunction,
+                            DoubleJump2CostFunction.nickname:DoubleJump2CostFunction,
+                            DoubleJump3CostFunction.nickname:DoubleJump3CostFunction,
                             GateCostFunction.nickname:GateCostFunction,
                             RealisticCostFunction.nickname:RealisticCostFunction,
                             }

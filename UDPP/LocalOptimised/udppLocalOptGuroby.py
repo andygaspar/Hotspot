@@ -121,10 +121,20 @@ def UDPPlocalOptGurobi(airline: Airline, slots: List[sl.Slot]):
     for flight in airline.flights:
 
         for slot in slots:
-            if y[flight.localNum, slot.index].x > 0.5:
-                flight.newSlot = slot
-                flight.udppPriority = "P"
-                flight.tna = slot.time
+            try:
+                if y[flight.localNum, slot.index].x > 0.5:
+                    flight.newSlot = slot
+                    flight.udppPriority = "P"
+                    flight.tna = slot.time
+            except AttributeError:
+                print (flight, flight.localNum)
+                print (slot)
+                print (y[flight.localNum, slot.index])
+                #print (y)
+                print (slots)
+                print (airline.numFlights)
+                print (airline.flights)
+                raise
 
         for k in range(airline.numFlights):
             if x[flight.localNum, k].x > 0.5:

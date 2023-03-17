@@ -20,7 +20,6 @@ def sort_flights_by_time(flights):
 
 def get_first_compatible_flight(slot, sorted_flights, slots):
     for flight in sorted_flights:
-        #if slot.time >= flight.eta - delta_t :
         if slot in flight.compatibleSlots:
             return flight
 
@@ -29,19 +28,13 @@ def udpp_merge(flights, slots, hfes=5):
     i = 0
     while len(sorted_flights) > 0:
         if slots[i] in sorted_flights[0].compatibleSlots:# or slots[i].time >= sorted_flights[0].eta - hfes:#sorted_flights[0]#slots[i].time >= sorted_flights[0].eta - delta_t :
-            # if sorted_flights[0].name==1191:
-            #     print ('HHEEEEEEEEEEEEEEERE', slots[i])
-            #     #raise Exception()
-            # print ('IN UDPP FLIGHT {} GO FROM SLOT {} TO SLOT {}'.format(sorted_flights[0], sorted_flights[0].slot, slots[i]))
             sorted_flights[0].newSlot = slots[i]
             sorted_flights.pop(0)
 
         else:
-            #print ('FIRST COMPATIBLE FLIGHT', slots[i], slots[i].time, sorted_flights, slots)
             flight = get_first_compatible_flight(slots[i], sorted_flights, slots)
             if flight is not None:
                 # This is for the case where some slots will be empty.
-                # print ('IN UDPP FLIGHT {} GO FROM SLOT {} TO SLOT {}'.format(flight, flight.slot, slots[i]))
                 flight.newSlot = slots[i]
                 sorted_flights.remove(flight)
         i += 1
@@ -59,7 +52,7 @@ class UDPPMerge(ModelStructure):
 
     def run(self, optimised=True):
         airline: Airline
-        # TODO: this is probably to remove, done with combined models now.
+ 
         for airline in self.airlines:
             if airline.numFlights > 1:
                 local.udpp_local(airline, self.slots)
