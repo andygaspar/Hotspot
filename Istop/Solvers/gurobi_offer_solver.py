@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 
 from ...ModelStructure.Flight.flight import Flight
+from ...GlobalFuns.globalFuns import HiddenPrints
 from gurobipy import Model, GRB, quicksum, Env
 
 import time
