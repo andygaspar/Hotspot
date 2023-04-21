@@ -21,13 +21,6 @@ from .Istop.istop import Istop
 from .GlobalOptimum.globalOptimum import GlobalOptimum
 from .NNBound.nnBound import NNBoundModel
 
-# def kwargs_init_from_combined(combined_model):
-# 	for Model in combined_model.Models:
-# 		if not Model is CombinedModel:
-# 			all_vars = inspect.signature(Model.__init__).parameters
-# 		else:
-
-
 def init_and_run(Model, slots, flights, kwargs_init, kwargs_run):
 	# Get all kwargs for init and init
 	all_vars = Model.get_kwargs_init(Model)

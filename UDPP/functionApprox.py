@@ -168,7 +168,7 @@ def fit_cost_curve(x, y, max_delay, fixed_paras={}, steps=8, approx_fun=None,
                         args=(fixed_paras, x, y, approx_fun),
                         method=algo_fit,
                         options={'maxiter': 10000,
-                                'xtol': 0.5,
+                                #'xtol': 0.5,
                                 'ftol': 0.01},
                         bounds=bounds)
     

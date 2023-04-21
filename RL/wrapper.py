@@ -32,6 +32,7 @@ models = {'istop':Istop,
 		'udpp_local_function_approx':UDPPLocalFunctionApprox,
 		'function_approx_cost':FunctionApproxCost,
 		'udpp_local_function_approx_cost':UDPPLocalFunctionApproxCost,
+		'function_approx_udpp_local':FuncApproxUDPPLocal,
 		'udpp_merge_istop':UDPPMergeIstop,
 		'udpp':UDPPTotal,
 		'udpp_approx':UDPPTotalApprox,
@@ -348,9 +349,10 @@ class HotspotHandler:
 		
 		return self.slots, self.flights
 
-	def prepare_hotspot_from_flights_ext(self, flights_ext=None, slot_times=[], slots=[], attr_map={'flight_name':'flight_name',
-		'flight_name':'airline_name', 'eta':'eta'},
+	def prepare_hotspot_from_flights_ext(self, flights_ext=None, slot_times=[], slots=[],
+		attr_map={'flight_name':'flight_name', 'flight_name':'airline_name', 'eta':'eta'},
 		set_cost_function_with={}, assign_FPFS=True):
+
 		"""
 		attr_map is in the ext -> int direction
 		"""
@@ -543,10 +545,6 @@ class HotspotHandler:
 		costVects = [self.flights[f].costVect for f in flight_names]
 
 		return self.slot_times, flight_names, etas, costVects
-
-
-class RLFlight(HFlight):
-	pass
 
 
 class Flight(HFlight):
