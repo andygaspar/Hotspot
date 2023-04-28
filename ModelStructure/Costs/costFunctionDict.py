@@ -121,7 +121,7 @@ class Jump2CostFunction(ArchetypeCostFunction):
     # single computation method.
     paras = ['eta', 'margin', 'jump']
     fixed_paras = ['eta']
-    
+
     def single_computation(self, time, eta=None, margin=None, jump=None):
         slope = 0.1
         return 0 if time - eta < 0 else (time - eta) * slope \
