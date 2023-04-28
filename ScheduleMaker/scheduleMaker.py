@@ -133,7 +133,7 @@ def schedule_maker(num_flights=20, num_airlines=3, distribution="uniform", capac
 
     """
     n_flights_first_airlines can be passed as list of ints and represents number
-    of fligihts per airlines. For instance, num_airlines=3 and n_flights_first_airlines=[3]
+    of flights per airlines. For instance, num_airlines=3 and n_flights_first_airlines=[3]
     can create distribution of flights [3, 4, 3] or [3, 5, 2] etc. All number of flights
     if given by n_flights_first_airlines, they are used as is, for instance 
     num_airlines=3 and n_flights_first_airlines=[1, 5, 4]
@@ -163,7 +163,7 @@ def schedule_maker(num_flights=20, num_airlines=3, distribution="uniform", capac
     slot = np.arange(num_flights)
     eta = slot * capacity
     fpfs = slot * new_capacity
-    priority = np.random.uniform(0.5, 2, num_flights)
+    # priority = np.random.uniform(0.5, 2, num_flights)
     priority = []
     for i in range(num_flights):
         m = np.random.choice([0, 1])
