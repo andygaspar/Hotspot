@@ -8,14 +8,23 @@ from ..Slot.slot import Slot
 def compatible_slots(slots, eta, alternative_rule=False):
     """
     This assumes that slots are ordered by time.
+
+    The alternative_rule = True allocates flights with ETA lying in brackets of time slot.
+
+    For instance, a flight with an ETA of 10.04 will be allocated to slot 10.00, if the next slot if 10.05 for instance.
+
+    The altervative_rule = False allocates flights to the next available flights, i.e in the previous example
+    to the 10.05 slot.
+
+    Note that both in the first and second rule, if an ETA falls exactly on a time slot, for instance 10.05, then it gets
+    allocated to that slot.
     """
     if not alternative_rule:
         pouic = Slot(index=-1, time=None)
         first_slot_index = next((slot for slot in slots[::-1] if slot.time<eta), pouic).index +1
     else:
-        #first_slot_index = max(get_first_matching_element(slots, condition=lambda x:x.time>eta).index-1, 0)    
         pouic = Slot(index=len(slots), time=None)
-        first_slot_index = max(get_first_matching_element(slots, condition=lambda x:x.time>eta, default=pouic).index-1, 0)    
+        first_slot_index = max(get_first_matching_element(slots, condition=lambda x:x.time>eta, default=pouic).index-1, 0)
     return [slot for i, slot in enumerate(slots) if i>=first_slot_index]
 
 class Flight:

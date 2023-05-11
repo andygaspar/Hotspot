@@ -67,11 +67,9 @@ def allocation_from_df(df, name_slot='new slot'):
 	return OrderedDict(df[['flight', name_slot]].set_index('flight').to_dict()[name_slot])
 
 def allocation_from_flights(flights, name_slot='newSlot'):
-	#return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
 	return OrderedDict(sorted([(flight.name, getattr(flight, name_slot)) for flight in flights], key=lambda x:x[1].time))
 
 def allocation_from_flights_debug(flights, name_slot='newSlot'):
-	#return OrderedDict([(flight.name, getattr(flight, name_slot).index) for flight in flights])
 	return OrderedDict([(flight.name, getattr(flight, name_slot)) for flight in flights])
 
 def df_from_flights(flights, name_slot='newSlot'):
