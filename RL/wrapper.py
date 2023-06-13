@@ -16,12 +16,10 @@ from ..UDPP.functionApproxCost import FunctionApproxCost
 from ..GlobalOptimum.globalOptimum import GlobalOptimum
 from ..ModelStructure.Costs.costFunctionDict import archetypes_cost_functions
 from ..ModelStructure.Flight.flight import compatible_slots
-from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void, clock_time
 from ..combined_models import UDPPMergeIstop, UDPPLocalFunctionApprox, UDPPTotal, UDPPTotalApprox, UDPPIstop
 from ..combined_models import IstopApprox, NNBoundTotalApprox, GlobalOptimumTotalApprox, UDPPIstopApprox
 from ..combined_models import UDPPLocalFunctionApproxCost, UDPPTotalApproxCost, FuncApproxUDPPLocal
 from ..combined_models import IstopApproxCost, NNBoundTotalApproxCost, GlobalOptimumTotalApproxCost, UDPPIstopApproxCost
-#from Hotspot.Istop.AirlineAndFlight.istopFlight import set_automatic_preference_vect
 
 models = {'istop':Istop,
 		'nnbound':NNBoundModel,

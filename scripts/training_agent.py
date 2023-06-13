@@ -8,8 +8,8 @@ import argparse
 import numpy as np
 
 from Hotspot.RL.game_trainer import ContinuousGameTrainer
-from Hotspot.libs.other_tools import agent_file_name, root_file_name
-from Hotspot.libs.uow_tool_belt.general_tools import loop
+from Hotspot.libs.other_tools import agent_file_name, root_file_name, loop
+
 
 def wrapper_training(paras={}):
 	do_training(**paras)

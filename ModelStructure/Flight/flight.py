@@ -1,9 +1,10 @@
 import numpy as np
 from typing import List, Callable
 
-from ...libs.uow_tool_belt.general_tools import get_first_matching_element
+from ...libs.other_tools import get_first_matching_element
 
 from ..Slot.slot import Slot
+
 
 def compatible_slots(slots, eta, alternative_rule=False):
     """
@@ -26,6 +27,7 @@ def compatible_slots(slots, eta, alternative_rule=False):
         pouic = Slot(index=len(slots), time=None)
         first_slot_index = max(get_first_matching_element(slots, condition=lambda x:x.time>eta, default=pouic).index-1, 0)
     return [slot for i, slot in enumerate(slots) if i>=first_slot_index]
+
 
 class Flight:
 
