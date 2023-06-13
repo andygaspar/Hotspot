@@ -4,7 +4,7 @@ from ..ModelStructure import modelStructure as mS
 from ..ModelStructure.Flight.flight import Flight
 from ..ModelStructure.Solution import solution
 from ..ModelStructure.Slot.slot import Slot
-from ..libs.uow_tool_belt.general_tools import write_on_file as print_to_void
+from ..libs.other_tools import write_on_file as print_to_void
 
 
 class GlobalOptimum(mS.ModelStructure):
