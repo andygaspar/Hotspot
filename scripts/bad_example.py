@@ -7,7 +7,6 @@ from collections import OrderedDict
 
 from Hotspot import models, models_correspondence_cost_vect, models_correspondence_approx
 from Hotspot import Engine, LocalEngine, HotspotHandler, print_allocation
-from Hotspot.libs.uow_tool_belt.general_tools import sort_lists
 from Hotspot.libs.other_tools import compute_cost, generate_comparison
 
 class Flight:

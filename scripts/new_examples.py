@@ -17,7 +17,7 @@ import pickle
 
 from Hotspot import models, models_correspondence_cost_vect, models_correspondence_approx
 from Hotspot import Engine, LocalEngine, HotspotHandler, print_allocation
-from Hotspot.libs.uow_tool_belt.general_tools import sort_lists
+from Hotspot.libs.other_tools import sort_lists
 
 np.random.seed(0)
 random.seed(0)
